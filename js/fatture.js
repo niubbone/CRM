@@ -1,6 +1,6 @@
 // =======================================================================
 // === Studio Smart CRM - Gestione Fatture ===
-// === Frontend Module v1.0 ===
+// === Frontend Module v1.1 ===
 // =======================================================================
 
 let allFattureData = [];
@@ -61,18 +61,7 @@ function renderFattureList(fatture) {
     container.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;"><div style="font-size:48px;margin-bottom:12px;">🧾</div><p style="font-weight:bold;">Nessuna fattura trovata</p><p style="font-size:14px;">Prova a modificare i filtri o aggiungi una nuova fattura</p></div>';
     return;
   }
-  const sorted = [...fatture].sort((a, b) => {
-    const pa = a.dataFattura ? a.dataFattura.split('/').reverse().join('') : '0';
-    const pb = b.dataFattura ? b.dataFattura.split('/').reverse().join('') : '0';
-    if (pb !== pa) return pb.localeCompare(pa);
-    const getKey = (nf) => {
-      const anno = (nf.match(/-(\d{4})$/) || ['','0000'])[1];
-      const num  = (nf.match(/^(\d+)/)    || ['','0'])[1].padStart(6,'0');
-      return anno + num;
-    };
-    return getKey(b.nFattura).localeCompare(getKey(a.nFattura));
-  });
-  container.innerHTML = sorted.map(f => buildFatturaCard(f)).join('');
+  container.innerHTML = fatture.map(f => buildFatturaCard(f)).join('');
 }
 
 function buildFatturaCard(f) {
@@ -80,7 +69,7 @@ function buildFatturaCard(f) {
   const isDiretta = !f.nProforma;
   const tipoText  = isDiretta ? '📋 Diretta' : '📄 Da proforma ' + f.nProforma;
   const tipoColor = isDiretta ? '#6c757d' : '#1976D2';
-  const isNC      = f.totale < 0;
+  const isNC      = parseFloat(f.totale) < 0;
 
   const badgeStyle = isPagata
     ? 'background:#28a745;color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;'
@@ -105,7 +94,7 @@ function buildFatturaCard(f) {
         </div>
       </div>
       <div style="padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-        <div><span style="font-size:13px;color:#6c757d;">👤 </span><span style="font-weight:600;color:#1976D2;text-transform:uppercase;">${f.nomeCliente || '—'}</span></div>
+        <div><span style="font-size:13px;color:#6c757d;">👤 </span><span style="font-weight:500;">${f.nomeCliente || '—'}</span></div>
         ${isPagata && f.dataPagamento ? `<div style="font-size:12px;color:#28a745;margin-left:8px;">Pagata il ${f.dataPagamento}</div>` : ''}
       </div>
     </div>`;
@@ -183,16 +172,25 @@ function openNuovaFatturaModal() {
   document.getElementById('nf-totale-display').textContent = '€ 0,00';
   document.getElementById('nf-descrizione').value = '';
   document.getElementById('nf-note').value = '';
+  const ritenuta = document.getElementById('nf-ritenuta');
+  if (ritenuta) ritenuta.checked = false;
+  const ritRow = document.getElementById('nf-ritenuta-row');
+  if (ritRow) ritRow.style.display = 'none';
+
   const selectCliente = document.getElementById('nf-cliente');
-  if (selectCliente && window.clients) {
+  if (selectCliente) {
     selectCliente.innerHTML = '<option value="">Seleziona cliente...</option>';
-    window.clients.forEach(c => {
-      const name = typeof c === 'string' ? c : c.name;
+    const clientList = window.clientsCache || window.clients || [];
+    clientList.forEach(c => {
+      const name = typeof c === 'string' ? c : (c.nome || c.name || '');
+      if (!name) return;
       const opt = document.createElement('option');
       opt.value = name; opt.textContent = name;
       selectCliente.appendChild(opt);
     });
+    if (typeof loadClienti === 'function') loadClienti();
   }
+
   modal.style.display = 'flex';
   document.getElementById('nf-numero').focus();
 }
@@ -203,11 +201,24 @@ function closeNuovaFatturaModal() {
 }
 
 function aggiornaCalcoloIVA() {
-  const imp = parseFloat(document.getElementById('nf-imponibile')?.value) || 0;
-  const iva = Math.round(imp * 0.22 * 100) / 100;
-  const tot = Math.round((imp + iva) * 100) / 100;
-  if (document.getElementById('nf-iva-display'))    document.getElementById('nf-iva-display').textContent    = '€ ' + formatFattureNum(iva);
-  if (document.getElementById('nf-totale-display')) document.getElementById('nf-totale-display').textContent = '€ ' + formatFattureNum(tot);
+  const imp    = parseFloat(document.getElementById('nf-imponibile')?.value) || 0;
+  const iva    = Math.round(imp * 0.22 * 100) / 100;
+  const tot    = Math.round((imp + iva) * 100) / 100;
+  const hasRA  = document.getElementById('nf-ritenuta')?.checked;
+  const ra     = hasRA ? Math.round(imp * 0.20 * 100) / 100 : 0;
+  const netto  = Math.round((tot - ra) * 100) / 100;
+
+  if (document.getElementById('nf-iva-display'))
+    document.getElementById('nf-iva-display').textContent = '€ ' + formatFattureNum(iva);
+  if (document.getElementById('nf-totale-display'))
+    document.getElementById('nf-totale-display').textContent = '€ ' + formatFattureNum(tot);
+
+  const ritRow = document.getElementById('nf-ritenuta-row');
+  if (ritRow) ritRow.style.display = hasRA ? 'flex' : 'none';
+  if (document.getElementById('nf-ra-display'))
+    document.getElementById('nf-ra-display').textContent = '- € ' + formatFattureNum(ra);
+  if (document.getElementById('nf-netto-display'))
+    document.getElementById('nf-netto-display').textContent = '€ ' + formatFattureNum(netto);
 }
 
 async function saveNuovaFattura(event) {
@@ -226,7 +237,15 @@ async function saveNuovaFattura(event) {
   btn.disabled = true; btn.textContent = '⏳ Salvataggio...';
   try {
     const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
-    const params = new URLSearchParams({ action: 'insert_fattura_diretta', n_fattura: nFattura, data_fattura: dataFattura || '', cliente, imponibile, descrizione: descrizione || '', note: note || '' });
+    const params = new URLSearchParams({
+      action: 'insert_fattura_diretta',
+      n_fattura: nFattura,
+      data_fattura: dataFattura || '',
+      cliente,
+      imponibile,
+      descrizione: descrizione || '',
+      note: note || ''
+    });
     const response = await fetch(`${API_URL}?${params.toString()}`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore salvataggio');
@@ -265,7 +284,13 @@ async function savePagamento(event) {
   btn.disabled = true; btn.textContent = '⏳ Salvataggio...';
   try {
     const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
-    const params = new URLSearchParams({ action: 'update_pagamento_fattura', n_fattura: nFattura, pagato: 'true', data_pagamento: data || '', note: note || '' });
+    const params = new URLSearchParams({
+      action: 'update_pagamento_fattura',
+      n_fattura: nFattura,
+      pagato: 'true',
+      data_pagamento: data || '',
+      note: note || ''
+    });
     const response = await fetch(`${API_URL}?${params.toString()}`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore');
@@ -276,6 +301,24 @@ async function savePagamento(event) {
     alert('❌ Errore: ' + error.message);
   } finally {
     btn.disabled = false; btn.textContent = '💳 Conferma Pagamento';
+  }
+}
+
+async function annullaPagamento(nFattura) {
+  if (!confirm('Annullare il pagamento della fattura ' + nFattura + '?')) return;
+  try {
+    const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
+    const params = new URLSearchParams({
+      action: 'update_pagamento_fattura',
+      n_fattura: nFattura,
+      pagato: 'false'
+    });
+    const response = await fetch(`${API_URL}?${params.toString()}`);
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error);
+    loadFattureList();
+  } catch(error) {
+    alert('❌ Errore: ' + error.message);
   }
 }
 
@@ -301,20 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-async function annullaPagamento(nFattura) {
-  if (!confirm('Annullare il pagamento della fattura ' + nFattura + '?')) return;
-  try {
-    const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
-    const params = new URLSearchParams({ action: 'update_pagamento_fattura', n_fattura: nFattura, pagato: 'false' });
-    const response = await fetch(`${API_URL}?${params.toString()}`);
-    const result = await response.json();
-    if (!result.success) throw new Error(result.error);
-    loadFattureList();
-  } catch(error) {
-    alert('❌ Errore: ' + error.message);
-  }
-}
-
 window.loadFattureList        = loadFattureList;
 window.initFattureTab         = initFattureTab;
 window.applyFattureFilters    = applyFattureFilters;
@@ -327,3 +356,5 @@ window.openPagamentoModal     = openPagamentoModal;
 window.closePagamentoModal    = closePagamentoModal;
 window.savePagamento          = savePagamento;
 window.annullaPagamento       = annullaPagamento;
+
+console.log('✅ fatture.js v1.1 caricato');
