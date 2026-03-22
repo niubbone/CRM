@@ -1056,24 +1056,8 @@ function quickViewCliente(clienteId) {
         alert('Cliente non trovato');
         return;
     }
-    
-    const info = `
-📋 DETTAGLIO CLIENTE
-
-🆔 ID: ${cliente.id || 'N/D'}
-👤 Nome: ${cliente.nome || 'N/D'}
-📧 Email: ${cliente.email || 'N/D'}
-📱 Cellulare: ${cliente.cellulare || 'N/D'}
-☎️ Telefono: ${cliente.telefono || 'N/D'}
-🏢 P.IVA: ${cliente.piva || 'N/D'}
-📄 CF: ${cliente.cf || 'N/D'}
-🏛️ SDI: ${cliente.sdi || 'N/D'}
-📍 Indirizzo: ${cliente.indirizzo || 'N/D'}
-🏙️ CAP/Città: ${cliente.cap || ''} ${cliente.citta || 'N/D'}
-👤 Referente: ${cliente.referente || 'N/D'}
-    `.trim();
-    
-    alert(info);
+    currentCliente = cliente;
+    showExportDataModal();
 }
 
 /**
