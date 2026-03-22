@@ -75,7 +75,7 @@ function displaySearchResults(clienti) {
                     <span class="cliente-card-name">${cliente.nome}</span>
                     <span class="cliente-card-status ${statusClass}">${statusText}</span>
                 </div>
-                <div class="cliente-card-body" onclick="loadClienteDetail('${cliente.id}')" style="cursor: pointer;">
+                <div class="cliente-card-body">
                     ${cliente.id ? `<div class="cliente-card-info">🆔 ${cliente.id}</div>` : ''}
                     ${cliente.email ? `<div class="cliente-card-info">📧 ${cliente.email}</div>` : ''}
                     ${cliente.piva ? `<div class="cliente-card-info">🏢 P.IVA: ${cliente.piva}</div>` : ''}
