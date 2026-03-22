@@ -552,9 +552,11 @@
       </div>
       <div style="margin-bottom:14px;">
         <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px;">Cliente *</label>
-        <select id="nf-cliente" style="width:100%;padding:9px 12px;border:1px solid #ced4da;border-radius:6px;font-size:14px;box-sizing:border-box;">
-          <option value="">Seleziona cliente...</option>
-        </select>
+        <input id="nf-cliente" type="text" list="nf-cliente-list"
+          placeholder="Cerca cliente..."
+          autocomplete="off"
+          style="width:100%;padding:9px 12px;border:1px solid #ced4da;border-radius:6px;font-size:14px;box-sizing:border-box;" />
+        <datalist id="nf-cliente-list"></datalist>
       </div>
       <div style="margin-bottom:14px;">
   <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px;">Imponibile (€) *</label>

@@ -177,18 +177,24 @@ function openNuovaFatturaModal() {
   const ritRow = document.getElementById('nf-ritenuta-row');
   if (ritRow) ritRow.style.display = 'none';
 
-  const selectCliente = document.getElementById('nf-cliente');
-  if (selectCliente) {
-    selectCliente.innerHTML = '<option value="">Seleziona cliente...</option>';
-    const clientList = window.clientsCache || window.clients || [];
-    clientList.forEach(c => {
-      const name = typeof c === 'string' ? c : (c.nome || c.name || '');
+  const clientInput = document.getElementById('nf-cliente');
+  const clientDatalist = document.getElementById('nf-cliente-list');
+  if (clientInput && clientDatalist) {
+    clientInput.value = '';
+    clientDatalist.innerHTML = '';
+    const clientList = window.clients || [];
+    const sorted = [...clientList].sort((a, b) => {
+      const na = typeof a === 'string' ? a : (a.name || '');
+      const nb = typeof b === 'string' ? b : (b.name || '');
+      return na.localeCompare(nb, 'it');
+    });
+    sorted.forEach(c => {
+      const name = typeof c === 'string' ? c : (c.name || '');
       if (!name) return;
       const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name;
-      selectCliente.appendChild(opt);
+      opt.value = name;
+      clientDatalist.appendChild(opt);
     });
-    if (typeof loadClienti === 'function') loadClienti();
   }
 
   modal.style.display = 'flex';
