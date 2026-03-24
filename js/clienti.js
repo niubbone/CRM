@@ -573,14 +573,14 @@ function displayClienteTimesheet(timesheet) {
     const contentDiv = document.getElementById('cliente-timesheet-content');
     
     if (!timesheet || timesheet.length === 0) {
-        contentDiv.innerHTML = '<p class="empty-state">Nessun timesheet da fatturare per questo cliente</p>';
+        contentDiv.innerHTML = '<p class="empty-state">Nessun timesheet in sospeso per questo cliente</p>';
         return;
     }
-    
-    // Calcola totale
+
     let totalOre = 0;
     let totalCosto = 0;
-    
+    let totalExtra = 0;
+
     let html = `
         <table class="timesheet-table">
             <thead>
@@ -588,33 +588,48 @@ function displayClienteTimesheet(timesheet) {
                     <th>Data</th>
                     <th>Descrizione</th>
                     <th>Ore</th>
+                    <th>Extra</th>
+                    <th>Stato</th>
                     <th>Tipo</th>
-                    <th>Modalità</th>
-                    <th>Chiamata</th>
                     <th>Costo €</th>
                     <th>Azioni</th>
                 </tr>
             </thead>
             <tbody>
     `;
-    
+
     timesheet.forEach(ts => {
-        totalOre += parseFloat(ts.ore) || 0;
-        totalCosto += parseFloat(ts.costo) || 0;
-        
+        totalOre  += parseFloat(ts.ore)  || 0;
+        totalCosto+= parseFloat(ts.costo)|| 0;
+        totalExtra+= parseFloat(ts.oreExtra) || 0;
+
+        const isErrore = ts.modAddebito === 'Errore Pacchetto';
+        const hasExtra = ts.oreExtra > 0;
+        const rowStyle = isErrore ? 'background:#fff3cd;' : hasExtra ? 'background:#ffe5e5;' : '';
+
+        const statoLabel = isErrore
+            ? '<span style="color:#dc3545;font-weight:600;font-size:11px;">⚠️ Nessun pacchetto</span>'
+            : hasExtra
+                ? '<span style="color:#dc3545;font-weight:600;font-size:11px;">⚠️ Ore extra</span>'
+                : '<span style="color:#28a745;font-size:11px;">Da fatturare</span>';
+
+        const extraCell = hasExtra
+            ? `<td style="color:#dc3545;font-weight:600;white-space:nowrap;">+${ts.oreExtra}h</td>`
+            : isErrore
+                ? `<td style="color:#dc3545;font-weight:600;white-space:nowrap;">+${ts.ore}h</td>`
+                : '<td style="color:#6c757d;">—</td>';
+
         html += `
-            <tr>
+            <tr style="${rowStyle}">
                 <td>${ts.data}</td>
                 <td>${ts.descrizione}</td>
-                <td style="white-space: nowrap;">${ts.ore} h</td>
+                <td style="white-space:nowrap;">${ts.ore}h</td>
+                ${extraCell}
+                <td>${statoLabel}</td>
                 <td>${ts.tipoIntervento}</td>
-                <td>${ts.modEsecuzione}</td>
-                <td>${ts.chiamata || '-'}</td>
-                <td style="text-align: right;">${parseFloat(ts.costo).toFixed(2)}</td>
+                <td style="text-align:right;">${parseFloat(ts.costo).toFixed(2)}</td>
                 <td class="actions-column">
-                    <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.idIntervento}')">
-                        ✏️
-                    </button>
+                    <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')">✏️</button>
                 </td>
             </tr>
         `;
@@ -623,11 +638,12 @@ function displayClienteTimesheet(timesheet) {
     html += `
             </tbody>
             <tfoot>
-                <tr style="font-weight: bold; background: #f8f9fa;">
-                    <td colspan="2" style="text-align: right;">TOTALE:</td>
-                    <td style="white-space: nowrap;">${totalOre.toFixed(2)} h</td>
-                    <td colspan="3"></td>
-                    <td style="text-align: right;">€&nbsp;${totalCosto.toFixed(2)}</td>
+                <tr style="font-weight:bold;background:#f8f9fa;">
+                    <td colspan="2" style="text-align:right;">TOTALE:</td>
+                    <td style="white-space:nowrap;">${totalOre.toFixed(2)}h</td>
+                    <td style="color:#dc3545;">${totalExtra > 0 ? '+' + totalExtra.toFixed(2) + 'h extra' : '—'}</td>
+                    <td colspan="2"></td>
+                    <td style="text-align:right;">€&nbsp;${totalCosto.toFixed(2)}</td>
                     <td></td>
                 </tr>
             </tfoot>
