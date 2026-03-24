@@ -83,7 +83,10 @@ function displaySearchResults(clienti) {
                     ${cliente.citta ? `<div class="cliente-card-info">📍 ${cliente.citta}</div>` : ''}
                 </div>
                 <div class="cliente-card-actions" style="display: flex; gap: 8px; padding: 10px 15px; border-top: 1px solid #eee; justify-content: flex-end;">
-                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickViewCliente('${cliente.id}')" title="Visualizza dettagli">
+                    <button class="btn-small btn-primary" onclick="event.stopPropagation(); loadClienteDetail('${cliente.id}')" title="Apri riepilogo cliente" style="font-size:12px;padding:4px 10px;">
+                        🔍 Dettaglio
+                    </button>
+                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickViewCliente('${cliente.id}')" title="Visualizza dati anagrafici">
                         👁️
                     </button>
                     <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickEditCliente('${cliente.id}')" title="Modifica cliente">
@@ -475,16 +478,34 @@ function displayClienteProdotti(prodotti) {
                         <span class="prodotto-info-label">Data Inizio</span>
                         <span class="prodotto-info-value">${prodotto.dataInizio}</span>
                     </div>` : ''}
-                    ${prodotto.dataScadenza ? `
+                    ${prodotto.tipo === 'Pacchetto' && prodotto.oreAcquistate !== undefined ? `
                     <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Scadenza</span>
-                        <span class="prodotto-info-value">${prodotto.dataScadenza}</span>
-                    </div>` : ''}
-                    ${prodotto.oreResidue !== undefined ? `
+                        <span class="prodotto-info-label">Ore acquistate</span>
+                        <span class="prodotto-info-value">${prodotto.oreAcquistate}h</span>
+                    </div>
+                    <div class="prodotto-info-item">
+                        <span class="prodotto-info-label">Ore utilizzate</span>
+                        <span class="prodotto-info-value">${prodotto.oreUtilizzate}h</span>
+                    </div>
+                    <div class="prodotto-info-item">
+                        <span class="prodotto-info-label">Ore residue</span>
+                        <span class="prodotto-info-value" style="font-weight:600;color:${prodotto.oreResidue <= 0 ? '#dc3545' : prodotto.oreResidue <= 5 ? '#fd7e14' : '#28a745'};">${prodotto.oreResidue}h</span>
+                    </div>` : prodotto.oreResidue !== undefined ? `
                     <div class="prodotto-info-item">
                         <span class="prodotto-info-label">Ore Residue</span>
                         <span class="prodotto-info-value">${prodotto.oreResidue}h</span>
                     </div>` : ''}
+                    ${prodotto.dataScadenza ? (() => {
+                        const parts = prodotto.dataScadenza.split('/');
+                        const scad = new Date(parts[2], parts[1]-1, parts[0]);
+                        const giorni = Math.ceil((scad - new Date()) / 86400000);
+                        const color = giorni < 0 ? '#dc3545' : giorni <= 30 ? '#fd7e14' : '#28a745';
+                        const label = giorni < 0 ? `Scaduto da ${Math.abs(giorni)} giorni` : `${giorni} giorni alla scadenza`;
+                        return `<div class="prodotto-info-item">
+                        <span class="prodotto-info-label">Scadenza</span>
+                        <span class="prodotto-info-value" style="color:${color};font-weight:600;">${prodotto.dataScadenza} — ${label}</span>
+                    </div>`;
+                    })() : ''}
                     ${prodotto.importo ? `
                     <div class="prodotto-info-item">
                         <span class="prodotto-info-label">Importo</span>
