@@ -992,19 +992,55 @@ async function editTimesheet(rowIndex, idIntervento) {
         }
         
         currentTimesheetData = data.timesheet;
-        
+
+        const ts = currentTimesheetData;
+        const isExtra  = ts.oreExtra > 0;
+        const isErrore = ts.modAddebito === 'Errore Pacchetto';
+
+        // Determina modalità e ore da mostrare
+        let mode = '';
+        let oreDisplay = ts.ore;
+        let bannerMsg = '';
+
+        if (isExtra) {
+            mode = 'extra';
+            oreDisplay = ts.oreExtra;
+            const oreScalate = ts.ore - ts.oreExtra;
+            bannerMsg = `⚠️ Stai gestendo <strong>${ts.oreExtra}h extra</strong> (le ${oreScalate}h scalate al pacchetto rimangono invariate). Salvando verrà creata una nuova riga "Da fatturare" per queste ore.`;
+        } else if (isErrore) {
+            mode = 'errore';
+            bannerMsg = `⚠️ Intervento senza pacchetto valido. Salvando verrà convertito in <strong>"Da fatturare"</strong>.`;
+        }
+
         // Popola il modal
         document.getElementById('ts-row-index').value = rowIndex;
         document.getElementById('ts-id-intervento').value = idIntervento;
         document.getElementById('ts-id-display').value = idIntervento;
-        document.getElementById('ts-data').value = currentTimesheetData.data;
-        document.getElementById('ts-ore').value = currentTimesheetData.ore;
-        document.getElementById('ts-descrizione').value = currentTimesheetData.descrizione;
-        document.getElementById('ts-tipo').value = currentTimesheetData.tipoIntervento;
-        document.getElementById('ts-modalita').value = currentTimesheetData.modEsecuzione;
-        document.getElementById('ts-chiamata').value = currentTimesheetData.chiamata || '';
-        document.getElementById('ts-costo').value = currentTimesheetData.costo;
-        
+        document.getElementById('ts-extra-mode').value = mode;
+        document.getElementById('ts-ore-extra-orig').value = ts.oreExtra || 0;
+        document.getElementById('ts-data').value = ts.data;
+        document.getElementById('ts-ore').value = oreDisplay;
+        document.getElementById('ts-descrizione').value = ts.descrizione;
+        document.getElementById('ts-tipo').value = ts.tipoIntervento;
+        document.getElementById('ts-modalita').value = ts.modEsecuzione;
+        document.getElementById('ts-chiamata').value = ts.chiamata || '';
+        document.getElementById('ts-costo').value = ts.costo;
+
+        // Banner
+        const banner = document.getElementById('ts-extra-banner');
+        if (bannerMsg) {
+            banner.innerHTML = bannerMsg;
+            banner.style.display = 'block';
+        } else {
+            banner.style.display = 'none';
+        }
+
+        // Titolo modale
+        document.querySelector('#edit-timesheet-modal h2').textContent =
+            mode === 'extra'  ? '💶 Gestisci ore extra' :
+            mode === 'errore' ? '⚠️ Converti in Da fatturare' :
+            '✏️ Modifica Timesheet';
+
         // Mostra il modal
         document.getElementById('edit-timesheet-modal').style.display = 'flex';
         
@@ -1019,6 +1055,9 @@ async function editTimesheet(rowIndex, idIntervento) {
  */
 function closeEditTimesheetModal() {
     document.getElementById('edit-timesheet-modal').style.display = 'none';
+    document.getElementById('ts-extra-mode').value = '';
+    document.getElementById('ts-extra-banner').style.display = 'none';
+    document.querySelector('#edit-timesheet-modal h2').textContent = '✏️ Modifica Timesheet';
     currentTimesheetData = null;
 }
 
@@ -1036,31 +1075,64 @@ async function saveTimesheetChanges(event) {
     }
     
     try {
-        const timesheetData = {
-            rowIndex: document.getElementById('ts-row-index').value,
-            data: document.getElementById('ts-data').value,
-            ore: document.getElementById('ts-ore').value,
-            descrizione: document.getElementById('ts-descrizione').value,
+        const mode     = document.getElementById('ts-extra-mode').value;
+        const rowIndex = document.getElementById('ts-row-index').value;
+        const oreExtra = parseFloat(document.getElementById('ts-ore-extra-orig').value) || 0;
+
+        const formData = {
+            data:           document.getElementById('ts-data').value,
+            ore:            document.getElementById('ts-ore').value,
+            descrizione:    document.getElementById('ts-descrizione').value,
             tipoIntervento: document.getElementById('ts-tipo').value,
-            modEsecuzione: document.getElementById('ts-modalita').value,
-            chiamata: document.getElementById('ts-chiamata').value,
-            costo: document.getElementById('ts-costo').value
+            modEsecuzione:  document.getElementById('ts-modalita').value,
+            chiamata:       document.getElementById('ts-chiamata').value,
+            costo:          document.getElementById('ts-costo').value
         };
-        
-        const url = `${CONFIG.APPS_SCRIPT_URL}`;
-        const response = await fetch(url, {
+
+        let body, successMsg;
+
+        if (mode === 'extra') {
+            // Crea nuova riga Da fatturare con le ore e i dati del form, azzera EXTRA sull'originale
+            body = new URLSearchParams({
+                action: 'crea_entry_da_fatturare',
+                row_index: rowIndex,
+                ore_extra: oreExtra,
+                data_override: formData.data,
+                descrizione_override: formData.descrizione,
+                ore_override: formData.ore,
+                tipo_override: formData.tipoIntervento,
+                mod_esec_override: formData.modEsecuzione
+            });
+            successMsg = `✅ Creata riga "Da fatturare" per ${formData.ore}h`;
+        } else if (mode === 'errore') {
+            // Aggiorna la riga cambiando Mod_Addebito in Da fatturare
+            body = new URLSearchParams({
+                action: 'update_timesheet',
+                rowIndex,
+                modAddebito: 'Da fatturare',
+                ...formData
+            });
+            successMsg = '✅ Convertito in "Da fatturare"';
+        } else {
+            // Modifica normale
+            body = new URLSearchParams({
+                action: 'update_timesheet',
+                rowIndex,
+                ...formData
+            });
+            successMsg = '✅ Timesheet aggiornato con successo';
+        }
+
+        const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                action: 'update_timesheet',
-                ...timesheetData
-            })
+            body
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
-            showNotification('clienti-info', '✅ Timesheet aggiornato con successo', 'success');
+            showNotification('clienti-info', successMsg, 'success');
             closeEditTimesheetModal();
             
             // Ricarica i timesheet del cliente
