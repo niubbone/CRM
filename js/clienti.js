@@ -606,10 +606,11 @@ function displayClienteTimesheet(timesheet) {
     timesheet.forEach(ts => {
         totalOre  += parseFloat(ts.ore)  || 0;
         totalCosto+= parseFloat(ts.costo)|| 0;
-        totalExtra+= parseFloat(ts.oreExtra) || 0;
 
         const isErrore = ts.modAddebito === 'Errore Pacchetto';
         const hasExtra = ts.oreExtra > 0;
+        totalExtra += hasExtra ? (parseFloat(ts.oreExtra) || 0) : isErrore ? (parseFloat(ts.ore) || 0) : 0;
+
         const rowStyle = isErrore ? 'background:#fff3cd;' : hasExtra ? 'background:#ffe5e5;' : '';
 
         const statoLabel = isErrore
@@ -618,8 +619,9 @@ function displayClienteTimesheet(timesheet) {
                 ? '<span style="color:#dc3545;font-weight:600;font-size:11px;">⚠️ Ore extra</span>'
                 : '<span style="color:#28a745;font-size:11px;">Da fatturare</span>';
 
+        const oreActionabili = hasExtra ? ts.oreExtra : isErrore ? ts.ore : 0;
         const extraCell = hasExtra
-            ? `<td style="color:#dc3545;font-weight:600;white-space:nowrap;">+${ts.oreExtra}h</td>`
+            ? `<td style="color:#dc3545;font-weight:600;white-space:nowrap;" title="${ts.ore}h totali, ${ts.ore - ts.oreExtra}h già scalate">+${ts.oreExtra}h</td>`
             : isErrore
                 ? `<td style="color:#dc3545;font-weight:600;white-space:nowrap;">+${ts.ore}h</td>`
                 : '<td style="color:#6c757d;">—</td>';
@@ -628,14 +630,20 @@ function displayClienteTimesheet(timesheet) {
             <tr style="${rowStyle}">
                 <td>${ts.data}</td>
                 <td>${ts.descrizione}</td>
-                <td style="white-space:nowrap;">${ts.ore}h</td>
+                <td style="white-space:nowrap;">${hasExtra ? `<span title="${ts.ore}h totali">${ts.ore - ts.oreExtra}h+<span style="color:#dc3545;">${ts.oreExtra}h</span></span>` : `${ts.ore}h`}</td>
                 ${extraCell}
                 <td>${statoLabel}</td>
                 <td>${ts.tipoIntervento}</td>
                 <td style="text-align:right;">${parseFloat(ts.costo).toFixed(2)}</td>
                 <td class="actions-column" style="white-space:nowrap;">
                     <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')">✏️</button>
-                    ${isErrore ? `<button class="timesheet-edit-btn" style="background:#28a745;color:#fff;margin-left:4px;" onclick="convertiDaFatturare(${ts.rowIndex})" title="Converti in Da fatturare">💶</button>` : ''}
+                    ${(isErrore || hasExtra) ? `
+                      <button class="timesheet-edit-btn" style="background:#28a745;color:#fff;margin-left:4px;"
+                        onclick="${isErrore ? `convertiDaFatturare(${ts.rowIndex})` : `convertiExtraDaFatturare(${ts.rowIndex},${ts.oreExtra})`}"
+                        title="Converti in Da fatturare">💶</button>
+                      <button class="timesheet-edit-btn" style="background:#1976D2;color:#fff;margin-left:4px;"
+                        onclick="apriScalaInPacchetto(${ts.rowIndex},${oreActionabili})"
+                        title="Scala in un pacchetto esistente">📦</button>` : ''}
                 </td>
             </tr>
         `;
@@ -647,7 +655,7 @@ function displayClienteTimesheet(timesheet) {
                 <tr style="font-weight:bold;background:#f8f9fa;">
                     <td colspan="2" style="text-align:right;">TOTALE:</td>
                     <td style="white-space:nowrap;">${totalOre.toFixed(2)}h</td>
-                    <td style="color:#dc3545;">${totalExtra > 0 ? '+' + totalExtra.toFixed(2) + 'h extra' : '—'}</td>
+                    <td style="color:#dc3545;">${totalExtra > 0 ? '+' + totalExtra.toFixed(2) + 'h da gestire' : '—'}</td>
                     <td colspan="2"></td>
                     <td style="text-align:right;">€&nbsp;${totalCosto.toFixed(2)}</td>
                     <td></td>
@@ -1279,6 +1287,78 @@ async function convertiDaFatturare(rowIndex) {
     }
 }
 
+async function convertiExtraDaFatturare(rowIndex, oreExtra) {
+    if (!confirm(`Creare una nuova riga "Da fatturare" per ${oreExtra}h extra?`)) return;
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=crea_entry_da_fatturare&row_index=${rowIndex}&ore_extra=${oreExtra}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error);
+        showNotification('clienti-info', '✅ Creata nuova riga Da fatturare (' + oreExtra + 'h)', 'success');
+        if (currentCliente) loadClienteTimesheet(currentCliente.id);
+    } catch(err) {
+        alert('❌ Errore: ' + err.message);
+    }
+}
+
+function apriScalaInPacchetto(rowIndex, oreActionabili) {
+    const modal = document.getElementById('scala-extra-modal');
+    if (!modal) return;
+
+    const pacchetti = (currentClienteProdotti || []).filter(p => p.tipo === 'Pacchetto' && p.stato === 'ATTIVO');
+    const select = document.getElementById('scala-extra-select');
+    select.innerHTML = '';
+
+    if (pacchetti.length === 0) {
+        select.innerHTML = '<option value="">Nessun pacchetto attivo disponibile</option>';
+        document.getElementById('scala-extra-confirm').disabled = true;
+    } else {
+        document.getElementById('scala-extra-confirm').disabled = false;
+        pacchetti.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `${p.id}${p.descrizione ? ' — ' + p.descrizione : ''} (${p.oreResidue}h residue)`;
+            select.appendChild(opt);
+        });
+    }
+
+    modal.dataset.rowIndex    = rowIndex;
+    modal.dataset.oreActionabili = oreActionabili;
+    modal.style.display = 'flex';
+}
+
+async function eseguiScalaExtra() {
+    const modal = document.getElementById('scala-extra-modal');
+    const rowIndex      = parseInt(modal.dataset.rowIndex);
+    const oreActionabili = parseFloat(modal.dataset.oreActionabili);
+    const idPacchetto   = document.getElementById('scala-extra-select').value;
+    if (!idPacchetto) { alert('Seleziona un pacchetto'); return; }
+
+    const btn = document.getElementById('scala-extra-confirm');
+    btn.disabled = true; btn.textContent = '⏳ ...';
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=scala_extra_in_pacchetto&row_index=${rowIndex}&id_pacchetto=${encodeURIComponent(idPacchetto)}&ore_extra=${oreActionabili}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error);
+        showNotification('clienti-info', `✅ ${oreActionabili}h scalate dal pacchetto ${idPacchetto}`, 'success');
+        modal.style.display = 'none';
+        if (currentCliente) {
+            loadClienteTimesheet(currentCliente.id);
+            loadClienteProdotti(currentCliente.id);
+        }
+    } catch(err) {
+        alert('❌ Errore: ' + err.message);
+    } finally {
+        btn.disabled = false; btn.textContent = '📦 Scala';
+    }
+}
+
+function chiudiScalaExtraModal() {
+    const modal = document.getElementById('scala-extra-modal');
+    if (modal) modal.style.display = 'none';
+}
+
 // Mantieni window.* solo per funzioni chiamate da HTML onclick
 window.searchCliente = searchCliente;
 window.loadClienteDetail = loadClienteDetail;
@@ -1301,3 +1381,7 @@ window.openPacchettoDettaglio    = openPacchettoDettaglio;
 window.closePacchettoDettaglioModal = closePacchettoDettaglioModal;
 window.exportPacchettoDettaglio  = exportPacchettoDettaglio;
 window.convertiDaFatturare       = convertiDaFatturare;
+window.convertiExtraDaFatturare = convertiExtraDaFatturare;
+window.apriScalaInPacchetto     = apriScalaInPacchetto;
+window.eseguiScalaExtra         = eseguiScalaExtra;
+window.chiudiScalaExtraModal    = chiudiScalaExtraModal;
