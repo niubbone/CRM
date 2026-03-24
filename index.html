@@ -1276,6 +1276,21 @@ function toggleOptionalFields() {
         </div>
     </div>
 
+    <!-- Modal Dettaglio Interventi Pacchetto -->
+<div id="pacchetto-dettaglio-modal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:750px;width:95%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 id="pacchetto-dettaglio-title" style="margin:0;font-size:18px;">Dettaglio Interventi</h2>
+            <button onclick="closePacchettoDettaglioModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6c757d;">✕</button>
+        </div>
+        <div id="pacchetto-dettaglio-content" style="max-height:60vh;overflow-y:auto;margin-bottom:16px;"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="btn btn-secondary" onclick="exportPacchettoDettaglio()">📥 Esporta CSV</button>
+            <button class="btn btn-secondary" onclick="closePacchettoDettaglioModal()">Chiudi</button>
+        </div>
+    </div>
+</div>
+
     <!-- Modal Emissione Fattura -->
 <div id="fatturaModal" class="modal">
   <div class="modal-content">

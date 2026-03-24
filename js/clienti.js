@@ -512,7 +512,12 @@ function displayClienteProdotti(prodotti) {
                         <span class="prodotto-info-value">€ ${prodotto.importo}</span>
                     </div>` : ''}
                 </div>
-                ${prodotto.canRenew ? `
+                ${prodotto.tipo === 'Pacchetto' ? `
+                <div class="prodotto-actions">
+                    <button class="btn btn-sm btn-secondary" onclick="openPacchettoDettaglio('${prodotto.id}', '${(prodotto.descrizione||'Pacchetto').replace(/'/g,"\\'")}')">
+                        📋 Dettaglio interventi
+                    </button>
+                </div>` : prodotto.canRenew ? `
                 <div class="prodotto-actions">
                     <button class="btn btn-sm btn-primary" onclick="renewProduct('${prodotto.id}', '${prodotto.tipo}')">
                         🔄 Rinnova
@@ -628,8 +633,9 @@ function displayClienteTimesheet(timesheet) {
                 <td>${statoLabel}</td>
                 <td>${ts.tipoIntervento}</td>
                 <td style="text-align:right;">${parseFloat(ts.costo).toFixed(2)}</td>
-                <td class="actions-column">
+                <td class="actions-column" style="white-space:nowrap;">
                     <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')">✏️</button>
+                    ${isErrore ? `<button class="timesheet-edit-btn" style="background:#28a745;color:#fff;margin-left:4px;" onclick="convertiDaFatturare(${ts.rowIndex})" title="Converti in Da fatturare">💶</button>` : ''}
                 </td>
             </tr>
         `;
@@ -1171,6 +1177,108 @@ export {
     closeExportDataModal
 };
 
+async function openPacchettoDettaglio(idPacchetto, descrizione) {
+    const modal = document.getElementById('pacchetto-dettaglio-modal');
+    const title = document.getElementById('pacchetto-dettaglio-title');
+    const content = document.getElementById('pacchetto-dettaglio-content');
+    if (!modal) return;
+
+    title.textContent = '📋 ' + (descrizione || idPacchetto);
+    content.innerHTML = '<p style="padding:20px;text-align:center;">⏳ Caricamento interventi...</p>';
+    modal.style.display = 'flex';
+
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_pacchetto_timesheet&id_pacchetto=${encodeURIComponent(idPacchetto)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error);
+
+        const rows = data.interventi || [];
+        if (rows.length === 0) {
+            content.innerHTML = '<p style="padding:20px;text-align:center;color:#6c757d;">Nessun intervento registrato per questo pacchetto.</p>';
+            return;
+        }
+
+        let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#f8f9fa;">
+                <th style="padding:8px;text-align:left;border-bottom:2px solid #dee2e6;">Data</th>
+                <th style="padding:8px;text-align:left;border-bottom:2px solid #dee2e6;">Descrizione</th>
+                <th style="padding:8px;text-align:center;border-bottom:2px solid #dee2e6;">Ore</th>
+                <th style="padding:8px;text-align:center;border-bottom:2px solid #dee2e6;">Extra</th>
+                <th style="padding:8px;text-align:left;border-bottom:2px solid #dee2e6;">Tipo</th>
+                <th style="padding:8px;text-align:right;border-bottom:2px solid #dee2e6;">Costo €</th>
+            </tr></thead><tbody>`;
+
+        rows.forEach(r => {
+            const extraCell = r.oreExtra > 0 ? `<td style="padding:8px;text-align:center;color:#dc3545;font-weight:600;">+${r.oreExtra}h</td>` : '<td style="padding:8px;text-align:center;color:#adb5bd;">—</td>';
+            html += `<tr style="border-bottom:1px solid #f0f0f0;">
+                <td style="padding:8px;white-space:nowrap;">${r.data}</td>
+                <td style="padding:8px;">${r.descrizione}</td>
+                <td style="padding:8px;text-align:center;">${r.ore}h</td>
+                ${extraCell}
+                <td style="padding:8px;">${r.tipoIntervento}</td>
+                <td style="padding:8px;text-align:right;">${r.costo.toFixed(2)}</td>
+            </tr>`;
+        });
+
+        html += `</tbody><tfoot><tr style="background:#f8f9fa;font-weight:700;">
+            <td colspan="2" style="padding:8px;text-align:right;">TOTALE</td>
+            <td style="padding:8px;text-align:center;">${data.totOre.toFixed(2)}h</td>
+            <td style="padding:8px;text-align:center;color:#dc3545;">${data.totExtra > 0 ? '+'+data.totExtra.toFixed(2)+'h' : '—'}</td>
+            <td></td>
+            <td style="padding:8px;text-align:right;">€ ${data.totCosto.toFixed(2)}</td>
+        </tr></tfoot></table>`;
+
+        // Store data for export
+        modal.dataset.exportData = JSON.stringify({ idPacchetto, descrizione, rows: data.interventi, totOre: data.totOre, totExtra: data.totExtra });
+        content.innerHTML = html;
+    } catch(err) {
+        content.innerHTML = `<p style="padding:20px;text-align:center;color:#dc3545;">❌ Errore: ${err.message}</p>`;
+    }
+}
+
+function closePacchettoDettaglioModal() {
+    const modal = document.getElementById('pacchetto-dettaglio-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function exportPacchettoDettaglio() {
+    const modal = document.getElementById('pacchetto-dettaglio-modal');
+    if (!modal || !modal.dataset.exportData) return;
+    const { idPacchetto, descrizione, rows, totOre, totExtra } = JSON.parse(modal.dataset.exportData);
+
+    let csv = `Pacchetto: ${idPacchetto} - ${descrizione}\n`;
+    csv += `Data;Descrizione;Ore;Ore Extra;Tipo Intervento;Costo\n`;
+    rows.forEach(r => {
+        csv += `${r.data};"${r.descrizione}";${r.ore};${r.oreExtra||0};${r.tipoIntervento};${r.costo.toFixed(2)}\n`;
+    });
+    csv += `\nTOTALE;;${totOre.toFixed(2)};${totExtra.toFixed(2)};;\n`;
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pacchetto_${idPacchetto}_interventi.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+async function convertiDaFatturare(rowIndex) {
+    if (!confirm('Convertire questa riga in "Da fatturare"? Sarà inclusa nella prossima proforma.')) return;
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=converti_da_fatturare&row_index=${rowIndex}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error);
+        showNotification('clienti-info', '✅ Convertita in Da fatturare', 'success');
+        if (currentCliente) loadClienteTimesheet(currentCliente.id);
+    } catch(err) {
+        alert('❌ Errore: ' + err.message);
+    }
+}
+
 // Mantieni window.* solo per funzioni chiamate da HTML onclick
 window.searchCliente = searchCliente;
 window.loadClienteDetail = loadClienteDetail;
@@ -1189,3 +1297,7 @@ window.quickEditCliente = quickEditCliente;
 window.quickCopyCliente = quickCopyCliente;
 window.quickExportVCard = quickExportVCard;
 window.saveTimesheetChanges = saveTimesheetChanges;
+window.openPacchettoDettaglio    = openPacchettoDettaglio;
+window.closePacchettoDettaglioModal = closePacchettoDettaglioModal;
+window.exportPacchettoDettaglio  = exportPacchettoDettaglio;
+window.convertiDaFatturare       = convertiDaFatturare;
