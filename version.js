@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.3.0';
+export const VERSION = '4.3.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,17 +30,18 @@ export const VERSION = '4.3.0';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Fatture Edition',
-  date: '5 Marzo 2026',
+  date: '24 Marzo 2026',
   codename: 'Invoicing',
 
   // Changelog corrente versione
   changelog: [
-    'Nuovo modulo Fatture: tab dedicata con lista, filtri e totali',
-    'Fatture da proforma: registrazione automatica alla fatturazione',
-    'Fatture dirette: inserimento senza proforma associata',
-    'Gestione pagamenti: segna pagata / annulla pagamento',
-    'Supporto note di credito: importi negativi con badge rosso',
-    'Backend: Fatture.js con tab Google Sheet dedicata (IVA 22%)'
+    'Fix selettore clienti in fatture: input datalist con ricerca testuale',
+    'Fix copia dati cliente: card body non più clickable, testo selezionabile',
+    'Fix quickView cliente: modal selezionabile invece di alert()',
+    'Riepilogo cliente: bottone Dettaglio esplicito nella card',
+    'Pacchetti ore: mostra ore acquistate, utilizzate, residue con colori',
+    'Scadenze: visualizzazione giorni rimanenti con colori (verde/arancio/rosso)',
+    'Backend: getClienteProdotti include oreAcquistate e oreUtilizzate'
   ],
   
   // Features principali
@@ -64,6 +65,21 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.3.1",
+    date: "24/03/2026",
+    type: "fix",
+    changes: [
+      "Fix selettore clienti fatture: <select> sostituito con input + datalist alfabetico",
+      "Fix copia dati cliente: card body non clickable, testo ora selezionabile",
+      "Fix campo ID cliente: disabled → readonly, copiabile",
+      "Fix quickView (👁️): usa modal selezionabile invece di alert()",
+      "Card cliente: aggiunto pulsante 🔍 Dettaglio esplicito",
+      "Riepilogo pacchetti ore: ore acquistate / utilizzate / residue con colori",
+      "Scadenze: giorni rimanenti con colori verde/arancio/rosso",
+      "Backend Clienti.js: getClienteProdotti restituisce oreAcquistate e oreUtilizzate"
+    ]
+  },
   {
     version: "4.3.0",
     date: "05/03/2026",
