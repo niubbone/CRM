@@ -113,6 +113,10 @@ function updateUtilitiesVersionBox() {
   console.log(`✅ Version display inizializzato: ${VERSION}`);
 }
 
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 /**
  * Genera HTML changelog
  */
@@ -133,7 +137,7 @@ function generateChangelogHTML() {
         </div>
         <div class="changelog-changes">
           <ul>
-            ${entry.changes.map(change => `<li>${change}</li>`).join('')}
+            ${entry.changes.map(change => `<li>${escapeHtml(change)}</li>`).join('')}
           </ul>
         </div>
       </div>
