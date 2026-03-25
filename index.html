@@ -325,9 +325,8 @@
                 </div>
                 
                 <label for="proforma_client_select">Cliente:</label>
-                <select id="proforma_client_select">
-                    <option value="">Seleziona Cliente</option>
-                </select>
+                <input type="text" id="proforma_client_select" list="proforma-client-list" placeholder="Cerca o seleziona cliente..." autocomplete="off" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:6px;font-size:14px;">
+                <datalist id="proforma-client-list"></datalist>
                 
                 <div id="loading-timesheet" class="info-box" style="display: none; margin-top: 20px !important;">
                     <p>⏳ Caricamento timesheet...</p>
@@ -455,9 +454,8 @@
   <!-- Vista Lista Proforma -->
   <div id="proforma-lista-view" class="proforma-view active">
     <div class="filters-row">
-      <select id="filter-cliente-proforma" onchange="filterProformaList()" style="min-width: 200px;">
-        <option value="">Tutti i clienti</option>
-      </select>
+      <input type="text" id="filter-cliente-proforma" list="filter-cliente-proforma-list" placeholder="Tutti i clienti" autocomplete="off" style="min-width:200px;padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:14px;" oninput="filterProformaList()">
+      <datalist id="filter-cliente-proforma-list"></datalist>
       <select id="filter-anno-proforma" onchange="filterProformaList()" style="min-width: 100px;">
         <option value="">Tutti gli anni</option>
       </select>
@@ -511,9 +509,8 @@
   <div style="background:#f8f9fa;border-radius:8px;padding:14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
     <div>
       <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px;">Cliente</label>
-      <select id="fatture-filter-cliente" onchange="applyFattureFilters()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:14px;min-width:160px;">
-        <option value="">Tutti i clienti</option>
-      </select>
+      <input type="text" id="fatture-filter-cliente" list="fatture-filter-cliente-list" placeholder="Tutti i clienti" autocomplete="off" oninput="applyFattureFilters()" style="padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:14px;min-width:160px;">
+      <datalist id="fatture-filter-cliente-list"></datalist>
     </div>
     <div>
       <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px;">Anno</label>

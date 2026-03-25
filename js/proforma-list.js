@@ -624,16 +624,14 @@ function formatCurrency(value) {
  * Popola filtro clienti
  */
 function populateProformaClientFilter() {
-  const selectCliente = document.getElementById('filter-cliente-proforma');
-  if (!selectCliente || !window.clients) return;
-  
-  selectCliente.innerHTML = '<option value="">Tutti i clienti</option>';
-  
+  const datalist = document.getElementById('filter-cliente-proforma-list');
+  if (!datalist || !window.clients) return;
+
+  datalist.innerHTML = '';
   window.clients.forEach(cliente => {
     const option = document.createElement('option');
     option.value = typeof cliente === 'string' ? cliente : cliente.name;
-    option.textContent = typeof cliente === 'string' ? cliente : cliente.name;
-    selectCliente.appendChild(option);
+    datalist.appendChild(option);
   });
 }
 

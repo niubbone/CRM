@@ -141,14 +141,14 @@ function populateFattureAnnoFilter() {
 }
 
 function populateFattureClientFilter() {
-  const select = document.getElementById('fatture-filter-cliente');
-  if (!select || !window.clients) return;
-  select.innerHTML = '<option value="">Tutti i clienti</option>';
+  const datalist = document.getElementById('fatture-filter-cliente-list');
+  if (!datalist || !window.clients) return;
+  datalist.innerHTML = '';
   window.clients.forEach(c => {
     const name = typeof c === 'string' ? c : c.name;
     const opt = document.createElement('option');
-    opt.value = name; opt.textContent = name;
-    select.appendChild(opt);
+    opt.value = name;
+    datalist.appendChild(opt);
   });
 }
 

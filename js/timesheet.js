@@ -117,30 +117,28 @@ function populateFormFields() {
  * NOTA: Per datalist si usa solo option.value, non textContent
  */
 function populateProformaClients() {
-  // Popola SELECT per step-1 (selezione cliente in creazione proforma)
-  const clientSelect = document.getElementById('proforma_client_select');
-  if (clientSelect) {
-    clientSelect.innerHTML = '<option value="">Seleziona Cliente</option>';
+  // Popola datalist per step-1 (selezione cliente in creazione proforma)
+  const clientDatalistProforma = document.getElementById('proforma-client-list');
+  if (clientDatalistProforma) {
+    clientDatalistProforma.innerHTML = '';
     window.clients.forEach(client => {
       const option = document.createElement('option');
       option.value = client.name;
-      option.textContent = client.name;
-      clientSelect.appendChild(option);
+      clientDatalistProforma.appendChild(option);
     });
-    console.log(`✅ Popolato select proforma_client_select con ${window.clients.length} clienti`);
+    console.log(`✅ Popolato datalist proforma_client_select con ${window.clients.length} clienti`);
   }
-  
-  // Popola SELECT per il filtro nella sezione gestione proforma
-  const filterSelect = document.getElementById('filter-cliente-proforma');
-  if (filterSelect) {
-    filterSelect.innerHTML = '<option value="">Tutti i clienti</option>';
+
+  // Popola datalist per il filtro nella sezione gestione proforma
+  const filterDatalist = document.getElementById('filter-cliente-proforma-list');
+  if (filterDatalist) {
+    filterDatalist.innerHTML = '';
     window.clients.forEach(client => {
       const option = document.createElement('option');
       option.value = client.name;
-      option.textContent = client.name;
-      filterSelect.appendChild(option);
+      filterDatalist.appendChild(option);
     });
-    console.log(`✅ Popolato select filtro proforma con ${window.clients.length} clienti`);
+    console.log(`✅ Popolato datalist filtro proforma con ${window.clients.length} clienti`);
   }
 }
 
