@@ -134,14 +134,8 @@
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .changelog-list {
@@ -192,6 +186,16 @@
 .version-badge.update {
   background: #a29bfe;
   color: #6c5ce7;
+}
+
+.version-badge.major {
+  background: #fd79a8;
+  color: #c0392b;
+}
+
+.version-badge.cleanup {
+  background: #b2bec3;
+  color: #2d3436;
 }
 
 .version-date {

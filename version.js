@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.3.1';
+export const VERSION = '4.3.5';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,18 +30,16 @@ export const VERSION = '4.3.1';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Fatture Edition',
-  date: '24 Marzo 2026',
+  date: '25 Marzo 2026',
   codename: 'Invoicing',
 
   // Changelog corrente versione
   changelog: [
-    'Fix selettore clienti in fatture: input datalist con ricerca testuale',
-    'Fix copia dati cliente: card body non più clickable, testo selezionabile',
-    'Fix quickView cliente: modal selezionabile invece di alert()',
-    'Riepilogo cliente: bottone Dettaglio esplicito nella card',
-    'Pacchetti ore: mostra ore acquistate, utilizzate, residue con colori',
-    'Scadenze: visualizzazione giorni rimanenti con colori (verde/arancio/rosso)',
-    'Backend: getClienteProdotti include oreAcquistate e oreUtilizzate'
+    'Ore extra: visualizzazione Xh+Yh, bottoni converti/scala inline',
+    'Edit timesheet integra conversione ore extra e Errore Pacchetto',
+    'Tracciabilità: nota automatica in descrizione dopo conversione/scala',
+    'Ricerca cliente uniformata a input+datalist in proforma, filtri e fatture',
+    'Fix changelog: animazione e badge corretti in utilities'
   ],
   
   // Features principali
@@ -65,6 +63,18 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.3.5",
+    date: "25/03/2026",
+    type: "feature",
+    changes: [
+      "Ore extra: display Xh+Yh nel timesheet, bottoni 💶 converti e 📦 scala inline",
+      "Edit timesheet: riconosce automaticamente ore extra ed Errore Pacchetto con banner e azione integrata",
+      "Tracciabilità: nota automatica in descrizione originale dopo conversione/scala ore extra",
+      "Ricerca cliente uniformata a input+datalist in proforma (step-1), filtro proforma e filtro fatture",
+      "Fix changelog utilities: animazione slideDown e badge major/cleanup corretti"
+    ]
+  },
   {
     version: "4.3.1",
     date: "24/03/2026",
