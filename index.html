@@ -446,6 +446,9 @@
     <button class="proforma-tab-btn active" onclick="switchProformaView('lista')">
       📄 Proforma Emesse
     </button>
+    <button class="proforma-tab-btn" onclick="switchProformaView('proforma-diretta')">
+      📋 Proforma Diretta
+    </button>
     <button class="proforma-tab-btn" onclick="switchProformaView('fattura-diretta')">
       🧾 Fattura Diretta
     </button>
@@ -472,6 +475,71 @@
     </div>
   </div>
   
+  <!-- Vista Proforma Diretta -->
+  <div id="proforma-diretta-view" class="proforma-view" style="display: none;">
+    <div class="info-banner" style="margin-bottom: 20px;">
+      <strong>📋 Proforma Diretta:</strong> Genera proforma ad importo libero senza selezionare interventi.
+      Se è per un pacchetto ore, spunta l'apposita opzione: il pacchetto verrà creato automaticamente alla conferma del pagamento.
+    </div>
+
+    <form id="proforma-diretta-form" onsubmit="submitProformaDiretta(event)" style="max-width:560px;">
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label for="pd-cliente">Cliente *</label>
+          <input type="text" id="pd-cliente" list="pd-cliente-list" class="form-control" placeholder="Cerca cliente..." autocomplete="off" required>
+          <datalist id="pd-cliente-list"></datalist>
+        </div>
+        <div class="form-group">
+          <label for="pd-data">Data *</label>
+          <input type="date" id="pd-data" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="pd-causale">Causale *</label>
+        <textarea id="pd-causale" class="form-control" rows="2" required placeholder="es. Pacchetto assistenza Kleos 10h - Anno 2026"></textarea>
+      </div>
+
+      <div class="form-row two-cols">
+        <div class="form-group">
+          <label for="pd-importo">Importo (imponibile) € *</label>
+          <input type="number" id="pd-importo" class="form-control" step="0.01" min="0.01" required oninput="aggiornaTotaleProformaDiretta()">
+        </div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <label style="visibility:hidden;">_</label>
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
+              <input type="checkbox" id="pd-quota" onchange="aggiornaTotaleProformaDiretta()"> Quota 4% INPS
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
+              <input type="checkbox" id="pd-pacchetto" onchange="toggleOrePacchetto()"> Pacchetto ore
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="pd-ore-row" class="form-group" style="display:none;">
+        <label for="pd-ore">Ore acquistate *</label>
+        <input type="number" id="pd-ore" class="form-control" step="0.5" min="0.5" placeholder="es. 10" style="max-width:160px;">
+      </div>
+
+      <div id="pd-riepilogo" style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;display:none;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Imponibile:</span><span id="pd-tot-imponibile">—</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Quota 4%:</span><span id="pd-tot-quota">—</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>IVA 22%:</span><span id="pd-tot-iva">—</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Ritenuta 20%:</span><span id="pd-tot-ritenuta">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;border-top:1px solid #dee2e6;padding-top:8px;"><span>Netto:</span><span id="pd-tot-netto" style="color:#667eea;">—</span></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;" id="pd-submit-btn">📋 Genera Proforma</button>
+        <button type="button" class="btn btn-secondary" onclick="resetProformaDiretta()">Reset</button>
+      </div>
+
+      <div id="pd-info" style="margin-top:12px;"></div>
+    </form>
+  </div>
+
   <!-- Vista Fattura Diretta -->
   <div id="fattura-diretta-view" class="proforma-view" style="display: none;">
     <div class="info-banner" style="margin-bottom: 20px;">

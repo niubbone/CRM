@@ -399,8 +399,13 @@ function switchProformaView(view) {
   event.target.classList.add('active');
   
   // Mostra vista corretta
-  document.getElementById('proforma-lista-view').style.display = view === 'lista' ? 'block' : 'none';
-  document.getElementById('fattura-diretta-view').style.display = view === 'fattura-diretta' ? 'block' : 'none';
+  document.getElementById('proforma-lista-view').style.display     = view === 'lista'             ? 'block' : 'none';
+  document.getElementById('proforma-diretta-view').style.display   = view === 'proforma-diretta'  ? 'block' : 'none';
+  document.getElementById('fattura-diretta-view').style.display    = view === 'fattura-diretta'   ? 'block' : 'none';
+
+  if (view === 'proforma-diretta') {
+    initProformaDiretta();
+  }
   
   if (view === 'lista') {
     // Usa funzioni da proforma-list.js
@@ -820,6 +825,115 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// =======================================================================
+// === PROFORMA DIRETTA ===
+// =======================================================================
+
+function initProformaDiretta() {
+  // Data default = oggi
+  const dataEl = document.getElementById('pd-data');
+  if (dataEl && !dataEl.value) {
+    dataEl.value = new Date().toISOString().split('T')[0];
+  }
+  // Popola datalist clienti
+  const dl = document.getElementById('pd-cliente-list');
+  if (dl && window.clients && dl.children.length === 0) {
+    window.clients.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = typeof c === 'string' ? c : c.name;
+      dl.appendChild(opt);
+    });
+  }
+}
+
+function aggiornaTotaleProformaDiretta() {
+  const importo = parseFloat(document.getElementById('pd-importo').value) || 0;
+  const quota   = document.getElementById('pd-quota').checked;
+  if (importo <= 0) {
+    document.getElementById('pd-riepilogo').style.display = 'none';
+    return;
+  }
+  const quotaAmt    = quota ? importo * 0.04 : 0;
+  const imponibile  = importo + quotaAmt;
+  const iva         = imponibile * 0.22;
+  const ritenuta    = imponibile * 0.20;
+  const netto       = imponibile + iva - ritenuta;
+
+  const fmt = v => '€ ' + v.toFixed(2).replace('.', ',');
+  document.getElementById('pd-tot-imponibile').textContent = fmt(importo);
+  document.getElementById('pd-tot-quota').textContent      = fmt(quotaAmt);
+  document.getElementById('pd-tot-iva').textContent        = fmt(iva);
+  document.getElementById('pd-tot-ritenuta').textContent   = fmt(ritenuta);
+  document.getElementById('pd-tot-netto').textContent      = fmt(netto);
+  document.getElementById('pd-riepilogo').style.display    = 'block';
+}
+
+function toggleOrePacchetto() {
+  const checked = document.getElementById('pd-pacchetto').checked;
+  document.getElementById('pd-ore-row').style.display = checked ? 'block' : 'none';
+  if (!checked) document.getElementById('pd-ore').value = '';
+}
+
+async function submitProformaDiretta(event) {
+  event.preventDefault();
+  const btn = document.getElementById('pd-submit-btn');
+  const infoEl = document.getElementById('pd-info');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generazione...';
+  infoEl.innerHTML = '';
+
+  try {
+    const cliente      = document.getElementById('pd-cliente').value.trim();
+    const causale      = document.getElementById('pd-causale').value.trim();
+    const importo      = parseFloat(document.getElementById('pd-importo').value) || 0;
+    const applicaQuota = document.getElementById('pd-quota').checked;
+    const isPacchetto  = document.getElementById('pd-pacchetto').checked;
+    const ore          = isPacchetto ? (parseFloat(document.getElementById('pd-ore').value) || 0) : 0;
+
+    if (isPacchetto && ore <= 0) {
+      throw new Error('Inserisci le ore acquistate del pacchetto');
+    }
+
+    const url = `${window.CONFIG.APPS_SCRIPT_URL}?action=genera_proforma_diretta` +
+      `&cliente_nome=${encodeURIComponent(cliente)}` +
+      `&causale=${encodeURIComponent(causale)}` +
+      `&importo_subtotale=${importo}` +
+      `&applica_quota=${applicaQuota}` +
+      `&ore_pacchetto=${ore}`;
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error || 'Errore generazione proforma');
+
+    infoEl.innerHTML = `<div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:6px;padding:12px;color:#155724;">
+      ✅ <strong>Proforma ${data.proforma_number}</strong> generata e inviata per email.<br>
+      Totale netto: <strong>€ ${parseFloat(data.totale).toFixed(2).replace('.',',')}</strong>
+      ${ore > 0 ? `<br>📦 Il pacchetto (${ore}h) verrà creato automaticamente alla conferma del pagamento.` : ''}
+    </div>`;
+
+    // Reset form
+    document.getElementById('proforma-diretta-form').reset();
+    document.getElementById('pd-riepilogo').style.display = 'none';
+    document.getElementById('pd-ore-row').style.display = 'none';
+    document.getElementById('pd-data').value = new Date().toISOString().split('T')[0];
+
+  } catch(err) {
+    infoEl.innerHTML = `<div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:6px;padding:12px;color:#721c24;">❌ ${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📋 Genera Proforma';
+  }
+}
+
+function resetProformaDiretta() {
+  document.getElementById('proforma-diretta-form').reset();
+  document.getElementById('pd-riepilogo').style.display = 'none';
+  document.getElementById('pd-ore-row').style.display = 'none';
+  document.getElementById('pd-info').innerHTML = '';
+  document.getElementById('pd-data').value = new Date().toISOString().split('T')[0];
+}
+
 // Esponi funzioni globalmente per onclick HTML
 window.switchProformaView = switchProformaView;
 window.openFatturaDirettaModal = openFatturaDirettaModal;
@@ -832,3 +946,7 @@ window.generateFatturaDirettaFinal = generateFatturaDirettaFinal;
 window.openEmettiFatturaModal = openEmettiFatturaModal;
 window.closeEmettiFatturaModal = closeEmettiFatturaModal;
 window.submitEmettiFattura = submitEmettiFattura;
+window.submitProformaDiretta = submitProformaDiretta;
+window.resetProformaDiretta = resetProformaDiretta;
+window.aggiornaTotaleProformaDiretta = aggiornaTotaleProformaDiretta;
+window.toggleOrePacchetto = toggleOrePacchetto;
