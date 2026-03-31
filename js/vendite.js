@@ -775,6 +775,297 @@ async function generateProformaFromPacchetto(idPacchetto) {
     }
 }
 
+// =======================================================================
+// === STORICO PACCHETTI ===
+// =======================================================================
+
+let storicoData = [];
+let storicoFilterTimer = null;
+
+async function loadStoricoPackages() {
+    const container = document.getElementById('storicoContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="loading-scadenze">Caricamento storico...</div>';
+
+    try {
+        const cliente = (document.getElementById('storico-filter-cliente')?.value || '').trim();
+        const stato   = document.getElementById('storico-filter-stato')?.value || '';
+
+        let url = `${API_URL}?action=get_pacchetti_storico`;
+        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
+
+        const response = await fetch(url);
+        const result   = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        storicoData = result.pacchetti || [];
+        populateStoricoClientFilter(storicoData);
+        renderStorico(storicoData);
+
+    } catch (error) {
+        console.error('Errore caricamento storico:', error);
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+    }
+}
+
+function populateStoricoClientFilter(pacchetti) {
+    const datalist = document.getElementById('storico-client-list');
+    if (!datalist) return;
+    const nomi = [...new Set(pacchetti.map(p => p.nomeCliente).filter(Boolean))].sort();
+    datalist.innerHTML = nomi.map(n => `<option value="${n}">`).join('');
+}
+
+function filterStoricoDebounced() {
+    clearTimeout(storicoFilterTimer);
+    storicoFilterTimer = setTimeout(filterStorico, 300);
+}
+
+function filterStorico() {
+    if (!storicoData.length) return;
+    const filtroCliente = (document.getElementById('storico-filter-cliente')?.value || '').trim().toLowerCase();
+    const filtroStato   = (document.getElementById('storico-filter-stato')?.value || '').toUpperCase();
+
+    const filtered = storicoData.filter(p => {
+        const matchCliente = !filtroCliente || p.nomeCliente.toLowerCase().includes(filtroCliente);
+        const matchStato   = !filtroStato   || p.stato.toUpperCase() === filtroStato;
+        return matchCliente && matchStato;
+    });
+    renderStorico(filtered);
+}
+
+function renderStorico(pacchetti) {
+    const container = document.getElementById('storicoContainer');
+    if (!container) return;
+
+    if (!pacchetti.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div>Nessun pacchetto trovato</div></div>`;
+        return;
+    }
+
+    // Raggruppa per cliente
+    const gruppi = {};
+    pacchetti.forEach(p => {
+        const k = p.nomeCliente || '—';
+        if (!gruppi[k]) gruppi[k] = [];
+        gruppi[k].push(p);
+    });
+
+    let html = '';
+    Object.keys(gruppi).sort().forEach(cliente => {
+        html += `<div class="storico-gruppo">
+            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+        gruppi[cliente].forEach(p => {
+            const statoClass = p.stato.toUpperCase() === 'TERMINATO' ? 'terminato'
+                             : p.stato.toUpperCase() === 'OVER'      ? 'over'
+                             :                                          'scaduto';
+            const percUsata = p.oreAcquistate > 0
+                ? Math.min(100, Math.round((p.oreUtilizzate / p.oreAcquistate) * 100))
+                : 0;
+            html += `
+            <div class="storico-card">
+                <div class="storico-card-header">
+                    <span class="storico-id">${p.idPacchetto}</span>
+                    <span class="storico-badge ${statoClass}">${p.stato}</span>
+                </div>
+                ${p.descrizione ? `<div class="storico-descrizione">${p.descrizione}</div>` : ''}
+                <div class="storico-card-body">
+                    <div class="storico-stat">
+                        <span class="storico-stat-label">Acquistate</span>
+                        <span class="storico-stat-value">${p.oreAcquistate}h</span>
+                    </div>
+                    <div class="storico-stat">
+                        <span class="storico-stat-label">Utilizzate</span>
+                        <span class="storico-stat-value">${p.oreUtilizzate}h</span>
+                    </div>
+                    <div class="storico-stat">
+                        <span class="storico-stat-label">Residue</span>
+                        <span class="storico-stat-value" style="color:${p.oreResidue < 0 ? '#dc3545' : '#6c757d'};">${p.oreResidue}h</span>
+                    </div>
+                    <div class="storico-stat">
+                        <span class="storico-stat-label">Importo</span>
+                        <span class="storico-stat-value">€ ${parseFloat(p.importo).toFixed(2)}</span>
+                    </div>
+                </div>
+                <div class="storico-progress-bar">
+                    <div class="storico-progress-fill ${statoClass}" style="width:${percUsata}%"></div>
+                </div>
+                <div class="storico-date">
+                    ${p.dataAcquisto ? `Acquisto: ${p.dataAcquisto}` : ''}
+                    ${p.dataAcquisto && p.dataScadenza ? ' &nbsp;•&nbsp; ' : ''}
+                    ${p.dataScadenza ? `Scadenza: ${p.dataScadenza}` : ''}
+                </div>
+                <div class="storico-actions">
+                    <button class="btn-small btn-storico-detail"
+                        onclick="openPacchettoDettaglio('${p.idPacchetto}', '${(p.descrizione || p.idPacchetto).replace(/'/g,"\\'")}', {nomeCliente:'${p.nomeCliente.replace(/'/g,"\\'")}',oreAcquistate:${p.oreAcquistate},dataAcquisto:'${p.dataAcquisto}',dataScadenza:'${p.dataScadenza}'})">
+                        📋 Dettaglio interventi
+                    </button>
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+// =======================================================================
+// === STAMPA RIEPILOGO PACCHETTO ===
+// =======================================================================
+
+function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, totOre, totExtra, totCosto, dataAcquisto, dataScadenza, oreAcquistate) {
+    const oggi = new Date().toLocaleDateString('it-IT');
+    const orePerc = oreAcquistate > 0 ? Math.min(100, Math.round((totOre / oreAcquistate) * 100)) : 0;
+
+    let righe = rows.map((r, i) => `
+        <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
+            <td>${r.data || '—'}</td>
+            <td class="desc">${r.descrizione || '—'}</td>
+            <td class="center">${r.ore}h</td>
+            <td class="center">${r.oreExtra > 0 ? '+' + r.oreExtra + 'h' : '—'}</td>
+            <td>${r.tipoIntervento || '—'}</td>
+            <td class="right">€ ${parseFloat(r.costo).toFixed(2)}</td>
+        </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Riepilogo ${idPacchetto}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; font-size: 13px; }
+  .page { max-width: 900px; margin: 0 auto; padding: 40px 30px; }
+
+  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px; padding-bottom:20px; border-bottom:3px solid #1a73e8; }
+  .studio-name { font-size:22px; font-weight:700; color:#1a73e8; }
+  .doc-info { text-align:right; color:#666; font-size:12px; }
+  .doc-info .doc-title { font-size:16px; font-weight:600; color:#333; margin-bottom:4px; }
+
+  .client-box { background:#f8f9ff; border:1px solid #d0d9f0; border-radius:8px; padding:16px 20px; margin-bottom:24px; }
+  .client-box .label { font-size:11px; text-transform:uppercase; color:#888; letter-spacing:.5px; margin-bottom:4px; }
+  .client-box .value { font-size:16px; font-weight:600; color:#1a73e8; }
+
+  .meta-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+  .meta-card { background:#fff; border:1px solid #e0e0e0; border-radius:6px; padding:12px; text-align:center; }
+  .meta-card .m-label { font-size:10px; text-transform:uppercase; color:#999; letter-spacing:.5px; }
+  .meta-card .m-value { font-size:18px; font-weight:700; color:#333; margin-top:4px; }
+  .meta-card.highlight .m-value { color:#1a73e8; }
+
+  .progress-wrap { margin-bottom:28px; }
+  .progress-label { display:flex; justify-content:space-between; font-size:12px; color:#666; margin-bottom:6px; }
+  .progress-bar { height:10px; background:#e9ecef; border-radius:5px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#1a73e8,#34a853); border-radius:5px; width:${orePerc}%; }
+
+  table { width:100%; border-collapse:collapse; margin-bottom:28px; }
+  thead tr { background:#1a73e8; color:#fff; }
+  thead th { padding:10px 12px; text-align:left; font-size:12px; font-weight:600; }
+  thead th.center { text-align:center; }
+  thead th.right { text-align:right; }
+  tbody tr.even { background:#f9f9f9; }
+  tbody tr.odd  { background:#fff; }
+  tbody td { padding:9px 12px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+  tbody td.center { text-align:center; }
+  tbody td.right  { text-align:right; }
+  tbody td.desc   { max-width:300px; }
+  tfoot tr { background:#1a73e8; color:#fff; }
+  tfoot td { padding:10px 12px; font-weight:700; }
+  tfoot td.center { text-align:center; }
+  tfoot td.right  { text-align:right; }
+
+  .footer { text-align:center; font-size:11px; color:#aaa; margin-top:30px; padding-top:15px; border-top:1px solid #e0e0e0; }
+
+  @media print {
+    body { font-size:12px; }
+    .page { padding:20px; }
+    .no-print { display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="studio-name">Studio Smart</div>
+      <div style="color:#666;font-size:13px;margin-top:4px;">Riepilogo Interventi Pacchetto Ore</div>
+    </div>
+    <div class="doc-info">
+      <div class="doc-title">${idPacchetto}</div>
+      <div>Generato il ${oggi}</div>
+      ${dataAcquisto ? `<div>Acquisto: ${dataAcquisto}</div>` : ''}
+      ${dataScadenza ? `<div>Scadenza: ${dataScadenza}</div>` : ''}
+    </div>
+  </div>
+
+  <div class="client-box">
+    <div class="label">Cliente</div>
+    <div class="value">${nomeCliente}</div>
+    ${descrizione ? `<div style="color:#666;font-size:13px;margin-top:4px;">${descrizione}</div>` : ''}
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-card highlight">
+      <div class="m-label">Ore acquistate</div>
+      <div class="m-value">${oreAcquistate}h</div>
+    </div>
+    <div class="meta-card">
+      <div class="m-label">Ore utilizzate</div>
+      <div class="m-value">${totOre.toFixed(1)}h</div>
+    </div>
+    <div class="meta-card">
+      <div class="m-label">Ore extra</div>
+      <div class="m-value" style="color:${totExtra > 0 ? '#dc3545' : '#aaa'};">${totExtra > 0 ? '+' + totExtra.toFixed(1) + 'h' : '—'}</div>
+    </div>
+    <div class="meta-card">
+      <div class="m-label">Totale €</div>
+      <div class="m-value">€ ${totCosto.toFixed(2)}</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Utilizzo ore</span>
+      <span>${orePerc}%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Descrizione</th>
+        <th class="center">Ore</th>
+        <th class="center">Extra</th>
+        <th>Tipo</th>
+        <th class="right">Costo €</th>
+      </tr>
+    </thead>
+    <tbody>${righe}</tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2" style="text-align:right;">TOTALE</td>
+        <td class="center">${totOre.toFixed(2)}h</td>
+        <td class="center">${totExtra > 0 ? '+' + totExtra.toFixed(2) + 'h' : '—'}</td>
+        <td></td>
+        <td class="right">€ ${totCosto.toFixed(2)}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="footer">Studio Smart &mdash; Riepilogo generato automaticamente il ${oggi}</div>
+</div>
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+}
+
 // Esporta funzioni per uso globale
 if (typeof window !== 'undefined') {
     window.initVenditeTab = initVenditeTab;
@@ -793,4 +1084,8 @@ if (typeof window !== 'undefined') {
     window.submitFatturaCanone = submitFatturaCanone;
     window.closeProformaFromPacchettoModal = closeProformaFromPacchettoModal;
     window.generateProformaFromPacchetto = generateProformaFromPacchetto;
+    window.loadStoricoPackages = loadStoricoPackages;
+    window.filterStorico = filterStorico;
+    window.filterStoricoDebounced = filterStoricoDebounced;
+    window.stampaPacchettoRiepilogo = stampaPacchettoRiepilogo;
 }

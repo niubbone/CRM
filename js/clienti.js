@@ -1257,7 +1257,8 @@ export {
     closeExportDataModal
 };
 
-async function openPacchettoDettaglio(idPacchetto, descrizione) {
+async function openPacchettoDettaglio(idPacchetto, descrizione, meta) {
+    // meta opzionale: { nomeCliente, dataAcquisto, dataScadenza, oreAcquistate }
     const modal = document.getElementById('pacchetto-dettaglio-modal');
     const title = document.getElementById('pacchetto-dettaglio-title');
     const content = document.getElementById('pacchetto-dettaglio-content');
@@ -1309,11 +1310,29 @@ async function openPacchettoDettaglio(idPacchetto, descrizione) {
             <td style="padding:8px;text-align:right;">€ ${data.totCosto.toFixed(2)}</td>
         </tr></tfoot></table>`;
 
-        // Store data for export
-        modal.dataset.exportData = JSON.stringify({ idPacchetto, descrizione, rows: data.interventi, totOre: data.totOre, totExtra: data.totExtra });
+        // Determina nomeCliente: da meta (storico) oppure dal cliente corrente
+        const nomeCliente = (meta && meta.nomeCliente) || (typeof currentCliente !== 'undefined' && currentCliente?.nome) || '';
+        const oreAcquistate = (meta && meta.oreAcquistate) || 0;
+        const dataAcquisto  = (meta && meta.dataAcquisto)  || '';
+        const dataScadenza  = (meta && meta.dataScadenza)  || '';
+
+        modal.dataset.exportData = JSON.stringify({
+            idPacchetto, descrizione, nomeCliente, oreAcquistate, dataAcquisto, dataScadenza,
+            rows: data.interventi, totOre: data.totOre, totExtra: data.totExtra, totCosto: data.totCosto
+        });
         content.innerHTML = html;
     } catch(err) {
         content.innerHTML = `<p style="padding:20px;text-align:center;color:#dc3545;">❌ Errore: ${err.message}</p>`;
+    }
+}
+
+function stampaPacchettoDettaglio() {
+    const modal = document.getElementById('pacchetto-dettaglio-modal');
+    if (!modal || !modal.dataset.exportData) return;
+    const d = JSON.parse(modal.dataset.exportData);
+    if (typeof stampaPacchettoRiepilogo === 'function') {
+        stampaPacchettoRiepilogo(d.idPacchetto, d.nomeCliente, d.descrizione, d.rows,
+            d.totOre, d.totExtra, d.totCosto, d.dataAcquisto, d.dataScadenza, d.oreAcquistate);
     }
 }
 
@@ -1449,9 +1468,10 @@ window.quickEditCliente = quickEditCliente;
 window.quickCopyCliente = quickCopyCliente;
 window.quickExportVCard = quickExportVCard;
 window.saveTimesheetChanges = saveTimesheetChanges;
-window.openPacchettoDettaglio    = openPacchettoDettaglio;
+window.openPacchettoDettaglio      = openPacchettoDettaglio;
 window.closePacchettoDettaglioModal = closePacchettoDettaglioModal;
-window.exportPacchettoDettaglio  = exportPacchettoDettaglio;
+window.exportPacchettoDettaglio    = exportPacchettoDettaglio;
+window.stampaPacchettoDettaglio    = stampaPacchettoDettaglio;
 window.convertiDaFatturare       = convertiDaFatturare;
 window.convertiExtraDaFatturare = convertiExtraDaFatturare;
 window.apriScalaInPacchetto     = apriScalaInPacchetto;

@@ -269,3 +269,166 @@
         padding: 12px;
     }
 }
+
+/* ========================================
+   STORICO PACCHETTI
+   ======================================== */
+
+.storico-filtri {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 12px 0 18px;
+}
+
+.storico-filtro-group input,
+.storico-filtro-group select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.btn-storico-load {
+    padding: 8px 16px;
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background .2s;
+}
+.btn-storico-load:hover { background: #1557b0; }
+
+/* Gruppo cliente */
+.storico-gruppo {
+    margin-bottom: 24px;
+}
+.storico-gruppo-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 6px 0;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 12px;
+}
+
+/* Card pacchetto */
+.storico-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: box-shadow .2s;
+}
+.storico-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+
+.storico-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.storico-id {
+    font-weight: 700;
+    font-size: 15px;
+    color: #333;
+}
+.storico-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.storico-badge.terminato { background: #d4edda; color: #155724; }
+.storico-badge.over      { background: #f8d7da; color: #721c24; }
+.storico-badge.scaduto   { background: #fff3cd; color: #856404; }
+
+.storico-descrizione {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.storico-card-body {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.storico-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 8px 6px;
+}
+.storico-stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #999;
+    letter-spacing: .5px;
+    margin-bottom: 3px;
+}
+.storico-stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+}
+
+/* Progress bar */
+.storico-progress-bar {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.storico-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .3s;
+}
+.storico-progress-fill.terminato { background: #28a745; }
+.storico-progress-fill.over      { background: #dc3545; }
+.storico-progress-fill.scaduto   { background: #ffc107; }
+
+.storico-date {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.storico-actions {
+    display: flex;
+    gap: 8px;
+}
+.btn-storico-detail {
+    padding: 6px 14px;
+    background: #f0f4ff;
+    color: #1a73e8;
+    border: 1px solid #c5d8f8;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background .2s;
+}
+.btn-storico-detail:hover { background: #dce8ff; }
+
+@media (max-width: 600px) {
+    .storico-card-body { grid-template-columns: repeat(2, 1fr); }
+    .storico-filtri { flex-direction: column; align-items: stretch; }
+    .storico-filtro-group input,
+    .storico-filtro-group select { min-width: unset; width: 100%; }
+}

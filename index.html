@@ -717,6 +717,38 @@
                 Caricamento scadenze...
             </div>
         </div>
+
+        <!-- Sezione Storico Pacchetti -->
+        <div class="section-vendite" style="margin-top: 30px;">
+            <h3>📋 Storico Pacchetti</h3>
+            <div class="storico-filtri">
+                <div class="storico-filtro-group">
+                    <input type="text" id="storico-filter-cliente"
+                           list="storico-client-list"
+                           placeholder="Filtra per cliente..."
+                           oninput="filterStoricoDebounced()"
+                           autocomplete="off">
+                    <datalist id="storico-client-list"></datalist>
+                </div>
+                <div class="storico-filtro-group">
+                    <select id="storico-filter-stato" onchange="filterStorico()">
+                        <option value="">Tutti gli stati</option>
+                        <option value="TERMINATO">Terminato</option>
+                        <option value="OVER">Over</option>
+                        <option value="SCADUTO">Scaduto</option>
+                    </select>
+                </div>
+                <button class="btn-storico-load" onclick="loadStoricoPackages()">
+                    🔍 Carica storico
+                </button>
+            </div>
+            <div id="storicoContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div>Clicca "Carica storico" per visualizzare i pacchetti terminati</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1355,6 +1387,7 @@ function toggleOptionalFields() {
         <div id="pacchetto-dettaglio-content" style="max-height:60vh;overflow-y:auto;margin-bottom:16px;"></div>
         <div style="display:flex;gap:10px;justify-content:flex-end;">
             <button class="btn btn-secondary" onclick="exportPacchettoDettaglio()">📥 Esporta CSV</button>
+            <button class="btn btn-primary" onclick="stampaPacchettoDettaglio()">🖨️ Stampa riepilogo</button>
             <button class="btn btn-secondary" onclick="closePacchettoDettaglioModal()">Chiudi</button>
         </div>
     </div>

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.3.5';
+export const VERSION = '4.4.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,17 +29,17 @@ export const VERSION = '4.3.5';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'Fatture Edition',
-  date: '25 Marzo 2026',
-  codename: 'Invoicing',
+  name: 'Package History Edition',
+  date: '31 Marzo 2026',
+  codename: 'Archive',
 
   // Changelog corrente versione
   changelog: [
-    'Ore extra: visualizzazione Xh+Yh, bottoni converti/scala inline',
-    'Edit timesheet integra conversione ore extra e Errore Pacchetto',
-    'Tracciabilità: nota automatica in descrizione dopo conversione/scala',
-    'Ricerca cliente uniformata a input+datalist in proforma, filtri e fatture',
-    'Fix changelog: animazione e badge corretti in utilities'
+    'Storico pacchetti ore: visualizzazione pacchetti terminati/over/scaduti nella sezione Vendite',
+    'Filtro per cliente e stato nello storico pacchetti',
+    'Dettaglio interventi accessibile dallo storico con meta-dati completi',
+    'Stampa riepilogo: report HTML formattato stampabile/PDF per ogni pacchetto',
+    'Fix: scala ore extra aggiorna ID_Pacchetto, riga visibile nel dettaglio nuovo pacchetto'
   ],
   
   // Features principali
@@ -63,6 +63,19 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.4.0",
+    date: "31/03/2026",
+    type: "feature",
+    changes: [
+      "Storico pacchetti: sezione dedicata in Vendite con tutti i pacchetti TERMINATO/OVER/SCADUTO",
+      "Filtro storico per cliente (datalist) e per stato",
+      "Cards raggruppate per cliente con barra utilizzo ore e dati chiave",
+      "Dettaglio interventi accessibile dallo storico con context completo (date, ore acquistate)",
+      "Stampa riepilogo: report HTML print-ready con intestazione, tabella interventi, totali e progress bar",
+      "Fix: scala ore extra aggiorna ID_Pacchetto sulla riga timesheet, intervento visibile nel nuovo pacchetto"
+    ]
+  },
   {
     version: "4.3.5",
     date: "25/03/2026",
