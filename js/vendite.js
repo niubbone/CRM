@@ -3,14 +3,19 @@
 // Versione: 2.0 - Aggiunto supporto Fatturazione Canoni
 // ========================================
 
+// getAPIUrl() è lazy: viene chiamata al momento di ogni fetch, non all'avvio.
+// I moduli ES6 (config.js via main.js) sono defer e girano DOPO i regular
+// script, quindi "const API_URL = getAPIUrl()" all'avvio leggerebbe CONFIG
+// non ancora impostato e userebbe sempre la URL di fallback.
 const getAPIUrl = () => {
+    if (typeof window !== 'undefined' && window.CONFIG && window.CONFIG.APPS_SCRIPT_URL) {
+        return window.CONFIG.APPS_SCRIPT_URL;
+    }
     if (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL) {
         return CONFIG.APPS_SCRIPT_URL;
     }
-    return 'https://script.google.com/macros/s/AKfycbxrpkmfBlraaYihYYtJB0uvg8K60sPM-9uLmybcqoiVM6rSabZe6QK_-00L9CGAFwdo/exec';
+    return 'https://script.google.com/macros/s/AKfycbyVth91EYNt38fXkL_Nessd-J4PE8yu_hUy1nxKIwryShRX-MluW71Ty_2dtok7X2ll/exec';
 };
-
-const API_URL = getAPIUrl();
 let scadenzeData = null;
 
 // Costanti fatturazione (sincronizzate con backend)
@@ -45,7 +50,7 @@ async function loadVenditaClienti() {
         input.placeholder = 'Caricamento...';
         datalist.innerHTML = '';
         
-        const response = await fetch(`${API_URL}?action=get_data`);
+        const response = await fetch(`${getAPIUrl()}?action=get_data`);
         const result = await response.json();
         
         if (!result || !result.clients) {
@@ -90,7 +95,7 @@ async function loadScadenze() {
     container.innerHTML = '<div class="loading-scadenze">Caricamento scadenze...</div>';
     
     try {
-        const response = await fetch(`${API_URL}?action=get_scadenze&giorni=90`);
+        const response = await fetch(`${getAPIUrl()}?action=get_scadenze&giorni=90`);
         const result = await response.json();
         
         if (!result.success) {
@@ -375,7 +380,7 @@ async function submitVendita(e) {
             params += `&tipo=${tipoFirma}&durata_anni=${durataAnni}&note=${encodeURIComponent(note)}`;
         }
         
-        const response = await fetch(`${API_URL}?action=${action}&${params}`);
+        const response = await fetch(`${getAPIUrl()}?action=${action}&${params}`);
         const result = await response.json();
         
         if (result.success) {
@@ -463,7 +468,7 @@ async function submitProformaCanone() {
     submitBtn.textContent = '⏳ Elaborazione...';
     
     try {
-        const url = `${API_URL}?action=update_fatturazione_canone&canone_id=${encodeURIComponent(canoneId)}&fatturazione=${encodeURIComponent(CANONE_FATTURAZIONE.PROFORMATO)}`;
+        const url = `${getAPIUrl()}?action=update_fatturazione_canone&canone_id=${encodeURIComponent(canoneId)}&fatturazione=${encodeURIComponent(CANONE_FATTURAZIONE.PROFORMATO)}`;
         
         const response = await fetch(url);
         const result = await response.json();
@@ -565,7 +570,7 @@ async function submitFatturaCanone() {
         const dataFormatted = new Date(dataFattura).toLocaleDateString('it-IT');
         const nFatturaCompleto = `${numeroFattura} del ${dataFormatted}`;
         
-        const url = `${API_URL}?action=set_canone_fatturato&canone_id=${encodeURIComponent(canoneId)}&n_fattura=${encodeURIComponent(nFatturaCompleto)}`;
+        const url = `${getAPIUrl()}?action=set_canone_fatturato&canone_id=${encodeURIComponent(canoneId)}&n_fattura=${encodeURIComponent(nFatturaCompleto)}`;
         
         const response = await fetch(url);
         const result = await response.json();
@@ -685,7 +690,7 @@ async function submitRinnovo(e) {
             if (note) params += `&note=${encodeURIComponent(note)}`;
         }
         
-        const response = await fetch(`${API_URL}?action=${action}&${params}`);
+        const response = await fetch(`${getAPIUrl()}?action=${action}&${params}`);
         const result = await response.json();
         
         if (result.success) {
@@ -760,7 +765,7 @@ async function generateProformaFromPacchetto(idPacchetto) {
     const applicaQuota = document.getElementById('applicaQuotaPacchetto')?.checked || false;
     
     try {
-        const response = await fetch(`${API_URL}?action=generate_proforma_pacchetto&id_pacchetto=${encodeURIComponent(idPacchetto)}&applica_quota=${applicaQuota}`);
+        const response = await fetch(`${getAPIUrl()}?action=generate_proforma_pacchetto&id_pacchetto=${encodeURIComponent(idPacchetto)}&applica_quota=${applicaQuota}`);
         const result = await response.json();
         
         if (result.success) {
@@ -792,7 +797,7 @@ async function loadStoricoPackages() {
         const cliente = (document.getElementById('storico-filter-cliente')?.value || '').trim();
         const stato   = document.getElementById('storico-filter-stato')?.value || '';
 
-        let url = `${API_URL}?action=get_pacchetti_storico`;
+        let url = `${getAPIUrl()}?action=get_pacchetti_storico`;
         if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
         if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
 
