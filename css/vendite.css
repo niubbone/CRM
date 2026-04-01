@@ -349,6 +349,7 @@
     text-transform: uppercase;
     letter-spacing: .5px;
 }
+.storico-badge.attivo    { background: #cce5ff; color: #004085; }
 .storico-badge.terminato { background: #d4edda; color: #155724; }
 .storico-badge.over      { background: #f8d7da; color: #721c24; }
 .storico-badge.scaduto   { background: #fff3cd; color: #856404; }
@@ -399,6 +400,7 @@
     border-radius: 3px;
     transition: width .3s;
 }
+.storico-progress-fill.attivo    { background: #1a73e8; }
 .storico-progress-fill.terminato { background: #28a745; }
 .storico-progress-fill.over      { background: #dc3545; }
 .storico-progress-fill.scaduto   { background: #ffc107; }

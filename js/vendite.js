@@ -863,7 +863,8 @@ function renderStorico(pacchetti) {
         html += `<div class="storico-gruppo">
             <div class="storico-gruppo-header">👤 ${cliente}</div>`;
         gruppi[cliente].forEach(p => {
-            const statoClass = p.stato.toUpperCase() === 'TERMINATO' ? 'terminato'
+            const statoClass = p.stato.toUpperCase() === 'ATTIVO'    ? 'attivo'
+                             : p.stato.toUpperCase() === 'TERMINATO' ? 'terminato'
                              : p.stato.toUpperCase() === 'OVER'      ? 'over'
                              :                                          'scaduto';
             const percUsata = p.oreAcquistate > 0
