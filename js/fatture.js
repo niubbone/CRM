@@ -117,7 +117,6 @@ function renderFattureTotali(totali) {
         <div style="font-size:16px;font-weight:700;color:#fd7e14;">€ ${formatFattureNum(totali.daPagare || 0)}</div>
         <div style="font-size:12px;color:#6c757d;">Da incassare</div>
       </div>
-      <button onclick="openNuovaFatturaModal()" style="margin-left:8px;background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">➕ Nuova Fattura Diretta</button>
     </div>`;
 }
 
