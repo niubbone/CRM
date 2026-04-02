@@ -210,7 +210,7 @@
 <div class="tabs">
     <button class="tab-button active" onclick="switchTab('timesheet')">⏱️ Timesheet</button>
     <button class="tab-button" onclick="switchTab('proforma')">📄 Proforma</button>
-    <button class="tab-button">🧾 Fatture</button>
+    <button class="tab-button" onclick="switchTab('fatture')">🧾 Fatture</button>
     <button class="tab-button" onclick="switchTab('vendite')">🛒 Vendite</button>
     <button class="tab-button" onclick="switchTab('clienti')">👥 Clienti</button>
     <button class="tab-button" onclick="switchTab('utilities')">⚙️ Utilities</button>
@@ -1047,6 +1047,19 @@
                 <p>Strumenti di test e verifica sistema</p>
             </div>
             
+            <div class="utility-card">
+                <div class="utility-info">
+                    <h4>Forza aggiornamento app</h4>
+                    <p>Svuota la cache del Service Worker e ricarica l'ultima versione</p>
+                </div>
+                <button class="btn btn-warning" onclick="forceSWUpdate()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Aggiorna
+                </button>
+            </div>
+
             <div class="utility-card">
                 <div class="utility-info">
                     <h4>Test Connessione Backend</h4>

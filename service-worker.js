@@ -9,7 +9,10 @@
 
 import { VERSION } from './version.js';
 
-const CACHE_VERSION = `crm-v${VERSION}`;
+// ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
+const SW_BUILD = '4.5.0';
+
+const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
@@ -64,7 +67,7 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxrpkmfBlraaYihYYt
  */
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing Service Worker v' + CACHE_VERSION);
-  
+
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -73,11 +76,13 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         console.log('[SW] Static cache complete');
-        // Force activation immediately
-        return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] Cache failed:', error);
+        console.error('[SW] Cache failed (non-blocking):', error);
+      })
+      .finally(() => {
+        // skipWaiting sempre, anche se il caching fallisce
+        self.skipWaiting();
       })
   );
 });
@@ -226,21 +231,18 @@ async function handleApiRequest(request) {
  * Strategy: Cache-first (instant load)
  */
 async function handleStaticRequest(request) {
-  // Try cache first
-  const cachedResponse = await caches.match(request);
-  
+  // Cerca solo nella cache corretta (non in cache vecchie)
+  const cache = await caches.open(STATIC_CACHE);
+  const cachedResponse = await cache.match(request);
+
   if (cachedResponse) {
     // Update cache in background (stale-while-revalidate)
     fetch(request).then((networkResponse) => {
       if (networkResponse.ok) {
-        caches.open(STATIC_CACHE).then((cache) => {
-          cache.put(request, networkResponse);
-        });
+        cache.put(request, networkResponse);
       }
-    }).catch(() => {
-      // Network failed, but we have cache - no problem
-    });
-    
+    }).catch(() => {});
+
     return cachedResponse;
   }
   

@@ -196,6 +196,34 @@ Apps Script URL: ${CONFIG.APPS_SCRIPT_URL || 'N/D'}
 };
 
 /**
+ * Forza aggiornamento Service Worker: svuota tutte le cache e ricarica
+ */
+window.forceSWUpdate = async function() {
+    try {
+        // 1. Svuota tutte le cache CacheStorage
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+
+        // 2. Manda messaggio CLEAR_CACHE al SW attivo (se presente)
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+        }
+
+        // 3. Deregistra tutti i SW
+        if (navigator.serviceWorker) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(r => r.unregister()));
+        }
+
+        // 4. Ricarica la pagina
+        window.location.reload(true);
+
+    } catch (err) {
+        alert('Errore durante l\'aggiornamento: ' + err.message + '\nRicarica manualmente la pagina.');
+    }
+};
+
+/**
  * Test connessione backend
  */
 window.testConnection = async function() {
@@ -466,7 +494,13 @@ function formatStatsForDisplay(stats) {
     if (stats.firmeAttive !== undefined) {
         html += `<div><strong>✅ Firme Attive:</strong> ${stats.firmeAttive}</div>`;
     }
-    
+    if (stats.proforma !== undefined) {
+        html += `<div><strong>📄 Proforma:</strong> ${stats.proforma} totali</div>`;
+    }
+    if (stats.fatture !== undefined) {
+        html += `<div><strong>🧾 Fatture:</strong> ${stats.fatture} totali</div>`;
+    }
+
     html += '</div>';
     return html;
 }

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.4.0';
+export const VERSION = '4.5.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,17 +29,20 @@ export const VERSION = '4.4.0';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'Package History Edition',
-  date: '31 Marzo 2026',
-  codename: 'Archive',
+  name: 'Vendite Edition',
+  date: '2 Aprile 2026',
+  codename: 'Commerce',
 
   // Changelog corrente versione
   changelog: [
-    'Storico pacchetti ore: visualizzazione pacchetti terminati/over/scaduti nella sezione Vendite',
-    'Filtro per cliente e stato nello storico pacchetti',
-    'Dettaglio interventi accessibile dallo storico con meta-dati completi',
-    'Stampa riepilogo: report HTML formattato stampabile/PDF per ogni pacchetto',
-    'Fix: scala ore extra aggiorna ID_Pacchetto, riga visibile nel dettaglio nuovo pacchetto'
+    'Sezione Vendite ristrutturata: navigazione a 4 card (Pacchetti, Canoni, Firme, Scadenze)',
+    'Subtab Nuovo / Riepilogo per ogni tipo prodotto con caricamento lazy',
+    'Riepilogo Pacchetti: tutte le ore attive/terminate/over/scadute con barra utilizzo e stampa PDF',
+    'Riepilogo Canoni: tutte le scadenze attive/scadute per cliente con badge fatturazione',
+    'Riepilogo Firme: Token e Remota con countdown scadenza e rinnovo diretto',
+    'Sincronizzazione pagamento Fatture→Proforma: aggiornamento automatico campo Pagato',
+    'Tab bar fissa in cima durante lo scroll',
+    'Fix: tab Fatture non si caricava (onclick mancante sul pulsante)'
   ],
   
   // Features principali
@@ -63,6 +66,21 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.5.0",
+    date: "02/04/2026",
+    type: "feature",
+    changes: [
+      "Sezione Vendite ristrutturata: navigazione a 4 card (Pacchetti, Canoni, Firme, Scadenze)",
+      "Subtab Nuovo / Riepilogo per ogni tipo prodotto con caricamento lazy",
+      "Riepilogo Pacchetti: tutte le ore attive/terminate/over/scadute con barra utilizzo e stampa PDF",
+      "Riepilogo Canoni: tutte le scadenze attive/scadute per cliente con badge fatturazione",
+      "Riepilogo Firme: Token e Remota con countdown scadenza e rinnovo diretto",
+      "Sincronizzazione pagamento Fatture→Proforma: aggiornamento automatico campo Pagato",
+      "Tab bar fissa in cima durante lo scroll",
+      "Fix: tab Fatture non si caricava (onclick mancante sul pulsante)"
+    ]
+  },
   {
     version: "4.4.0",
     date: "31/03/2026",

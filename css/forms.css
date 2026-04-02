@@ -133,8 +133,25 @@ input[type="submit"],
 }
 
 input[type="submit"]:hover,
-.btn-primary:hover { 
+.btn-primary:hover {
     background-color: var(--success-dark);
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-warning:hover {
+    background-color: #e65c00;
 }
 
 input[type="submit"]:disabled,
