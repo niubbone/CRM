@@ -13,6 +13,11 @@ html, body {
     height: auto;
 }
 
+/* overflow-x su html (non su body) per non rompere position:sticky sulla .tabs */
+html {
+    overflow-x: hidden;
+}
+
 h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, blockquote, dl, dd {
     margin: 0;
     padding: 0;
@@ -57,7 +62,7 @@ body {
     padding: 0 !important; 
     width: 100% !important; 
     min-width: 320px;
-    overflow-x: hidden !important;
+    /* overflow-x rimosso da body: spostato su html per compatibilità con position:sticky */
     line-height: 1.6;
 }
 
