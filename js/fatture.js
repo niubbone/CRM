@@ -104,19 +104,22 @@ function renderFattureTotali(totali) {
   const el = document.getElementById('fatture-totali');
   if (!el) return;
   el.innerHTML = `
-    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:0 0 14px 0;">
-      <div style="background:#f8f9fa;border-radius:8px;padding:10px 18px;text-align:center;min-width:90px;">
-        <div style="font-size:22px;font-weight:700;">${totali.count || 0}</div>
-        <div style="font-size:12px;color:#6c757d;">Fatture</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:0 0 14px 0;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <div style="background:#f8f9fa;border-radius:8px;padding:10px 18px;text-align:center;min-width:90px;">
+          <div style="font-size:22px;font-weight:700;">${totali.count || 0}</div>
+          <div style="font-size:12px;color:#6c757d;">Fatture</div>
+        </div>
+        <div style="background:#e8f5e9;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px;">
+          <div style="font-size:16px;font-weight:700;color:#28a745;">€ ${formatFattureNum(totali.totale || 0)}</div>
+          <div style="font-size:12px;color:#6c757d;">Totale fatturato</div>
+        </div>
+        <div style="background:#fff3cd;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px;">
+          <div style="font-size:16px;font-weight:700;color:#fd7e14;">€ ${formatFattureNum(totali.daPagare || 0)}</div>
+          <div style="font-size:12px;color:#6c757d;">Da incassare</div>
+        </div>
       </div>
-      <div style="background:#e8f5e9;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px;">
-        <div style="font-size:16px;font-weight:700;color:#28a745;">€ ${formatFattureNum(totali.totale || 0)}</div>
-        <div style="font-size:12px;color:#6c757d;">Totale fatturato</div>
-      </div>
-      <div style="background:#fff3cd;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px;">
-        <div style="font-size:16px;font-weight:700;color:#fd7e14;">€ ${formatFattureNum(totali.daPagare || 0)}</div>
-        <div style="font-size:12px;color:#6c757d;">Da incassare</div>
-      </div>
+      <button onclick="openNuovaFatturaModal()" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">➕ Nuova Fattura Diretta</button>
     </div>`;
 }
 
