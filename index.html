@@ -718,6 +718,37 @@
             </div>
         </div>
 
+        <!-- Sezione Riepilogo Firme -->
+        <div class="section-vendite" style="margin-top: 30px;">
+            <h3>✍️ Riepilogo Firme Digitali</h3>
+            <div class="storico-filtri">
+                <div class="storico-filtro-group">
+                    <input type="text" id="firme-filter-cliente"
+                           list="firme-client-list"
+                           placeholder="Filtra per cliente..."
+                           oninput="filterFirmeDebounced()"
+                           autocomplete="off">
+                    <datalist id="firme-client-list"></datalist>
+                </div>
+                <div class="storico-filtro-group">
+                    <select id="firme-filter-stato" onchange="filterFirme()">
+                        <option value="">Tutti gli stati</option>
+                        <option value="attivo">Attivo</option>
+                        <option value="scaduto">Scaduto</option>
+                    </select>
+                </div>
+                <button class="btn-storico-load" onclick="loadFirmeRiepilogo()">
+                    🔍 Carica firme
+                </button>
+            </div>
+            <div id="firmeContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">✍️</div>
+                    <div>Clicca "Carica firme" per visualizzare le firme digitali</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Sezione Riepilogo Pacchetti -->
         <div class="section-vendite" style="margin-top: 30px;">
             <h3>📦 Riepilogo Pacchetti Ore</h3>

@@ -781,6 +781,142 @@ async function generateProformaFromPacchetto(idPacchetto) {
 }
 
 // =======================================================================
+// === RIEPILOGO FIRME DIGITALI ===
+// =======================================================================
+
+let firmeData = [];
+let firmeFilterTimer = null;
+
+async function loadFirmeRiepilogo() {
+    const container = document.getElementById('firmeContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="loading-scadenze">Caricamento firme...</div>';
+
+    try {
+        const cliente = (document.getElementById('firme-filter-cliente')?.value || '').trim();
+        const stato   = document.getElementById('firme-filter-stato')?.value || '';
+
+        let url = `${getAPIUrl()}?action=get_firme_riepilogo`;
+        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
+
+        const response = await fetch(url);
+        const result   = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        firmeData = result.firme || [];
+        populateFirmeClientFilter(firmeData);
+        renderFirme(firmeData);
+
+    } catch (error) {
+        console.error('Errore caricamento firme:', error);
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+    }
+}
+
+function populateFirmeClientFilter(firme) {
+    const datalist = document.getElementById('firme-client-list');
+    if (!datalist) return;
+    const nomi = [...new Set(firme.map(f => f.nomeCliente).filter(Boolean))].sort();
+    datalist.innerHTML = nomi.map(n => `<option value="${n}">`).join('');
+}
+
+function filterFirmeDebounced() {
+    clearTimeout(firmeFilterTimer);
+    firmeFilterTimer = setTimeout(filterFirme, 300);
+}
+
+function filterFirme() {
+    if (!firmeData.length) return;
+    const filtroCliente = (document.getElementById('firme-filter-cliente')?.value || '').trim().toLowerCase();
+    const filtroStato   = (document.getElementById('firme-filter-stato')?.value || '').toLowerCase();
+
+    const filtered = firmeData.filter(f => {
+        const matchCliente = !filtroCliente || f.nomeCliente.toLowerCase().includes(filtroCliente);
+        const matchStato   = !filtroStato   || f.stato.toLowerCase() === filtroStato;
+        return matchCliente && matchStato;
+    });
+    renderFirme(filtered);
+}
+
+function renderFirme(firme) {
+    const container = document.getElementById('firmeContainer');
+    if (!container) return;
+
+    if (!firme.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div>Nessuna firma trovata</div></div>`;
+        return;
+    }
+
+    // Raggruppa per cliente
+    const gruppi = {};
+    firme.forEach(f => {
+        const k = f.nomeCliente || '—';
+        if (!gruppi[k]) gruppi[k] = [];
+        gruppi[k].push(f);
+    });
+
+    let html = '';
+    Object.keys(gruppi).sort().forEach(cliente => {
+        html += `<div class="storico-gruppo">
+            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+
+        gruppi[cliente].forEach(f => {
+            const isAttivo  = f.stato.toLowerCase() === 'attivo';
+            const statoClass = isAttivo ? 'attivo' : 'scaduto';
+
+            let scadenzaInfo = '';
+            if (f.giorniAllaScadenza !== null) {
+                if (f.giorniAllaScadenza < 0) {
+                    scadenzaInfo = `<span style="color:#dc3545;">Scaduta da ${Math.abs(f.giorniAllaScadenza)} giorni</span>`;
+                } else if (f.giorniAllaScadenza <= 60) {
+                    scadenzaInfo = `<span style="color:#fd7e14;">Scade tra ${f.giorniAllaScadenza} giorni</span>`;
+                } else {
+                    scadenzaInfo = `<span style="color:#28a745;">Scade tra ${f.giorniAllaScadenza} giorni</span>`;
+                }
+            }
+
+            html += `
+            <div class="storico-card">
+                <div class="storico-card-header">
+                    <span class="storico-id">${f.idFirma} &nbsp;<span style="color:#888;font-weight:400;font-size:13px;">${f.tipo}</span></span>
+                    <span class="storico-badge ${statoClass}">${f.stato}</span>
+                </div>
+                <div class="firma-card-body">
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Inizio</span>
+                        <span class="storico-stat-value">${f.dataInizio || '—'}</span>
+                    </div>
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Scadenza</span>
+                        <span class="storico-stat-value">${f.dataScadenza || '—'}</span>
+                    </div>
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Importo</span>
+                        <span class="storico-stat-value">€ ${parseFloat(f.importo).toFixed(2)}</span>
+                    </div>
+                </div>
+                ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
+                ${f.note ? `<div class="storico-date">${f.note}</div>` : ''}
+                ${f.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${f.idPrecedente}</div>` : ''}
+                ${isAttivo ? `
+                <div class="storico-actions">
+                    <button class="btn-small btn-storico-detail"
+                        onclick="openRinnovoModal('${f.idFirma}', 'FIRMA')">
+                        🔄 Rinnova
+                    </button>
+                </div>` : ''}
+            </div>`;
+        });
+        html += `</div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+// =======================================================================
 // === STORICO PACCHETTI ===
 // =======================================================================
 
@@ -1094,4 +1230,7 @@ if (typeof window !== 'undefined') {
     window.filterStorico = filterStorico;
     window.filterStoricoDebounced = filterStoricoDebounced;
     window.stampaPacchettoRiepilogo = stampaPacchettoRiepilogo;
+    window.loadFirmeRiepilogo = loadFirmeRiepilogo;
+    window.filterFirme = filterFirme;
+    window.filterFirmeDebounced = filterFirmeDebounced;
 }

@@ -3,7 +3,7 @@
 // =======================================================================
 
 export const CONFIG = {
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbz1sxwtW6lLEhttTKaPI2mYLBdf1L5e-zeXdVVvh9YV9F2TY02bEIz5x3DBZMiVBN_1/exec",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzfmIy0V9r-Ns_8z-RAo-rxgKzEXcRinIB2bWhcu3VlY8NcmqgBu2aEpAfop3MmTtvx/exec",
   APP_NAME: "Studio Smart Timesheet",
   VERSION: "2.0.0"
 };

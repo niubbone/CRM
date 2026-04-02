@@ -428,8 +428,37 @@
 }
 .btn-storico-detail:hover { background: #dce8ff; }
 
+/* Card firma (3 colonne: inizio, scadenza, importo) */
+.firma-card-body {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.firma-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 8px 6px;
+}
+.firma-stat .storico-stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #999;
+    letter-spacing: .5px;
+    margin-bottom: 3px;
+}
+.firma-stat .storico-stat-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
 @media (max-width: 600px) {
     .storico-card-body { grid-template-columns: repeat(2, 1fr); }
+    .firma-card-body   { grid-template-columns: repeat(2, 1fr); }
     .storico-filtri { flex-direction: column; align-items: stretch; }
     .storico-filtro-group input,
     .storico-filtro-group select { min-width: unset; width: 100%; }
