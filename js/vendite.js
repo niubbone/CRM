@@ -28,8 +28,7 @@ const CANONE_FATTURAZIONE = {
 function initVenditeTab() {
     loadVenditaClienti();
     setVenditaDefaultDate();
-    // Mostra pacchetti come sezione di default e carica il riepilogo
-    switchVenditeSection('pacchetti');
+    switchVenditeSection('scadenze');
 }
 
 // =======================================================================
