@@ -571,9 +571,9 @@
     <h1>🧾 Fatture Emesse</h1>
     <div class="info-box"><p>Elenco fatture emesse con filtri per cliente, anno e stato pagamento. Usa "Nuova Fattura Diretta" per fatture senza proforma.</p></div>
   </div>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-    <div id="fatture-totali" style="flex:1;min-width:0;"></div>
-    <button onclick="openNuovaFatturaModal()" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">➕ Nuova Fattura Diretta</button>
+  <div id="fatture-totali" style="margin-bottom:12px;"></div>
+  <div style="margin-bottom:16px;">
+    <button onclick="openNuovaFatturaModal()" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">➕ Nuova Fattura Diretta</button>
   </div>
   <div style="background:#f8f9fa;border-radius:8px;padding:14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
     <div>
@@ -595,8 +595,9 @@
         <option value="SI">Pagate</option>
       </select>
     </div>
-    <div style="display:flex;flex-direction:column;justify-content:flex-end;">
-      <button onclick="resetFattureFilters()" style="padding:7px 14px;background:#fce4e4;color:#c0392b;border:1px solid #f5c6cb;border-radius:6px;font-size:13px;cursor:pointer;">✕ Reset</button>
+    <div>
+      <label style="font-size:12px;display:block;margin-bottom:4px;visibility:hidden;">_</label>
+      <button onclick="resetFattureFilters()" style="padding:7px 14px;background:#e74c3c;color:#000;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">✕ Reset</button>
     </div>
   </div>
   <div id="fatture-list-container">
