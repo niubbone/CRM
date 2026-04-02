@@ -687,30 +687,152 @@
 <div id="vendite-tab" class="tab-content">
     <div class="form-container">
         <h1>🛒 Vendite</h1>
-        
-        <!-- Sezione Nuova Vendita -->
-        <div class="section-vendite">
-            <h3>📦 Nuova Vendita</h3>
-            <div class="vendita-buttons">
-                <button class="btn-vendita" onclick="openVenditaModal('pacchetto')">
-                    <span class="icon">📦</span>
-                    <span>Pacchetto Ore</span>
-                </button>
-                <button class="btn-vendita" onclick="openVenditaModal('canone')">
-                    <span class="icon">📅</span>
-                    <span>Canone</span>
-                </button>
-                <button class="btn-vendita" onclick="openVenditaModal('firma')">
-                    <span class="icon">✍️</span>
-                    <span>Firma Digitale</span>
-                </button>
+
+        <!-- Navigazione principale -->
+        <div class="vendite-nav">
+            <div class="vendite-nav-card active" id="vnav-pacchetti" onclick="switchVenditeSection('pacchetti')">
+                <span class="vendite-nav-icon">📦</span>
+                <span class="vendite-nav-label">Pacchetti Ore</span>
+            </div>
+            <div class="vendite-nav-card" id="vnav-canoni" onclick="switchVenditeSection('canoni')">
+                <span class="vendite-nav-icon">📅</span>
+                <span class="vendite-nav-label">Canoni</span>
+            </div>
+            <div class="vendite-nav-card" id="vnav-firme" onclick="switchVenditeSection('firme')">
+                <span class="vendite-nav-icon">✍️</span>
+                <span class="vendite-nav-label">Firme Digitali</span>
+            </div>
+            <div class="vendite-nav-card" id="vnav-scadenze" onclick="switchVenditeSection('scadenze')">
+                <span class="vendite-nav-icon">🔔</span>
+                <span class="vendite-nav-label">Scadenze</span>
             </div>
         </div>
 
-        <!-- Sezione Scadenze -->
-        <div class="section-vendite" style="margin-top: 30px;">
-            <h3>🔄 Prodotti in Scadenza</h3>
-            <div class="info-banner">
+        <!-- ===== SEZIONE PACCHETTI ===== -->
+        <div id="vendite-section-pacchetti" class="vendite-section">
+            <div class="vendite-subtab-bar">
+                <button class="vendite-subtab active" id="vsub-pacchetti-nuovo" onclick="switchVenditeSubtab('pacchetti','nuovo')">
+                    ➕ Nuovo pacchetto
+                </button>
+                <button class="vendite-subtab" id="vsub-pacchetti-riepilogo" onclick="switchVenditeSubtab('pacchetti','riepilogo')">
+                    📋 Riepilogo
+                </button>
+            </div>
+            <div id="vsub-pacchetti-nuovo-content" class="vendite-subtab-content">
+                <div class="vendite-action-card" onclick="openVenditaModal('pacchetto')">
+                    <span class="vendite-action-icon">📦</span>
+                    <div>
+                        <div class="vendite-action-title">Nuovo Pacchetto Ore</div>
+                        <div class="vendite-action-desc">Registra l'acquisto di un nuovo pacchetto</div>
+                    </div>
+                </div>
+            </div>
+            <div id="vsub-pacchetti-riepilogo-content" class="vendite-subtab-content" style="display:none;">
+                <div class="storico-filtri">
+                    <div class="storico-filtro-group">
+                        <input type="text" id="storico-filter-cliente" list="storico-client-list"
+                               placeholder="Filtra per cliente..." oninput="filterStoricoDebounced()" autocomplete="off">
+                        <datalist id="storico-client-list"></datalist>
+                    </div>
+                    <div class="storico-filtro-group">
+                        <select id="storico-filter-stato" onchange="filterStorico()">
+                            <option value="">Tutti gli stati</option>
+                            <option value="ATTIVO">Attivo</option>
+                            <option value="TERMINATO">Terminato</option>
+                            <option value="OVER">Over</option>
+                            <option value="SCADUTO">Scaduto</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="storicoContainer">
+                    <div class="empty-state"><div class="empty-state-icon">📦</div><div>Caricamento...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SEZIONE CANONI ===== -->
+        <div id="vendite-section-canoni" class="vendite-section" style="display:none;">
+            <div class="vendite-subtab-bar">
+                <button class="vendite-subtab active" id="vsub-canoni-nuovo" onclick="switchVenditeSubtab('canoni','nuovo')">
+                    ➕ Nuovo canone
+                </button>
+                <button class="vendite-subtab" id="vsub-canoni-riepilogo" onclick="switchVenditeSubtab('canoni','riepilogo')">
+                    📋 Riepilogo
+                </button>
+            </div>
+            <div id="vsub-canoni-nuovo-content" class="vendite-subtab-content">
+                <div class="vendite-action-card" onclick="openVenditaModal('canone')">
+                    <span class="vendite-action-icon">📅</span>
+                    <div>
+                        <div class="vendite-action-title">Nuovo Canone</div>
+                        <div class="vendite-action-desc">Registra un nuovo canone annuale</div>
+                    </div>
+                </div>
+            </div>
+            <div id="vsub-canoni-riepilogo-content" class="vendite-subtab-content" style="display:none;">
+                <div class="storico-filtri">
+                    <div class="storico-filtro-group">
+                        <input type="text" id="canoni-filter-cliente" list="canoni-client-list"
+                               placeholder="Filtra per cliente..." oninput="filterCanoniDebounced()" autocomplete="off">
+                        <datalist id="canoni-client-list"></datalist>
+                    </div>
+                    <div class="storico-filtro-group">
+                        <select id="canoni-filter-stato" onchange="filterCanoni()">
+                            <option value="">Tutti gli stati</option>
+                            <option value="ATTIVO">Attivo</option>
+                            <option value="SCADUTO">Scaduto</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="canoniContainer">
+                    <div class="empty-state"><div class="empty-state-icon">📅</div><div>Caricamento...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SEZIONE FIRME ===== -->
+        <div id="vendite-section-firme" class="vendite-section" style="display:none;">
+            <div class="vendite-subtab-bar">
+                <button class="vendite-subtab active" id="vsub-firme-nuovo" onclick="switchVenditeSubtab('firme','nuovo')">
+                    ➕ Nuova firma
+                </button>
+                <button class="vendite-subtab" id="vsub-firme-riepilogo" onclick="switchVenditeSubtab('firme','riepilogo')">
+                    📋 Riepilogo
+                </button>
+            </div>
+            <div id="vsub-firme-nuovo-content" class="vendite-subtab-content">
+                <div class="vendite-action-card" onclick="openVenditaModal('firma')">
+                    <span class="vendite-action-icon">✍️</span>
+                    <div>
+                        <div class="vendite-action-title">Nuova Firma Digitale</div>
+                        <div class="vendite-action-desc">Registra una nuova firma Token o Remota</div>
+                    </div>
+                </div>
+            </div>
+            <div id="vsub-firme-riepilogo-content" class="vendite-subtab-content" style="display:none;">
+                <div class="storico-filtri">
+                    <div class="storico-filtro-group">
+                        <input type="text" id="firme-filter-cliente" list="firme-client-list"
+                               placeholder="Filtra per cliente..." oninput="filterFirmeDebounced()" autocomplete="off">
+                        <datalist id="firme-client-list"></datalist>
+                    </div>
+                    <div class="storico-filtro-group">
+                        <select id="firme-filter-stato" onchange="filterFirme()">
+                            <option value="">Tutti gli stati</option>
+                            <option value="attivo">Attivo</option>
+                            <option value="scaduto">Scaduto</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="firmeContainer">
+                    <div class="empty-state"><div class="empty-state-icon">✍️</div><div>Caricamento...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SEZIONE SCADENZE ===== -->
+        <div id="vendite-section-scadenze" class="vendite-section" style="display:none;">
+            <div class="info-banner" style="margin-bottom:16px;">
                 Prodotti in scadenza nei prossimi 90 giorni
             </div>
             <div id="scadenzeContainer" class="loading-scadenze">
@@ -718,69 +840,6 @@
             </div>
         </div>
 
-        <!-- Sezione Riepilogo Firme -->
-        <div class="section-vendite" style="margin-top: 30px;">
-            <h3>✍️ Riepilogo Firme Digitali</h3>
-            <div class="storico-filtri">
-                <div class="storico-filtro-group">
-                    <input type="text" id="firme-filter-cliente"
-                           list="firme-client-list"
-                           placeholder="Filtra per cliente..."
-                           oninput="filterFirmeDebounced()"
-                           autocomplete="off">
-                    <datalist id="firme-client-list"></datalist>
-                </div>
-                <div class="storico-filtro-group">
-                    <select id="firme-filter-stato" onchange="filterFirme()">
-                        <option value="">Tutti gli stati</option>
-                        <option value="attivo">Attivo</option>
-                        <option value="scaduto">Scaduto</option>
-                    </select>
-                </div>
-                <button class="btn-storico-load" onclick="loadFirmeRiepilogo()">
-                    🔍 Carica firme
-                </button>
-            </div>
-            <div id="firmeContainer">
-                <div class="empty-state">
-                    <div class="empty-state-icon">✍️</div>
-                    <div>Clicca "Carica firme" per visualizzare le firme digitali</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sezione Riepilogo Pacchetti -->
-        <div class="section-vendite" style="margin-top: 30px;">
-            <h3>📦 Riepilogo Pacchetti Ore</h3>
-            <div class="storico-filtri">
-                <div class="storico-filtro-group">
-                    <input type="text" id="storico-filter-cliente"
-                           list="storico-client-list"
-                           placeholder="Filtra per cliente..."
-                           oninput="filterStoricoDebounced()"
-                           autocomplete="off">
-                    <datalist id="storico-client-list"></datalist>
-                </div>
-                <div class="storico-filtro-group">
-                    <select id="storico-filter-stato" onchange="filterStorico()">
-                        <option value="">Tutti gli stati</option>
-                        <option value="ATTIVO">Attivo</option>
-                        <option value="TERMINATO">Terminato</option>
-                        <option value="OVER">Over</option>
-                        <option value="SCADUTO">Scaduto</option>
-                    </select>
-                </div>
-                <button class="btn-storico-load" onclick="loadStoricoPackages()">
-                    🔍 Carica storico
-                </button>
-            </div>
-            <div id="storicoContainer">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
-                    <div>Clicca "Carica storico" per visualizzare i pacchetti terminati</div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 

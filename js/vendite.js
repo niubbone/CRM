@@ -27,8 +27,63 @@ const CANONE_FATTURAZIONE = {
 
 function initVenditeTab() {
     loadVenditaClienti();
-    loadScadenze();
     setVenditaDefaultDate();
+    // Mostra pacchetti come sezione di default e carica il riepilogo
+    switchVenditeSection('pacchetti');
+}
+
+// =======================================================================
+// === NAVIGAZIONE VENDITE ===
+// =======================================================================
+
+let currentVenditeSection = 'pacchetti';
+// Traccia se il riepilogo di ogni sezione è già stato caricato
+const riepilogoLoaded = { pacchetti: false, canoni: false, firme: false };
+
+function switchVenditeSection(section) {
+    // Aggiorna nav cards
+    ['pacchetti','canoni','firme','scadenze'].forEach(s => {
+        const card = document.getElementById(`vnav-${s}`);
+        if (card) card.classList.toggle('active', s === section);
+    });
+
+    // Mostra/nascondi pannelli
+    ['pacchetti','canoni','firme','scadenze'].forEach(s => {
+        const panel = document.getElementById(`vendite-section-${s}`);
+        if (panel) panel.style.display = s === section ? '' : 'none';
+    });
+
+    currentVenditeSection = section;
+
+    // Carica dati necessari
+    if (section === 'scadenze') {
+        loadScadenze();
+    } else if (section !== 'scadenze') {
+        // Auto-carica il riepilogo se non ancora fatto
+        if (!riepilogoLoaded[section]) {
+            switchVenditeSubtab(section, 'riepilogo');
+        }
+    }
+}
+
+function switchVenditeSubtab(section, subtab) {
+    const nuovoContent    = document.getElementById(`vsub-${section}-nuovo-content`);
+    const riepilogoContent = document.getElementById(`vsub-${section}-riepilogo-content`);
+    const btnNuovo        = document.getElementById(`vsub-${section}-nuovo`);
+    const btnRiepilogo    = document.getElementById(`vsub-${section}-riepilogo`);
+
+    if (nuovoContent)    nuovoContent.style.display    = subtab === 'nuovo'    ? '' : 'none';
+    if (riepilogoContent) riepilogoContent.style.display = subtab === 'riepilogo' ? '' : 'none';
+    if (btnNuovo)    btnNuovo.classList.toggle('active',    subtab === 'nuovo');
+    if (btnRiepilogo) btnRiepilogo.classList.toggle('active', subtab === 'riepilogo');
+
+    // Carica dati la prima volta che si apre il riepilogo
+    if (subtab === 'riepilogo' && !riepilogoLoaded[section]) {
+        riepilogoLoaded[section] = true;
+        if (section === 'pacchetti') loadStoricoPackages();
+        if (section === 'canoni')    loadCanoniRiepilogo();
+        if (section === 'firme')     loadFirmeRiepilogo();
+    }
 }
 
 function setVenditaDefaultDate() {
@@ -781,6 +836,143 @@ async function generateProformaFromPacchetto(idPacchetto) {
 }
 
 // =======================================================================
+// === RIEPILOGO CANONI ===
+// =======================================================================
+
+let canoniData = [];
+let canoniFilterTimer = null;
+
+async function loadCanoniRiepilogo() {
+    const container = document.getElementById('canoniContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="loading-scadenze">Caricamento canoni...</div>';
+
+    try {
+        const cliente = (document.getElementById('canoni-filter-cliente')?.value || '').trim();
+        const stato   = document.getElementById('canoni-filter-stato')?.value || '';
+
+        let url = `${getAPIUrl()}?action=get_canoni_riepilogo`;
+        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
+
+        const response = await fetch(url);
+        const result   = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        canoniData = result.canoni || [];
+        populateCanoniClientFilter(canoniData);
+        renderCanoni(canoniData);
+
+    } catch (error) {
+        console.error('Errore caricamento canoni:', error);
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+    }
+}
+
+function populateCanoniClientFilter(canoni) {
+    const datalist = document.getElementById('canoni-client-list');
+    if (!datalist) return;
+    const nomi = [...new Set(canoni.map(c => c.nomeCliente).filter(Boolean))].sort();
+    datalist.innerHTML = nomi.map(n => `<option value="${n}">`).join('');
+}
+
+function filterCanoniDebounced() {
+    clearTimeout(canoniFilterTimer);
+    canoniFilterTimer = setTimeout(filterCanoni, 300);
+}
+
+function filterCanoni() {
+    if (!canoniData.length) return;
+    const filtroCliente = (document.getElementById('canoni-filter-cliente')?.value || '').trim().toLowerCase();
+    const filtroStato   = (document.getElementById('canoni-filter-stato')?.value || '').toUpperCase();
+
+    const filtered = canoniData.filter(c => {
+        const matchCliente = !filtroCliente || c.nomeCliente.toLowerCase().includes(filtroCliente);
+        const matchStato   = !filtroStato   || (c.stato || '').toUpperCase() === filtroStato;
+        return matchCliente && matchStato;
+    });
+    renderCanoni(filtered);
+}
+
+function renderCanoni(canoni) {
+    const container = document.getElementById('canoniContainer');
+    if (!container) return;
+
+    if (!canoni.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div>Nessun canone trovato</div></div>`;
+        return;
+    }
+
+    const gruppi = {};
+    canoni.forEach(c => {
+        const k = c.nomeCliente || '—';
+        if (!gruppi[k]) gruppi[k] = [];
+        gruppi[k].push(c);
+    });
+
+    let html = '';
+    Object.keys(gruppi).sort().forEach(cliente => {
+        html += `<div class="storico-gruppo">
+            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+
+        gruppi[cliente].forEach(c => {
+            const isAttivo   = (c.stato || '').toUpperCase() === 'ATTIVO';
+            const statoClass = isAttivo ? 'attivo' : 'scaduto';
+
+            let scadenzaInfo = '';
+            if (c.giorniAllaScadenza !== null) {
+                if (c.giorniAllaScadenza < 0) {
+                    scadenzaInfo = `<span style="color:#dc3545;">Scaduto da ${Math.abs(c.giorniAllaScadenza)} giorni</span>`;
+                } else if (c.giorniAllaScadenza <= 60) {
+                    scadenzaInfo = `<span style="color:#fd7e14;">Scade tra ${c.giorniAllaScadenza} giorni</span>`;
+                } else {
+                    scadenzaInfo = `<span style="color:#28a745;">Scade tra ${c.giorniAllaScadenza} giorni</span>`;
+                }
+            }
+
+            const fattBadge = c.fatturazione ? `<span class="storico-badge" style="background:#e8f4fd;color:#0c63e4;margin-left:6px;">${c.fatturazione}</span>` : '';
+
+            html += `
+            <div class="storico-card">
+                <div class="storico-card-header">
+                    <span class="storico-id">${c.idCanone}${fattBadge}</span>
+                    <span class="storico-badge ${statoClass}">${c.stato}</span>
+                </div>
+                ${c.descrizione ? `<div class="storico-descrizione">${c.descrizione}</div>` : ''}
+                <div class="firma-card-body">
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Inizio</span>
+                        <span class="storico-stat-value">${c.dataInizio || '—'}</span>
+                    </div>
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Scadenza</span>
+                        <span class="storico-stat-value">${c.dataScadenza || '—'}</span>
+                    </div>
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Importo</span>
+                        <span class="storico-stat-value">€ ${parseFloat(c.importo).toFixed(2)}</span>
+                    </div>
+                </div>
+                ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
+                ${c.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${c.idPrecedente}</div>` : ''}
+                ${isAttivo ? `
+                <div class="storico-actions">
+                    <button class="btn-small btn-storico-detail"
+                        onclick="openRinnovoModal('${c.idCanone}', 'CANONE')">
+                        🔄 Rinnova
+                    </button>
+                </div>` : ''}
+            </div>`;
+        });
+        html += `</div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+// =======================================================================
 // === RIEPILOGO FIRME DIGITALI ===
 // =======================================================================
 
@@ -1233,4 +1425,9 @@ if (typeof window !== 'undefined') {
     window.loadFirmeRiepilogo = loadFirmeRiepilogo;
     window.filterFirme = filterFirme;
     window.filterFirmeDebounced = filterFirmeDebounced;
+    window.loadCanoniRiepilogo = loadCanoniRiepilogo;
+    window.filterCanoni = filterCanoni;
+    window.filterCanoniDebounced = filterCanoniDebounced;
+    window.switchVenditeSection = switchVenditeSection;
+    window.switchVenditeSubtab = switchVenditeSubtab;
 }
