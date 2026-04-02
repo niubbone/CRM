@@ -340,6 +340,16 @@ function buildFattureErrorHTML(title, msg, retryFn) {
 function initFattureTab() {
   console.log('🧾 Inizializzazione tab Fatture');
   populateFattureClientFilter();
+  // Default: anno corrente
+  const annoSelect = document.getElementById('fatture-filter-anno');
+  if (annoSelect && !annoSelect.value) {
+    const opt = document.createElement('option');
+    const currentYear = new Date().getFullYear().toString();
+    opt.value = currentYear;
+    opt.textContent = currentYear;
+    annoSelect.appendChild(opt);
+    annoSelect.value = currentYear;
+  }
   loadFattureList();
 }
 

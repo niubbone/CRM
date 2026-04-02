@@ -266,9 +266,13 @@ window.checkDataIntegrity = async function() {
         
         showNotification('diagnostic-info', '⏳ Verifica integrità in corso...', 'info');
         
+        // Test connessione incluso nel flusso
+        const startTime = Date.now();
         const url = `${CONFIG.APPS_SCRIPT_URL}?action=check_integrity`;
         const response = await fetch(url);
+        const responseTime = Date.now() - startTime;
         const data = await response.json();
+        data._responseTime = responseTime;
         
         if (!data.success) {
             throw new Error(data.error || 'Errore sconosciuto');
@@ -304,7 +308,7 @@ function displayIntegrityResults(data) {
     
     let html = '<div class="log-entries">';
     
-    // STATISTICHE GENERALI
+    // CONNESSIONE + STATISTICHE
     html += `
         <div class="log-entry" data-level="INFO">
             <div class="log-header">
@@ -312,6 +316,7 @@ function displayIntegrityResults(data) {
                 <span class="log-timestamp">${new Date().toLocaleString('it-IT')}</span>
             </div>
             <div class="log-body">
+                <div style="margin-bottom:8px;">✅ <strong>Connessione backend:</strong> ${data._responseTime}ms</div>
                 ${formatStatsForDisplay(data.stats)}
             </div>
         </div>
