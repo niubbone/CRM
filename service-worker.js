@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.5.3';
+const SW_BUILD = '4.5.4';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -29,11 +29,13 @@ const API_TTL_SHORT = 2 * 60 * 1000; // 2 minuti (get_last_warning)
 const BASE_PATH = self.location.pathname.split('/').filter(p => p)[0] ? `/${self.location.pathname.split('/').filter(p => p)[0]}/` : '/';
 
 // Files da cachare all'installazione
+// Solo HTML e CSS in cache-first (cambiano raramente)
+// I JS sono gestiti da handleRuntimeRequest (network-first) → sempre aggiornati senza bump SW_BUILD
 const STATIC_FILES = [
   BASE_PATH,
   `${BASE_PATH}index.html`,
   `${BASE_PATH}manifest.json`,
-  
+
   // CSS
   `${BASE_PATH}css/main.css`,
   `${BASE_PATH}css/clienti.css`,
@@ -45,18 +47,6 @@ const STATIC_FILES = [
   `${BASE_PATH}css/utilities.css`,
   `${BASE_PATH}css/vendite.css`,
   `${BASE_PATH}css/vendite-scaduti.css`,
-  
-  // JavaScript
-  `${BASE_PATH}js/api.js`,
-  `${BASE_PATH}js/clienti.js`,
-  `${BASE_PATH}js/config.js`,
-  `${BASE_PATH}js/main.js`,
-  `${BASE_PATH}js/proforma-list.js`,
-  `${BASE_PATH}js/proforma.js`,
-  `${BASE_PATH}js/timesheet.js`,
-  `${BASE_PATH}js/utilities.js`,
-  `${BASE_PATH}js/utils.js`,
-  `${BASE_PATH}js/vendite.js`
 ];
 
 // API endpoint da cachare (per offline fallback)
