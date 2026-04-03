@@ -87,6 +87,11 @@ window.switchTab = function(tabName) {
         initFattureTab();
       }
       break;
+    case 'clienti':
+      if (typeof initClienteTab === 'function') {
+        initClienteTab();
+      }
+      break;
   }
 };
 

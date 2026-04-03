@@ -128,14 +128,13 @@ async function loadClienteDetail(clienteId) {
             document.getElementById('cliente-detail-section').style.display = 'none';
             document.getElementById('cliente-prodotti-section').style.display = 'block';
             document.getElementById('cliente-timesheet-section').style.display = 'block';
-            document.getElementById('cliente-movimenti-section').style.display = 'block';
 
             // Aggiungi bottone Modifica Cliente prima dei prodotti
             addModificaClienteButton();
 
             loadClienteProdotti(clienteId);
             loadClienteTimesheet(clienteId);
-            loadClienteMovimenti(clienteId);
+            loadClienteMovimenti(clienteId, currentCliente.nome);
             
             // Scroll alla sezione prodotti
             document.getElementById('cliente-prodotti-section').scrollIntoView({ behavior: 'smooth' });
@@ -217,7 +216,6 @@ function showClienteDetail(cliente) {
     document.getElementById('cliente-detail-section').style.display = 'block';
     document.getElementById('cliente-prodotti-section').style.display = 'block';
     document.getElementById('cliente-timesheet-section').style.display = 'block';
-    document.getElementById('cliente-movimenti-section').style.display = 'block';
 
     // Scroll alla sezione dettaglio
     document.getElementById('cliente-detail-section').scrollIntoView({ behavior: 'smooth' });
@@ -231,8 +229,8 @@ function closeClienteDetail() {
     document.getElementById('cliente-detail-section').style.display = 'none';
     document.getElementById('cliente-prodotti-section').style.display = 'none';
     document.getElementById('cliente-timesheet-section').style.display = 'none';
-    document.getElementById('cliente-movimenti-section').style.display = 'none';
     document.getElementById('cliente-form').reset();
+    loadClienteMovimenti(null);
 }
 
 /**
@@ -1486,11 +1484,18 @@ window.chiudiScalaExtraModal    = chiudiScalaExtraModal;
 // === ULTIMI MOVIMENTI CLIENTE ===
 // =======================================================================
 
-async function loadClienteMovimenti(clienteId) {
+async function loadClienteMovimenti(clienteId, nomeCliente) {
     const contentDiv = document.getElementById('cliente-movimenti-content');
-    contentDiv.innerHTML = '<p style="padding:10px;color:#6c757d;">⏳ Caricamento movimenti...</p>';
+    const titleEl = document.getElementById('cliente-movimenti-title');
+    if (titleEl) {
+        titleEl.textContent = clienteId
+            ? `📋 Ultimi Movimenti — ${nomeCliente || clienteId}`
+            : '📋 Ultimi Movimenti';
+    }
+    contentDiv.innerHTML = '<p style="padding:10px;color:#6c757d;">⏳ Caricamento...</p>';
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_cliente_movimenti&id=${encodeURIComponent(clienteId)}`;
+        const idParam = clienteId ? `&id=${encodeURIComponent(clienteId)}` : '';
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_cliente_movimenti${idParam}`;
         const response = await fetch(url);
         const data = await response.json();
         if (data.success) {
@@ -1535,3 +1540,8 @@ function displayClienteMovimenti(movimenti) {
 }
 
 window.loadClienteMovimenti = loadClienteMovimenti;
+
+function initClienteTab() {
+    loadClienteMovimenti(null);
+}
+window.initClienteTab = initClienteTab;
