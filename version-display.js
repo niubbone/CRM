@@ -81,9 +81,6 @@ function updateUtilitiesVersionBox() {
         ${generateChangelogHTML()}
       </div>
       
-      <a href="/TSFE/docs/architecture.html" target="_blank" class="doc-link">
-        📚 Visualizza Documentazione Architettura
-      </a>
     </div>
   `;
 
