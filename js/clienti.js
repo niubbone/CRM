@@ -402,7 +402,7 @@ async function assignMissingClientIDs() {
         const data = await response.json();
 
         if (data.success) {
-            showToast(`✅ Assegnati ${data.assigned} ID mancanti`, 'success');
+            showToast(data.assigned > 0 ? `✅ Assegnati ${data.assigned} ID mancanti` : `✅ Nessun ID mancante`, 'success');
         } else {
             throw new Error(data.error || 'Errore assegnazione');
         }
