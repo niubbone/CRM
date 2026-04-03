@@ -966,6 +966,20 @@
             <p>Benvenuto nella sezione Utilities</p>
         </div>
         
+        <!-- SEZIONE CLIENTI UTILITIES -->
+        <div class="utility-section">
+            <h3>👥 Clienti</h3>
+            <div class="utility-card">
+                <div class="utility-info">
+                    <h4>Assegna ID mancanti</h4>
+                    <p>Assegna automaticamente ID_Cliente ai clienti che non ne hanno uno</p>
+                </div>
+                <button class="btn btn-primary" onclick="assignMissingClientIDs()">
+                    🔢 Assegna ID
+                </button>
+            </div>
+        </div>
+
         <!-- SEZIONE BACKUP -->
         <div class="utility-section">
             <h3>💾 Backup Frontend</h3>
@@ -1317,20 +1331,14 @@
                 <p class="empty-state">Seleziona un cliente per visualizzare i suoi timesheet</p>
             </div>
         </div>
-        
+
         <!-- =========================
-             UTILITIES
+             SEZIONE ULTIMI MOVIMENTI
         ========================= -->
-        <div class="clienti-section">
-            <h3>⚙️ Utilities</h3>
-            <div class="utility-card">
-                <div class="utility-info">
-                    <h4>Assegna ID mancanti</h4>
-                    <p>Assegna automaticamente ID_Cliente ai clienti che non ne hanno uno</p>
-                </div>
-                <button class="btn btn-primary" onclick="assignMissingClientIDs()">
-                    🔢 Assegna ID
-                </button>
+        <div id="cliente-movimenti-section" class="clienti-section" style="display: none;">
+            <h3>📋 Ultimi Movimenti</h3>
+            <div id="cliente-movimenti-content">
+                <p class="empty-state">Seleziona un cliente per visualizzare i movimenti</p>
             </div>
         </div>
         

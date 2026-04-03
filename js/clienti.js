@@ -128,12 +128,14 @@ async function loadClienteDetail(clienteId) {
             document.getElementById('cliente-detail-section').style.display = 'none';
             document.getElementById('cliente-prodotti-section').style.display = 'block';
             document.getElementById('cliente-timesheet-section').style.display = 'block';
-            
+            document.getElementById('cliente-movimenti-section').style.display = 'block';
+
             // Aggiungi bottone Modifica Cliente prima dei prodotti
             addModificaClienteButton();
-            
+
             loadClienteProdotti(clienteId);
             loadClienteTimesheet(clienteId);
+            loadClienteMovimenti(clienteId);
             
             // Scroll alla sezione prodotti
             document.getElementById('cliente-prodotti-section').scrollIntoView({ behavior: 'smooth' });
@@ -215,7 +217,8 @@ function showClienteDetail(cliente) {
     document.getElementById('cliente-detail-section').style.display = 'block';
     document.getElementById('cliente-prodotti-section').style.display = 'block';
     document.getElementById('cliente-timesheet-section').style.display = 'block';
-    
+    document.getElementById('cliente-movimenti-section').style.display = 'block';
+
     // Scroll alla sezione dettaglio
     document.getElementById('cliente-detail-section').scrollIntoView({ behavior: 'smooth' });
 }
@@ -228,6 +231,7 @@ function closeClienteDetail() {
     document.getElementById('cliente-detail-section').style.display = 'none';
     document.getElementById('cliente-prodotti-section').style.display = 'none';
     document.getElementById('cliente-timesheet-section').style.display = 'none';
+    document.getElementById('cliente-movimenti-section').style.display = 'none';
     document.getElementById('cliente-form').reset();
 }
 
@@ -1477,3 +1481,57 @@ window.convertiExtraDaFatturare = convertiExtraDaFatturare;
 window.apriScalaInPacchetto     = apriScalaInPacchetto;
 window.eseguiScalaExtra         = eseguiScalaExtra;
 window.chiudiScalaExtraModal    = chiudiScalaExtraModal;
+
+// =======================================================================
+// === ULTIMI MOVIMENTI CLIENTE ===
+// =======================================================================
+
+async function loadClienteMovimenti(clienteId) {
+    const contentDiv = document.getElementById('cliente-movimenti-content');
+    contentDiv.innerHTML = '<p style="padding:10px;color:#6c757d;">⏳ Caricamento movimenti...</p>';
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_cliente_movimenti&id=${encodeURIComponent(clienteId)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.success) {
+            displayClienteMovimenti(data.movimenti);
+        } else {
+            contentDiv.innerHTML = `<p class="empty-state">Errore: ${data.error}</p>`;
+        }
+    } catch(err) {
+        contentDiv.innerHTML = `<p class="empty-state">Errore di connessione</p>`;
+    }
+}
+
+function displayClienteMovimenti(movimenti) {
+    const contentDiv = document.getElementById('cliente-movimenti-content');
+    if (!movimenti || movimenti.length === 0) {
+        contentDiv.innerHTML = '<p class="empty-state">Nessun movimento trovato</p>';
+        return;
+    }
+
+    const typeConfig = {
+        'Timesheet': { color: '#0d6efd', bg: '#e7f1ff' },
+        'Pacchetto':  { color: '#6f42c1', bg: '#f0ebff' },
+        'Canone':     { color: '#198754', bg: '#e8f5ee' },
+        'Firma':      { color: '#fd7e14', bg: '#fff3e7' },
+        'Fattura':    { color: '#dc3545', bg: '#fdecea' },
+        'Proforma':   { color: '#6c757d', bg: '#f0f0f0' },
+    };
+
+    let html = '<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">';
+    movimenti.forEach(m => {
+        const cfg = typeConfig[m.tipo] || { color: '#495057', bg: '#f8f9fa' };
+        html += `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border:1px solid #e9ecef;border-radius:6px;font-size:13px;">
+            <span style="flex:0 0 80px;color:#6c757d;font-size:12px;">${m.data}</span>
+            <span style="flex:0 0 80px;background:${cfg.bg};color:${cfg.color};border-radius:4px;padding:2px 7px;font-weight:600;font-size:11px;text-align:center;">${m.tipo}</span>
+            <span style="flex:1;color:#212529;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${m.descrizione}">${m.descrizione}</span>
+            <span style="flex:0 0 auto;color:#495057;font-size:12px;white-space:nowrap;">${m.dettaglio}</span>
+        </div>`;
+    });
+    html += '</div>';
+    contentDiv.innerHTML = html;
+}
+
+window.loadClienteMovimenti = loadClienteMovimenti;
