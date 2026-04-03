@@ -1527,10 +1527,15 @@ function displayClienteMovimenti(movimenti) {
     let html = '<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">';
     movimenti.forEach(m => {
         const cfg = typeConfig[m.tipo] || { color: '#495057', bg: '#f8f9fa' };
+        const nomeEsc = (m.nomeCliente || '').replace(/'/g, "\\'");
+        const idEsc = (m.idCliente || '').replace(/'/g, "\\'");
         html += `
         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border:1px solid #e9ecef;border-radius:6px;font-size:13px;">
-            <span style="flex:0 0 80px;color:#6c757d;font-size:12px;">${m.data}</span>
-            <span style="flex:0 0 80px;background:${cfg.bg};color:${cfg.color};border-radius:4px;padding:2px 7px;font-weight:600;font-size:11px;text-align:center;">${m.tipo}</span>
+            <span style="flex:0 0 76px;color:#6c757d;font-size:12px;">${m.data}</span>
+            <span style="flex:0 0 76px;background:${cfg.bg};color:${cfg.color};border-radius:4px;padding:2px 7px;font-weight:600;font-size:11px;text-align:center;">${m.tipo}</span>
+            <span style="flex:0 0 140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <a href="#" onclick="event.preventDefault();loadClienteDetail('${idEsc}')" style="color:#1976D2;font-weight:600;text-decoration:none;font-size:12px;" title="Apri dettaglio ${nomeEsc}">${m.nomeCliente || ''}</a>
+            </span>
             <span style="flex:1;color:#212529;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${m.descrizione}">${m.descrizione}</span>
             <span style="flex:0 0 auto;color:#495057;font-size:12px;white-space:nowrap;">${m.dettaglio}</span>
         </div>`;
