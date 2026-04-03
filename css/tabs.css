@@ -101,7 +101,7 @@
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 600px) {
     .tabs {
         gap: 4px;
         padding: 10px 4px 8px 4px !important;

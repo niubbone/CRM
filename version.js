@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.5.0';
+export const VERSION = '4.5.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
