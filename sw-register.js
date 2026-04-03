@@ -40,8 +40,8 @@
 
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New version available
-            showUpdateNotification();
+            // New version available - passa il nuovo SW in attesa
+            showUpdateNotification(registration);
           }
         });
       });
@@ -61,7 +61,7 @@
   /**
    * Show update notification to user
    */
-  function showUpdateNotification() {
+  function showUpdateNotification(registration) {
     const updateBanner = document.createElement('div');
     updateBanner.id = 'sw-update-banner';
     updateBanner.innerHTML = `
@@ -109,8 +109,11 @@
 
     // Update button
     document.getElementById('sw-update-btn').addEventListener('click', () => {
-      // Tell SW to skip waiting and activate
-      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+      // Manda SKIP_WAITING al nuovo SW in attesa (non al vecchio controller)
+      const waitingWorker = registration.waiting;
+      if (waitingWorker) {
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      }
     });
 
     // Dismiss button
