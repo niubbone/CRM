@@ -216,7 +216,7 @@ window.forceSWUpdate = async function() {
         }
 
         // 4. Ricarica la pagina
-        window.location.reload(true);
+        const base = window.location.pathname.split('?')[0]; window.location.replace(base + '?_=' + Date.now());
 
     } catch (err) {
         alert('Errore durante l\'aggiornamento: ' + err.message + '\nRicarica manualmente la pagina.');
