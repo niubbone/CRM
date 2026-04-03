@@ -395,21 +395,21 @@ async function assignMissingClientIDs() {
     }
     
     try {
-        showNotification('clienti-info', '⏳ Assegnazione ID in corso...', 'info');
-        
+        showToast('⏳ Assegnazione ID in corso...', 'info');
+
         const url = `${CONFIG.APPS_SCRIPT_URL}?action=assign_missing_ids`;
         const response = await fetch(url);
         const data = await response.json();
-        
+
         if (data.success) {
-            showNotification('clienti-info', `✅ Assegnati ${data.assigned} ID`, 'success');
+            showToast(`✅ Assegnati ${data.assigned} ID mancanti`, 'success');
         } else {
             throw new Error(data.error || 'Errore assegnazione');
         }
-        
+
     } catch (error) {
         console.error('Errore assegnazione ID:', error);
-        showNotification('clienti-info', '❌ Errore durante l\'assegnazione', 'error');
+        showToast('❌ Errore durante l\'assegnazione', 'error');
     }
 }
 
@@ -1550,3 +1550,12 @@ function initClienteTab() {
     loadClienteMovimenti(null);
 }
 window.initClienteTab = initClienteTab;
+
+function showToast(message, type = 'info') {
+    const colors = { info: '#1976D2', success: '#2e7d32', error: '#c62828' };
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${colors[type]||colors.info};color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.4s;`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
+}
