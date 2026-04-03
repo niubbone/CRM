@@ -1476,6 +1476,7 @@ window.quickEditCliente = quickEditCliente;
 window.quickCopyCliente = quickCopyCliente;
 window.quickExportVCard = quickExportVCard;
 window.saveTimesheetChanges = saveTimesheetChanges;
+window.assignMissingClientIDs      = assignMissingClientIDs;
 window.openPacchettoDettaglio      = openPacchettoDettaglio;
 window.closePacchettoDettaglioModal = closePacchettoDettaglioModal;
 window.exportPacchettoDettaglio    = exportPacchettoDettaglio;
