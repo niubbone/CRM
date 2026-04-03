@@ -394,22 +394,28 @@ async function assignMissingClientIDs() {
         return;
     }
     
+    const resultBox = document.getElementById('assign-id-result');
+    function showResult(msg, ok) {
+        if (resultBox) {
+            resultBox.style.display = 'block';
+            resultBox.style.background = ok ? '#e8f5ee' : '#fdecea';
+            resultBox.style.color = ok ? '#2e7d32' : '#c62828';
+            resultBox.innerHTML = `<p style="margin:0;">${msg}</p>`;
+        }
+    }
     try {
-        showToast('⏳ Assegnazione ID in corso...', 'info');
-
+        showResult('⏳ Assegnazione in corso...', true);
         const url = `${CONFIG.APPS_SCRIPT_URL}?action=assign_missing_ids`;
         const response = await fetch(url);
         const data = await response.json();
-
         if (data.success) {
-            showToast(data.assigned > 0 ? `✅ Assegnati ${data.assigned} ID mancanti` : `✅ Nessun ID mancante`, 'success');
+            showResult(data.assigned > 0 ? `✅ Assegnati ${data.assigned} ID mancanti` : `✅ Nessun ID mancante — tutti i clienti hanno già un ID`, true);
         } else {
             throw new Error(data.error || 'Errore assegnazione');
         }
-
     } catch (error) {
         console.error('Errore assegnazione ID:', error);
-        showToast('❌ Errore durante l\'assegnazione', 'error');
+        showResult('❌ Errore durante l\'assegnazione: ' + error.message, false);
     }
 }
 
