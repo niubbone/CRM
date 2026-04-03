@@ -80,7 +80,10 @@ function updateUtilitiesVersionBox() {
       <div id="changelog-content" class="changelog-content" style="display: none;">
         ${generateChangelogHTML()}
       </div>
-      
+
+      <a href="/CRM/docs/architecture.html" target="_blank" class="doc-link">
+        📚 Visualizza Documentazione Architettura
+      </a>
     </div>
   `;
 
