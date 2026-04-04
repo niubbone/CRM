@@ -220,7 +220,7 @@
         <div class="header">
             <h1>🏗️ CRM Studio Smart</h1>
             <p style="font-size: 1.1rem; margin-top: 10px;">Architettura & Documentazione Tecnica</p>
-            <div class="version-badge">Versione 4.0.4 - Dicembre 2025</div>
+            <div class="version-badge">Versione 4.5.6 - Aprile 2026</div>
         </div>
         
         <div class="content">
@@ -253,7 +253,7 @@
                         <span class="stat-label">File Backend (.gs)</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number">9</span>
+                        <span class="stat-number">12</span>
                         <span class="stat-label">File Frontend (.js)</span>
                     </div>
                     <div class="stat-box">
@@ -316,9 +316,9 @@
 │  │   + CSS      │→ │  Modules      │→ │   (Cache)      │             │
 │  │              │  │               │  │                │             │
 │  │  • UI/UX     │  │ • main.js     │  │ • Offline      │             │
-│  │  • Forms     │  │ • client.js   │  │ • Cache API    │             │
+│  │  • Forms     │  │ • clienti.js  │  │ • Cache API    │             │
 │  │  • Modals    │  │ • vendite.js  │  │ • Background   │             │
-│  │  • Tables    │  │ • dom.js      │  │   Sync         │             │
+│  │  • Tables    │  │ • fatture.js  │  │   Sync         │             │
 │  └──────────────┘  └───────────────┘  └────────────────┘             │
 │                                                                         │
 │  State: window.clients, window.packets (in-memory cache)               │
@@ -405,7 +405,7 @@ ESEMPIO: Inserimento Nuovo Cliente
    └─> Compila form cliente (nome, email, telefono)
    └─> Click "Salva Cliente"
 
-2. FRONTEND (client.js)
+2. FRONTEND (clienti.js)
    └─> Valida input (email format, campi required)
    └─> showLoadingState()
    └─> fetch(`${API_URL}?action=insert_client&nome=...&email=...`)
@@ -474,7 +474,7 @@ ESEMPIO: Inserimento Nuovo Cliente
                     <div class="card">
                         <h3>Frontend (GitHub Pages)</h3>
                         <p><strong>URL Produzione:</strong><br>
-                        <code>https://niubbone.github.io/TSFE/</code></p>
+                        <code>https://niubbone.github.io/CRM/</code></p>
                         
                         <p style="margin-top: 12px;"><strong>Caratteristiche:</strong></p>
                         <ul style="margin-left: 20px; line-height: 1.8;">
@@ -542,6 +542,9 @@ ESEMPIO: Inserimento Nuovo Cliente
                     </div>
                     <div class="feature-item">
                         ✅ <strong>Sistema Rinnovi:</strong> Storico completo rinnovi canoni/firme, chain tracking
+                    </div>
+                    <div class="feature-item">
+                        ✅ <strong>Fatture:</strong> Lista fatture con filtri, fatture dirette, gestione pagamenti, note credito
                     </div>
                     <div class="feature-item">
                         ✅ <strong>Sistema Log:</strong> Tracciamento completo operazioni, data integrity check, query log avanzate

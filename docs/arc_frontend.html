@@ -209,41 +209,48 @@ Frontend (GitHub Pages)
 │   └── index.html                   → SPA principale, modals, tabs
 │
 ├── 🎨 CSS
-│   ├── css/style.css                → Global styles
-│   ├── css/client.css               → Clienti section
-│   ├── css/timesheet.css            → Timesheet section
-│   ├── css/vendite.css              → Vendite section
+│   ├── css/main.css                 → Global styles
+│   ├── css/clienti.css              → Clienti section
+│   ├── css/tabs.css                 → Tab navigation
+│   ├── css/forms.css                → Form styles
+│   ├── css/tables.css               → Table styles
+│   ├── css/modals.css               → Modal styles
 │   ├── css/utilities.css            → Utilities section
+│   ├── css/vendite.css              → Vendite section
+│   ├── css/vendite-scaduti.css      → Scaduti panel
+│   ├── css/proforma-list.css        → Proforma list
 │   └── version-display.css          → Version box styling
 │
 ├── ⚙️ JAVASCRIPT MODULES
-│   ├── main.js                      → App init, tab switching
-│   ├── config.js                    → API_URL, constants
+│   ├── main.js                      → App init, tab switching, exposeGlobalFunctions
+│   ├── config.js                    → API_URL, constants, global state
+│   ├── api.js                       → Wrapper chiamate API principali
 │   │
-│   ├── 📊 DATA & API
-│   │   ├── client.js                → Gestione clienti (CRUD)
-│   │   ├── vendite.js               → Vendite module
-│   │   └── endpoints.js             → API endpoints map
+│   ├── 📊 MODULI FUNZIONALI
+│   │   ├── clienti.js               → Gestione clienti (CRUD, dettaglio, movimenti)
+│   │   ├── timesheet.js             → Inserimento/gestione ore
+│   │   ├── vendite.js               → Pacchetti, canoni, firme, scadenze
+│   │   ├── fatture.js               → Lista fatture, fatture dirette, pagamenti
+│   │   ├── proforma.js              → Step 1-2 (selezione cliente/timesheet)
+│   │   ├── proforma-list.js         → Step 3 (lista proforma, PDF, pagamento)
+│   │   └── utilities.js             → Backup, diagnostica, assegna ID
 │   │
 │   ├── 🛠️ UTILITIES
-│   │   ├── dom.js                   → DOM manipulation helpers
-│   │   ├── utils.js                 → General utilities
-│   │   ├── format.js                → Data formatting
-│   │   └── interceptors.js          → Request/response interceptors
+│   │   └── utils.js                 → formatDate, formatCurrency, showNotification
 │   │
-│   ├── 📱 PWA
-│   │   ├── service-worker.js        → SW main logic, caching
-│   │   ├── sw-register.js           → SW registration
-│   │   ├── version.js               → Version manager
-│   │   └── version-display.js       → Version UI component
-│   │
-│   └── manifest.json                → PWA manifest
+│   └── 📱 PWA (root, non in js/)
+│       ├── service-worker.js        → SW main logic, caching strategy
+│       ├── sw-register.js           → SW registration, banner aggiornamento
+│       ├── version.js               → VERSION (display UI)
+│       └── version-display.js       → Version UI component + changelog
+│
+├── manifest.json                    → PWA manifest
 │
 └── 🖼️ ASSETS
     ├── icons/                       → App icons (PWA)
     └── docs/                        → Documentation HTML
 
-TOTALE: 9 file .js + 5 file .css + 1 HTML
+TOTALE: 12 file .js + 11 file .css + 1 HTML
 </pre>
                 </div>
             </div>
@@ -307,7 +314,7 @@ document.addEventListener('DOMContentLoaded', initializeApp);
             
             <!-- CLIENT.JS -->
             <div class="section">
-                <h2 class="section-title">👥 client.js - Gestione Clienti</h2>
+                <h2 class="section-title">👥 clienti.js - Gestione Clienti</h2>
                 
                 <div class="subsection">
                     <h3 class="subsection-title">State Management</h3>
@@ -862,8 +869,8 @@ async function syncOfflineData() {
                     <h3 class="subsection-title">version.js - Single Source of Truth</h3>
                     
 <pre><code>// Unico file da modificare per update versione
-export const VERSION = '4.0.4';
-export const BUILD_DATE = '22/12/2025';
+export const VERSION = '4.5.6';
+export const BUILD_DATE = '04/04/2026';
 
 export const CHANGELOG = [
   {

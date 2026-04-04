@@ -213,7 +213,7 @@
                 <a href="architecture.html">← Architettura</a> / Tech Sheet
             </div>
             <h1>⚡ Quick Reference Sheet</h1>
-            <p>Cheat Sheet per Sviluppo Rapido - CRM Studio Smart v4.0</p>
+            <p>Cheat Sheet per Sviluppo Rapido - CRM Studio Smart v4.5.6</p>
         </div>
         
         <div class="content">
@@ -374,6 +374,29 @@
                             <td>-</td>
                         </tr>
                         
+                        <!-- FATTURE -->
+                        <tr style="background: #f0f0f0; font-weight: 600;">
+                            <td colspan="4">🧾 FATTURE</td>
+                        </tr>
+                        <tr>
+                            <td><code>get_fatture_list</code></td>
+                            <td>cliente?, anno?, stato?</td>
+                            <td>{success, fatture[]}</td>
+                            <td>Filtri opzionali</td>
+                        </tr>
+                        <tr>
+                            <td><code>insert_fattura_diretta</code></td>
+                            <td>cliente, importo, descrizione, data</td>
+                            <td>{success, n_fattura}</td>
+                            <td>Senza proforma</td>
+                        </tr>
+                        <tr>
+                            <td><code>update_pagamento_fattura</code></td>
+                            <td>n_fattura, pagato, data_pagamento?</td>
+                            <td>{success}</td>
+                            <td>-</td>
+                        </tr>
+
                         <!-- VENDITE -->
                         <tr style="background: #f0f0f0; font-weight: 600;">
                             <td colspan="4">💼 VENDITE</td>
