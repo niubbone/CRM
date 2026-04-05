@@ -37,17 +37,17 @@ function initVenditeTab() {
 
 let currentVenditeSection = 'pacchetti';
 // Traccia se il riepilogo di ogni sezione è già stato caricato
-const riepilogoLoaded = { pacchetti: false, canoni: false, firme: false };
+const riepilogoLoaded = { pacchetti: false, canoni: false, firme: false, qodnet: false };
 
 function switchVenditeSection(section) {
     // Aggiorna nav cards
-    ['pacchetti','canoni','firme','scadenze'].forEach(s => {
+    ['pacchetti','canoni','firme','scadenze','qodnet'].forEach(s => {
         const card = document.getElementById(`vnav-${s}`);
         if (card) card.classList.toggle('active', s === section);
     });
 
     // Mostra/nascondi pannelli
-    ['pacchetti','canoni','firme','scadenze'].forEach(s => {
+    ['pacchetti','canoni','firme','scadenze','qodnet'].forEach(s => {
         const panel = document.getElementById(`vendite-section-${s}`);
         if (panel) panel.style.display = s === section ? '' : 'none';
     });
@@ -82,6 +82,7 @@ function switchVenditeSubtab(section, subtab) {
         if (section === 'pacchetti') loadStoricoPackages();
         if (section === 'canoni')    loadCanoniRiepilogo();
         if (section === 'firme')     loadFirmeRiepilogo();
+        if (section === 'qodnet')    loadQodnetRiepilogo();
     }
 }
 
@@ -1399,6 +1400,370 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
     win.document.close();
 }
 
+// =======================================================================
+// === QODNET ===
+// =======================================================================
+
+let qodnetData = [];
+let qodnetFilterTimer = null;
+
+function openQodnetForm() {
+    const modal = document.getElementById('qodnetModal');
+    if (!modal) return;
+
+    // Popola datalist clienti
+    const datalist = document.getElementById('qodnet-client-list');
+    if (datalist && datalist.options.length === 0) {
+        fetch(`${getAPIUrl()}?action=get_data`)
+            .then(r => r.json())
+            .then(result => {
+                if (result && result.clients) {
+                    const nomi = result.clients
+                        .map(c => typeof c === 'string' ? c : (c.name || ''))
+                        .filter(Boolean).sort();
+                    datalist.innerHTML = nomi.map(n => `<option value="${n}">`).join('');
+                }
+            })
+            .catch(() => {});
+    }
+
+    // Date di default: oggi → +1 anno
+    const today = new Date().toISOString().split('T')[0];
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    const nextYearStr = nextYear.toISOString().split('T')[0];
+
+    const inizio = document.getElementById('qodnetDataInizio');
+    const scad   = document.getElementById('qodnetDataScadenza');
+    if (inizio && !inizio.value) inizio.value = today;
+    if (scad  && !scad.value)   scad.value   = nextYearStr;
+
+    // Reset provvigione calcolata
+    calcQodnetProvvigione();
+
+    modal.classList.add('active');
+}
+
+function closeQodnetModal() {
+    const modal = document.getElementById('qodnetModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function calcQodnetProvvigione() {
+    const imp  = parseFloat(document.getElementById('qodnetImponibile')?.value) || 0;
+    const perc = parseFloat(document.getElementById('qodnetPercentuale')?.value) || 0;
+    const field = document.getElementById('qodnetProvvigione');
+    if (field) field.value = (imp * perc / 100).toFixed(2);
+}
+
+async function submitQodnet(e) {
+    e.preventDefault();
+
+    const cliente      = (document.getElementById('qodnetCliente')?.value || '').trim();
+    const tipo         = document.getElementById('qodnetTipo')?.value || '';
+    const prodotto     = (document.getElementById('qodnetProdotto')?.value || '').trim();
+    const config       = (document.getElementById('qodnetConfigurazione')?.value || '').trim();
+    const dataInizio   = document.getElementById('qodnetDataInizio')?.value || '';
+    const dataScadenza = document.getElementById('qodnetDataScadenza')?.value || '';
+    const imponibile   = document.getElementById('qodnetImponibile')?.value || '';
+    const percentuale  = document.getElementById('qodnetPercentuale')?.value || '20';
+    const provvigione  = document.getElementById('qodnetProvvigione')?.value || '';
+    const note         = (document.getElementById('qodnetNote')?.value || '').trim();
+
+    if (!cliente) { alert('⚠️ Seleziona un cliente'); return; }
+    if (!prodotto) { alert('⚠️ Inserisci il prodotto'); return; }
+    if (!imponibile || parseFloat(imponibile) <= 0) { alert('⚠️ Inserisci un imponibile valido'); return; }
+
+    const btn = document.getElementById('qodnetSubmitBtn');
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Salvataggio...';
+
+    try {
+        const params = [
+            `cliente_nome=${encodeURIComponent(cliente)}`,
+            `tipo=${encodeURIComponent(tipo)}`,
+            `prodotto=${encodeURIComponent(prodotto)}`,
+            `configurazione=${encodeURIComponent(config)}`,
+            `data_inizio=${dataInizio}`,
+            `data_scadenza=${dataScadenza}`,
+            `imponibile=${imponibile}`,
+            `percentuale=${percentuale}`,
+            `provvigione=${provvigione}`,
+            `note=${encodeURIComponent(note)}`
+        ].join('&');
+
+        const response = await fetch(`${getAPIUrl()}?action=insert_qodnet&${params}`);
+        const result   = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        alert(`✅ Abbonamento creato: ${result.id}`);
+        closeQodnetModal();
+        document.getElementById('qodnetForm').reset();
+        // Forza ricaricamento riepilogo
+        qodnetData = [];
+        riepilogoLoaded.qodnet = false;
+        switchVenditeSubtab('qodnet', 'riepilogo');
+
+    } catch (error) {
+        console.error('Errore insert QODNET:', error);
+        alert('❌ Errore: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+    }
+}
+
+async function loadQodnetRiepilogo() {
+    const container = document.getElementById('qodnetContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="loading-scadenze">Caricamento abbonamenti QODNET...</div>';
+
+    try {
+        const cliente = (document.getElementById('qodnet-filter-cliente')?.value || '').trim();
+        const stato   = document.getElementById('qodnet-filter-stato')?.value || '';
+
+        let url = `${getAPIUrl()}?action=get_qodnet_riepilogo`;
+        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
+
+        const response = await fetch(url);
+        const result   = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        qodnetData = result.abbonamenti || [];
+        renderQodnet(qodnetData);
+
+    } catch (error) {
+        console.error('Errore caricamento QODNET:', error);
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+    }
+}
+
+function filterQodnetDebounced() {
+    clearTimeout(qodnetFilterTimer);
+    qodnetFilterTimer = setTimeout(filterQodnet, 300);
+}
+
+function filterQodnet() {
+    if (!qodnetData.length) { loadQodnetRiepilogo(); return; }
+    const filtroCliente = (document.getElementById('qodnet-filter-cliente')?.value || '').trim().toLowerCase();
+    const filtroStato   = (document.getElementById('qodnet-filter-stato')?.value || '').toLowerCase();
+
+    const filtered = qodnetData.filter(q => {
+        const matchCliente = !filtroCliente || (q.nomeCliente || '').toLowerCase().includes(filtroCliente);
+        const matchStato   = !filtroStato   || (q.stato || '').toLowerCase() === filtroStato;
+        return matchCliente && matchStato;
+    });
+    renderQodnet(filtered);
+}
+
+function renderQodnet(lista) {
+    const container = document.getElementById('qodnetContainer');
+    if (!container) return;
+
+    if (!lista.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌐</div><div>Nessun abbonamento trovato</div></div>`;
+        return;
+    }
+
+    // Raggruppa per cliente
+    const gruppi = {};
+    lista.forEach(q => {
+        const k = q.nomeCliente || '—';
+        if (!gruppi[k]) gruppi[k] = [];
+        gruppi[k].push(q);
+    });
+
+    let html = '';
+    Object.keys(gruppi).sort().forEach(cliente => {
+        html += `<div class="storico-gruppo">
+            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+
+        gruppi[cliente].forEach(q => {
+            const stato = (q.stato || '').toLowerCase();
+            const isAttivo = stato === 'attivo';
+            const statoClass = isAttivo ? 'attivo' : stato === 'rinnovato' ? 'rinnovato' : 'scaduto';
+
+            let scadenzaInfo = '';
+            if (q.giorniAllaScadenza != null) {
+                if (q.giorniAllaScadenza < 0) {
+                    scadenzaInfo = `<span style="color:#dc3545;">Scaduto da ${Math.abs(q.giorniAllaScadenza)} giorni</span>`;
+                } else if (q.giorniAllaScadenza <= 30) {
+                    scadenzaInfo = `<span style="color:#dc3545;">⚠️ Scade tra ${q.giorniAllaScadenza} giorni</span>`;
+                } else if (q.giorniAllaScadenza <= 60) {
+                    scadenzaInfo = `<span style="color:#fd7e14;">Scade tra ${q.giorniAllaScadenza} giorni</span>`;
+                } else {
+                    scadenzaInfo = `<span style="color:#28a745;">Scade tra ${q.giorniAllaScadenza} giorni</span>`;
+                }
+            }
+
+            const configHtml = q.configurazione
+                ? `<div class="storico-date" style="color:#555;white-space:pre-wrap;">${q.configurazione}</div>`
+                : '';
+
+            const actionsHtml = isAttivo ? `
+            <div class="storico-actions">
+                <button class="btn-small btn-storico-detail" onclick="openQodnetRinnovoModal('${q.id}')">
+                    🔄 Rinnova
+                </button>
+                <button class="btn-small" style="background:#f0f0f0;color:#555;"
+                    onclick="updateStatoQodnet('${q.id}','Incorporato')">
+                    📥 Incorporato
+                </button>
+            </div>` : '';
+
+            html += `
+            <div class="storico-card">
+                <div class="storico-card-header">
+                    <span class="storico-id">${q.id} &nbsp;<span style="color:#888;font-weight:400;font-size:13px;">${q.tipo || ''}</span></span>
+                    <span class="storico-badge ${statoClass}">${q.stato}</span>
+                </div>
+                <div class="storico-descrizione">${q.prodotto || '—'}</div>
+                <div class="firma-card-body">
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Inizio</span>
+                        <span class="storico-stat-value">${q.dataInizio || '—'}</span>
+                    </div>
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Scadenza</span>
+                        <span class="storico-stat-value">${q.dataScadenza || '—'}</span>
+                    </div>
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Imponibile</span>
+                        <span class="storico-stat-value">€ ${parseFloat(q.imponibile || 0).toFixed(2)}</span>
+                    </div>
+                    <div class="firma-stat">
+                        <span class="storico-stat-label">Provvigione</span>
+                        <span class="storico-stat-value">€ ${parseFloat(q.provvigione || 0).toFixed(2)} <small style="color:#888;">(${q.percentuale || 20}%)</small></span>
+                    </div>
+                </div>
+                ${configHtml}
+                ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
+                ${q.note ? `<div class="storico-date">${q.note}</div>` : ''}
+                ${actionsHtml}
+            </div>`;
+        });
+        html += `</div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function openQodnetRinnovoModal(id) {
+    const record = qodnetData.find(q => q.id === id);
+    if (!record) { alert('Record non trovato'); return; }
+
+    document.getElementById('qodnetRinnovoId').value = id;
+    document.getElementById('qodnetRinnovoCliente').textContent = record.nomeCliente || '';
+    document.getElementById('qodnetRinnovoDettagli').textContent =
+        `${record.tipo || ''} — ${record.prodotto || ''} | Scadenza attuale: ${record.dataScadenza || '—'}`;
+
+    // Data scadenza default: +1 anno dall'attuale
+    const rinnovoScad = document.getElementById('qodnetRinnovoDataScadenza');
+    if (rinnovoScad) {
+        const base = record.dataScadenza ? new Date(record.dataScadenza) : new Date();
+        base.setFullYear(base.getFullYear() + 1);
+        rinnovoScad.value = base.toISOString().split('T')[0];
+    }
+
+    // Pre-popola configurazione e valori economici
+    const configEl = document.getElementById('qodnetRinnovoConfigurazione');
+    if (configEl) configEl.value = record.configurazione || '';
+
+    const impEl  = document.getElementById('qodnetRinnovoImponibile');
+    const percEl = document.getElementById('qodnetRinnovoPercentuale');
+    if (impEl)  impEl.value  = record.imponibile  || '';
+    if (percEl) percEl.value = record.percentuale || '20';
+    calcQodnetRinnovoProvvigione();
+
+    const modal = document.getElementById('qodnetRinnovoModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeQodnetRinnovoModal() {
+    const modal = document.getElementById('qodnetRinnovoModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function calcQodnetRinnovoProvvigione() {
+    const imp  = parseFloat(document.getElementById('qodnetRinnovoImponibile')?.value) || 0;
+    const perc = parseFloat(document.getElementById('qodnetRinnovoPercentuale')?.value) || 0;
+    const field = document.getElementById('qodnetRinnovoProvvigione');
+    if (field) field.value = (imp * perc / 100).toFixed(2);
+}
+
+async function submitQodnetRinnovo(e) {
+    e.preventDefault();
+
+    const id           = document.getElementById('qodnetRinnovoId')?.value || '';
+    const dataScadenza = document.getElementById('qodnetRinnovoDataScadenza')?.value || '';
+    const config       = (document.getElementById('qodnetRinnovoConfigurazione')?.value || '').trim();
+    const imponibile   = document.getElementById('qodnetRinnovoImponibile')?.value || '';
+    const percentuale  = document.getElementById('qodnetRinnovoPercentuale')?.value || '20';
+    const provvigione  = document.getElementById('qodnetRinnovoProvvigione')?.value || '';
+    const note         = (document.getElementById('qodnetRinnovoNote')?.value || '').trim();
+
+    if (!id || !dataScadenza) { alert('⚠️ Dati mancanti'); return; }
+
+    const btn = e.submitter || document.querySelector('#qodnetRinnovoForm button[type="submit"]');
+    const origText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Rinnovando...'; }
+
+    try {
+        const params = [
+            `id=${encodeURIComponent(id)}`,
+            `data_scadenza=${dataScadenza}`,
+            `configurazione=${encodeURIComponent(config)}`,
+            `imponibile=${imponibile}`,
+            `percentuale=${percentuale}`,
+            `provvigione=${provvigione}`,
+            `note=${encodeURIComponent(note)}`
+        ].join('&');
+
+        const response = await fetch(`${getAPIUrl()}?action=rinnova_qodnet&${params}`);
+        const result   = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        alert(`✅ Rinnovo completato: ${result.nuovoId}`);
+        closeQodnetRinnovoModal();
+        document.getElementById('qodnetRinnovoForm').reset();
+        qodnetData = [];
+        riepilogoLoaded.qodnet = false;
+        switchVenditeSubtab('qodnet', 'riepilogo');
+
+    } catch (error) {
+        console.error('Errore rinnovo QODNET:', error);
+        alert('❌ Errore: ' + error.message);
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = origText; }
+    }
+}
+
+async function updateStatoQodnet(id, stato) {
+    if (!confirm(`Segnare questo abbonamento come "${stato}"?`)) return;
+
+    try {
+        const params = `id=${encodeURIComponent(id)}&stato=${encodeURIComponent(stato)}`;
+        const response = await fetch(`${getAPIUrl()}?action=update_stato_qodnet&${params}`);
+        const result   = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        qodnetData = [];
+        riepilogoLoaded.qodnet = false;
+        loadQodnetRiepilogo();
+
+    } catch (error) {
+        console.error('Errore update stato QODNET:', error);
+        alert('❌ Errore: ' + error.message);
+    }
+}
+
 // Esporta funzioni per uso globale
 if (typeof window !== 'undefined') {
     window.initVenditeTab = initVenditeTab;
@@ -1429,4 +1794,16 @@ if (typeof window !== 'undefined') {
     window.filterCanoniDebounced = filterCanoniDebounced;
     window.switchVenditeSection = switchVenditeSection;
     window.switchVenditeSubtab = switchVenditeSubtab;
+    window.openQodnetForm = openQodnetForm;
+    window.closeQodnetModal = closeQodnetModal;
+    window.calcQodnetProvvigione = calcQodnetProvvigione;
+    window.submitQodnet = submitQodnet;
+    window.loadQodnetRiepilogo = loadQodnetRiepilogo;
+    window.filterQodnet = filterQodnet;
+    window.filterQodnetDebounced = filterQodnetDebounced;
+    window.openQodnetRinnovoModal = openQodnetRinnovoModal;
+    window.closeQodnetRinnovoModal = closeQodnetRinnovoModal;
+    window.calcQodnetRinnovoProvvigione = calcQodnetRinnovoProvvigione;
+    window.submitQodnetRinnovo = submitQodnetRinnovo;
+    window.updateStatoQodnet = updateStatoQodnet;
 }
