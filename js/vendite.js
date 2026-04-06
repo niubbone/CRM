@@ -14,7 +14,7 @@ const getAPIUrl = () => {
     if (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL) {
         return CONFIG.APPS_SCRIPT_URL;
     }
-    return 'https://script.google.com/macros/s/AKfycbyVth91EYNt38fXkL_Nessd-J4PE8yu_hUy1nxKIwryShRX-MluW71Ty_2dtok7X2ll/exec';
+    return 'https://script.google.com/macros/s/AKfycbwC5aUlvKNTzO_LZ9iQiGW1RwXpj04pJFhj52nBaWbRLuaD_dt3EbZa9crMNjb89vRq/exec';
 };
 let scadenzeData = null;
 
