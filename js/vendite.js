@@ -14,7 +14,7 @@ const getAPIUrl = () => {
     if (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL) {
         return CONFIG.APPS_SCRIPT_URL;
     }
-    return 'https://script.google.com/macros/s/AKfycbwC5aUlvKNTzO_LZ9iQiGW1RwXpj04pJFhj52nBaWbRLuaD_dt3EbZa9crMNjb89vRq/exec';
+    return 'https://script.google.com/macros/s/AKfycbz6wg-oCcnitZKZKC756Q74wf4HYOxNn8ARgj6ewFCBuLFUAqdwHZqSWloZ67vRPcO-/exec';
 };
 let scadenzeData = null;
 
@@ -1093,6 +1093,9 @@ function renderFirme(firme) {
                 ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
                 ${f.note ? `<div class="storico-date">${f.note}</div>` : ''}
                 ${f.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${f.idPrecedente}</div>` : ''}
+                ${f.nFattura
+                    ? `<div class="storico-date">🧾 Fattura: <strong>${f.nFattura}</strong>${f.dataFattura ? ' — ' + f.dataFattura : ''}</div>`
+                    : (isAttivo ? `<div class="storico-actions"><button class="btn-small" style="background:#e8f4fd;color:#0c63e4;" onclick="openFirmaFatturaModal('${f.idFirma}', '${f.nomeCliente}', '${f.tipo}')">📋 Registra fattura</button></div>` : '')}
                 ${isAttivo ? `
                 <div class="storico-actions">
                     <button class="btn-small btn-storico-detail"
@@ -1398,6 +1401,53 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
+}
+
+// =======================================================================
+// === FATTURA FIRMA DIGITALE ===
+// =======================================================================
+
+function openFirmaFatturaModal(idFirma, nomeCliente, tipo) {
+    document.getElementById('firmaFatturaId').value = idFirma;
+    document.getElementById('firmaFatturaInfo').textContent = `${idFirma} — ${nomeCliente} (${tipo})`;
+    const oggi = new Date().toISOString().split('T')[0];
+    document.getElementById('firmaFatturaData').value = oggi;
+    document.getElementById('firmaFatturaN').value = '';
+    const modal = document.getElementById('firmaFatturaModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeFirmaFatturaModal() {
+    const modal = document.getElementById('firmaFatturaModal');
+    if (modal) modal.classList.remove('active');
+}
+
+async function submitFirmaFattura(e) {
+    e.preventDefault();
+    const idFirma    = document.getElementById('firmaFatturaId').value;
+    const nFattura   = document.getElementById('firmaFatturaN').value.trim();
+    const dataFattura = document.getElementById('firmaFatturaData').value;
+
+    const btn = document.getElementById('firmaFatturaSubmitBtn');
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Salvataggio...';
+
+    try {
+        const params = `firma_id=${encodeURIComponent(idFirma)}&n_fattura=${encodeURIComponent(nFattura)}&data_fattura=${dataFattura}`;
+        const response = await fetch(`${getAPIUrl()}?action=update_fattura_firma&${params}`);
+        const result   = await response.json();
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+        closeFirmaFatturaModal();
+        riepilogoLoaded.firme = false;
+        loadFirmeRiepilogo();
+    } catch (error) {
+        console.error('Errore registrazione fattura firma:', error);
+        alert('❌ Errore: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+    }
 }
 
 // =======================================================================
@@ -1789,6 +1839,9 @@ if (typeof window !== 'undefined') {
     window.loadFirmeRiepilogo = loadFirmeRiepilogo;
     window.filterFirme = filterFirme;
     window.filterFirmeDebounced = filterFirmeDebounced;
+    window.openFirmaFatturaModal = openFirmaFatturaModal;
+    window.closeFirmaFatturaModal = closeFirmaFatturaModal;
+    window.submitFirmaFattura = submitFirmaFattura;
     window.loadCanoniRiepilogo = loadCanoniRiepilogo;
     window.filterCanoni = filterCanoni;
     window.filterCanoniDebounced = filterCanoniDebounced;

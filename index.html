@@ -957,6 +957,31 @@
     </div>
 </div>
 
+<!-- Modal Firma - Registra Fattura -->
+<div id="firmaFatturaModal" class="modal-vendite">
+    <div class="modal-content-vendite">
+        <div class="modal-header-vendite">
+            <span>Registra Fattura</span>
+            <button class="modal-close-vendite" onclick="closeFirmaFatturaModal()">&times;</button>
+        </div>
+        <form id="firmaFatturaForm" onsubmit="submitFirmaFattura(event)">
+            <input type="hidden" id="firmaFatturaId">
+            <div class="info-banner" style="margin-bottom:16px;">
+                <strong id="firmaFatturaInfo"></strong>
+            </div>
+            <div class="form-group">
+                <label>Numero Fattura *</label>
+                <input type="text" id="firmaFatturaN" required placeholder="es. 2026/042">
+            </div>
+            <div class="form-group">
+                <label>Data Fattura *</label>
+                <input type="date" id="firmaFatturaData" required>
+            </div>
+            <button type="submit" class="btn-primary" id="firmaFatturaSubmitBtn">Salva</button>
+        </form>
+    </div>
+</div>
+
 <!-- Modal QODNET - Inserimento -->
 <div id="qodnetModal" class="modal-vendite">
     <div class="modal-content-vendite">
