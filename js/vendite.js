@@ -1042,70 +1042,61 @@ function renderFirme(firme) {
         return;
     }
 
-    // Raggruppa per cliente
-    const gruppi = {};
-    firme.forEach(f => {
-        const k = f.nomeCliente || '—';
-        if (!gruppi[k]) gruppi[k] = [];
-        gruppi[k].push(f);
-    });
+    // Ordina per data inizio discendente (più recenti prima)
+    const parseDate = s => { if (!s) return 0; const p = s.split('/'); return new Date(p[2], p[1]-1, p[0]).getTime(); };
+    const sorted = [...firme].sort((a, b) => parseDate(b.dataInizio) - parseDate(a.dataInizio));
 
     let html = '';
-    Object.keys(gruppi).sort().forEach(cliente => {
-        html += `<div class="storico-gruppo">
-            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+    sorted.forEach(f => {
+        const isAttivo  = f.stato.toLowerCase() === 'attivo';
+        const statoClass = isAttivo ? 'attivo' : 'scaduto';
 
-        gruppi[cliente].forEach(f => {
-            const isAttivo  = f.stato.toLowerCase() === 'attivo';
-            const statoClass = isAttivo ? 'attivo' : 'scaduto';
-
-            let scadenzaInfo = '';
-            if (f.giorniAllaScadenza !== null) {
-                if (f.giorniAllaScadenza < 0) {
-                    scadenzaInfo = `<span style="color:#dc3545;">Scaduta da ${Math.abs(f.giorniAllaScadenza)} giorni</span>`;
-                } else if (f.giorniAllaScadenza <= 60) {
-                    scadenzaInfo = `<span style="color:#fd7e14;">Scade tra ${f.giorniAllaScadenza} giorni</span>`;
-                } else {
-                    scadenzaInfo = `<span style="color:#28a745;">Scade tra ${f.giorniAllaScadenza} giorni</span>`;
-                }
+        let scadenzaInfo = '';
+        if (f.giorniAllaScadenza !== null) {
+            if (f.giorniAllaScadenza < 0) {
+                scadenzaInfo = `<span style="color:#dc3545;">Scaduta da ${Math.abs(f.giorniAllaScadenza)} giorni</span>`;
+            } else if (f.giorniAllaScadenza <= 60) {
+                scadenzaInfo = `<span style="color:#fd7e14;">Scade tra ${f.giorniAllaScadenza} giorni</span>`;
+            } else {
+                scadenzaInfo = `<span style="color:#28a745;">Scade tra ${f.giorniAllaScadenza} giorni</span>`;
             }
+        }
 
-            html += `
-            <div class="storico-card">
-                <div class="storico-card-header">
-                    <span class="storico-id">${f.idFirma} &nbsp;<span style="color:#888;font-weight:400;font-size:13px;">${f.tipo}</span></span>
-                    <span class="storico-badge ${statoClass}">${f.stato}</span>
+        html += `
+        <div class="storico-card">
+            <div class="storico-card-header">
+                <span class="storico-id">${f.idFirma} &nbsp;<span style="color:#888;font-weight:400;font-size:13px;">${f.tipo}</span></span>
+                <span class="storico-badge ${statoClass}">${f.stato}</span>
+            </div>
+            <div class="storico-descrizione" style="color:#555;">${f.nomeCliente}</div>
+            <div class="firma-card-body">
+                <div class="firma-stat">
+                    <span class="storico-stat-label">Inizio</span>
+                    <span class="storico-stat-value">${f.dataInizio || '—'}</span>
                 </div>
-                <div class="firma-card-body">
-                    <div class="firma-stat">
-                        <span class="storico-stat-label">Inizio</span>
-                        <span class="storico-stat-value">${f.dataInizio || '—'}</span>
-                    </div>
-                    <div class="firma-stat">
-                        <span class="storico-stat-label">Scadenza</span>
-                        <span class="storico-stat-value">${f.dataScadenza || '—'}</span>
-                    </div>
-                    <div class="firma-stat">
-                        <span class="storico-stat-label">Importo</span>
-                        <span class="storico-stat-value">€ ${parseFloat(f.importo).toFixed(2)}</span>
-                    </div>
+                <div class="firma-stat">
+                    <span class="storico-stat-label">Scadenza</span>
+                    <span class="storico-stat-value">${f.dataScadenza || '—'}</span>
                 </div>
-                ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
-                ${f.note ? `<div class="storico-date">${f.note}</div>` : ''}
-                ${f.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${f.idPrecedente}</div>` : ''}
-                ${f.nFattura
-                    ? `<div class="storico-date">🧾 Fattura: <strong>${f.nFattura}</strong>${f.dataFattura ? ' — ' + f.dataFattura : ''}</div>`
-                    : (isAttivo ? `<div class="storico-actions"><button class="btn-small" style="background:#e8f4fd;color:#0c63e4;" onclick="openFirmaFatturaModal('${f.idFirma}', '${f.nomeCliente}', '${f.tipo}')">📋 Registra fattura</button></div>` : '')}
-                ${isAttivo ? `
-                <div class="storico-actions">
-                    <button class="btn-small btn-storico-detail"
-                        onclick="openRinnovoModal('${f.idFirma}', 'FIRMA')">
-                        🔄 Rinnova
-                    </button>
-                </div>` : ''}
-            </div>`;
-        });
-        html += `</div>`;
+                <div class="firma-stat">
+                    <span class="storico-stat-label">Importo</span>
+                    <span class="storico-stat-value">€ ${parseFloat(f.importo).toFixed(2)}</span>
+                </div>
+            </div>
+            ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
+            ${f.note ? `<div class="storico-date">${f.note}</div>` : ''}
+            ${f.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${f.idPrecedente}</div>` : ''}
+            ${f.nFattura
+                ? `<div class="storico-date">🧾 Fattura: <strong>${f.nFattura}</strong>${f.dataFattura ? ' — ' + f.dataFattura : ''}</div>`
+                : (isAttivo ? `<div class="storico-actions"><button class="btn-small" style="background:#e8f4fd;color:#0c63e4;" onclick="openFirmaFatturaModal('${f.idFirma}', '${f.nomeCliente}', '${f.tipo}')">📋 Registra fattura</button></div>` : '')}
+            ${isAttivo ? `
+            <div class="storico-actions">
+                <button class="btn-small btn-storico-detail"
+                    onclick="openRinnovoModal('${f.idFirma}', 'FIRMA')">
+                    🔄 Rinnova
+                </button>
+            </div>` : ''}
+        </div>`;
     });
 
     container.innerHTML = html;
