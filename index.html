@@ -203,9 +203,71 @@
 /* ========================================= */
 
 </style>
+<style>
+/* === LOADING BAR === */
+#loading-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #1976D2, #42a5f5);
+    z-index: 9999;
+    transition: width 0.3s ease, opacity 0.4s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+#loading-bar.loading {
+    opacity: 1;
+    animation: loading-bar-grow 1.5s ease-in-out infinite;
+}
+#loading-bar.done {
+    width: 100% !important;
+    opacity: 0;
+    transition: width 0.1s ease, opacity 0.5s ease 0.1s;
+}
+@keyframes loading-bar-grow {
+    0%   { width: 10%; }
+    50%  { width: 70%; }
+    100% { width: 85%; }
+}
+</style>
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 </head>
 <body>
+<div id="loading-bar"></div>
+<script>
+(function() {
+    const bar = document.getElementById('loading-bar');
+    let active = 0;
+    let doneTimer = null;
+
+    window._showLoading = function() {
+        active++;
+        if (doneTimer) { clearTimeout(doneTimer); doneTimer = null; }
+        bar.classList.remove('done');
+        bar.classList.add('loading');
+    };
+
+    window._hideLoading = function() {
+        active = Math.max(0, active - 1);
+        if (active === 0) {
+            bar.classList.remove('loading');
+            bar.classList.add('done');
+            doneTimer = setTimeout(() => {
+                bar.classList.remove('done');
+                bar.style.width = '0%';
+            }, 600);
+        }
+    };
+
+    // Intercetta tutti i fetch globalmente
+    const _fetch = window.fetch;
+    window.fetch = function(...args) {
+        window._showLoading();
+        return _fetch.apply(this, args).finally(() => window._hideLoading());
+    };
+})();
+</script>
 
 <div class="tabs">
     <button class="tab-button active" onclick="switchTab('timesheet')">⏱️ <span class="tab-label">Timesheet</span></button>
