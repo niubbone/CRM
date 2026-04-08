@@ -510,7 +510,6 @@
         <option value="fatturata">✅ Fatturata</option>
       </select>
       <button class="btn-secondary" onclick="resetProformaFilters()" title="Reimposta tutti i filtri">🔄 Reset</button>
-      <button class="btn-secondary" onclick="window.markTabDirty('proforma'); loadProformaList();" title="Ricarica elenco">🔄 Aggiorna</button>
     </div>
     
     <div id="proforma-list-container">
@@ -638,10 +637,6 @@
     <div>
       <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px;">&nbsp;</label>
       <button onclick="resetFattureFilters()" style="padding:10px 14px;background:#e74c3c;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;box-sizing:border-box;margin-bottom:8px;white-space:nowrap;">✕ Reset</button>
-    </div>
-    <div>
-      <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px;">&nbsp;</label>
-      <button onclick="window.markTabDirty('fatture'); loadFattureList();" style="padding:10px 14px;background:#6c757d;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;box-sizing:border-box;margin-bottom:8px;" title="Ricarica elenco">🔄</button>
     </div>
   </div>
   <div id="fatture-list-container">
