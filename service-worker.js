@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.7.4';
+const SW_BUILD = '4.7.5';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -60,7 +60,7 @@ const STATIC_FILES = [
 ];
 
 // API endpoint da cachare (per offline fallback)
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxodRCMoPa9VW2nphsazv8Ux72mebjCSKd48c0HKoCOsrG5Z-ZJFyzCWHt6qhCgPxkU/exec';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbw9CdNzb8Tfkd31ogn-2SXXxJ6B8gLcx-2SgoLBLjc/exec';
 
 /**
  * INSTALL - Cache static assets

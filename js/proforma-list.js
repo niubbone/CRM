@@ -66,7 +66,7 @@ async function loadProformaList(clientName = null, retryCount = 0) {
     }
     // Tentativo 3: Hardcoded fallback
     else {
-      API_URL = 'https://script.google.com/macros/s/AKfycbxrpkmfBlraaYihYYtJB0uvg8K60sPM-9uLmybcqoiVM6rSabZe6QK_-00L9CGAFwdo/exec';
+      API_URL = 'https://script.google.com/macros/s/AKfycbw9CdNzb8Tfkd31ogn-2SXXxJ6B8gLcx-2SgoLBLjc/exec';
       console.warn('⚠️ Uso API URL fallback hardcoded');
     }
     
