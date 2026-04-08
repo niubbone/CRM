@@ -429,6 +429,8 @@ async function saveNumeroFattura(event) {
     }
     
     console.log('✅ Fattura salvata con successo');
+    window.markTabDirty && window.markTabDirty('proforma');
+    window.markTabDirty && window.markTabDirty('fatture');
     alert(`✅ Fattura ${numeroFattura} registrata per proforma ${nProforma}${pagato ? ' (Pagata)' : ''}`);
     closeFatturaModal();
     loadProformaList(); // Ricarica lista

@@ -439,6 +439,7 @@ async function submitVendita(e) {
         const result = await response.json();
         
         if (result.success) {
+            window.markTabDirty && window.markTabDirty('vendite');
             if (tipo === 'pacchetto') {
                 closeVenditaModal();
                 document.getElementById('venditaForm').reset();
@@ -749,6 +750,7 @@ async function submitRinnovo(e) {
         const result = await response.json();
         
         if (result.success) {
+            window.markTabDirty && window.markTabDirty('vendite');
             alert('✅ Rinnovo completato con successo!');
             closeRinnovoModal();
             loadScadenze();
@@ -1429,6 +1431,8 @@ async function submitFirmaFattura(e) {
         const response = await fetch(`${getAPIUrl()}?action=update_fattura_firma&${params}`);
         const result   = await response.json();
         if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+        window.markTabDirty && window.markTabDirty('vendite');
+        window.markTabDirty && window.markTabDirty('fatture');
         closeFirmaFatturaModal();
         riepilogoLoaded.firme = false;
         loadFirmeRiepilogo();
@@ -1539,6 +1543,7 @@ async function submitQodnet(e) {
 
         if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
 
+        window.markTabDirty && window.markTabDirty('vendite');
         alert(`✅ Abbonamento creato: ${result.id}`);
         closeQodnetModal();
         document.getElementById('qodnetForm').reset();
@@ -1770,6 +1775,7 @@ async function submitQodnetRinnovo(e) {
 
         if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
 
+        window.markTabDirty && window.markTabDirty('vendite');
         alert(`✅ Rinnovo completato: ${result.nuovoId}`);
         closeQodnetRinnovoModal();
         document.getElementById('qodnetRinnovoForm').reset();

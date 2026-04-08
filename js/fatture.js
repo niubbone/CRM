@@ -258,6 +258,7 @@ async function saveNuovaFattura(event) {
     const response = await fetch(`${API_URL}?${params.toString()}`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore salvataggio');
+    window.markTabDirty && window.markTabDirty('fatture');
     alert('✅ Fattura ' + nFattura + ' inserita con successo!');
     closeNuovaFatturaModal();
     loadFattureList();
@@ -303,6 +304,7 @@ async function savePagamento(event) {
     const response = await fetch(`${API_URL}?${params.toString()}`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore');
+    window.markTabDirty && window.markTabDirty('fatture');
     alert('✅ Fattura ' + nFattura + ' segnata come pagata!');
     closePagamentoModal();
     loadFattureList();
