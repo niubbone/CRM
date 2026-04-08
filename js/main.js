@@ -19,28 +19,27 @@ import { initUtilities } from './utilities.js';
  * Cambia tab attivo - ESPOSTA GLOBALMENTE SUBITO
  * VERSIONE CORRETTA con protezione undefined e controlli null
  */
+// Traccia quali tab sono già state inizializzate nella sessione corrente
+const _tabLoaded = {};
+
+// Esponi funzione per invalidare cache di una tab (chiamarla dopo inserimenti)
+window.markTabDirty = function(tabName) {
+  _tabLoaded[tabName] = false;
+};
+
 window.switchTab = function(tabName) {
-  // 🛡️ PROTEZIONE: Previeni errori se chiamata senza parametro valido
   if (!tabName || tabName === 'undefined') {
     console.warn('⚠️ switchTab chiamata senza parametro valido - operazione ignorata');
     return;
   }
-  
-  // Nascondi tutte le tab - CON CONTROLLO NULL
+
   document.querySelectorAll('.tab-content').forEach(tab => {
-    if (tab && tab.classList) {
-      tab.classList.remove('active');
-    }
+    if (tab && tab.classList) tab.classList.remove('active');
   });
-  
-  // Disattiva tutti i pulsanti - CON CONTROLLO NULL
   document.querySelectorAll('.tab-button').forEach(btn => {
-    if (btn && btn.classList) {
-      btn.classList.remove('active');
-    }
+    if (btn && btn.classList) btn.classList.remove('active');
   });
-  
-  // Attiva la tab selezionata - CON CONTROLLO NULL
+
   const targetTab = document.getElementById(tabName + '-tab');
   if (targetTab && targetTab.classList) {
     targetTab.classList.add('active');
@@ -48,49 +47,32 @@ window.switchTab = function(tabName) {
     console.error('❌ Tab non trovata:', tabName + '-tab');
     return;
   }
-  
-  // Attiva il pulsante corrispondente
+
   const activeBtn = Array.from(document.querySelectorAll('.tab-button'))
     .find(btn => btn && btn.textContent && btn.textContent.toLowerCase().includes(tabName));
-  
-  if (activeBtn && activeBtn.classList) {
-    activeBtn.classList.add('active');
-  }
-  
-  // Inizializza il contenuto specifico della tab
+  if (activeBtn && activeBtn.classList) activeBtn.classList.add('active');
+
+  // Inizializza solo se non già caricata in questa sessione
+  if (_tabLoaded[tabName]) return;
+  _tabLoaded[tabName] = true;
+
   switch(tabName) {
     case 'proforma':
-      if (typeof showProformaStep === 'function') {
-        showProformaStep(1);
-      }
-      // 🆕 Carica automaticamente la lista proforma
-      if (typeof loadProformaList === 'function') {
-        loadProformaList();
-      }
-      // 🆕 Popola il dropdown clienti
-      if (typeof populateClientDropdown === 'function') {
-        populateClientDropdown();
-      }
+      if (typeof showProformaStep === 'function') showProformaStep(1);
+      if (typeof loadProformaList === 'function') loadProformaList();
+      if (typeof populateClientDropdown === 'function') populateClientDropdown();
       break;
     case 'utilities':
-      if (typeof initUtilities === 'function') {
-        initUtilities();
-      }
+      if (typeof initUtilities === 'function') initUtilities();
       break;
     case 'vendite':
-      if (typeof initVenditeTab === 'function') {
-        initVenditeTab();
-      }
+      if (typeof initVenditeTab === 'function') initVenditeTab();
       break;
     case 'fatture':
-      if (typeof initFattureTab === 'function') {
-        initFattureTab();
-      }
+      if (typeof initFattureTab === 'function') initFattureTab();
       break;
     case 'clienti':
-      if (typeof initClienteTab === 'function') {
-        initClienteTab();
-      }
+      if (typeof initClienteTab === 'function') initClienteTab();
       break;
   }
 };

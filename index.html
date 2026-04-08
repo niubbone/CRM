@@ -203,9 +203,49 @@
 /* ========================================= */
 
 </style>
+<style>
+#spinner-overlay {
+    display: none;
+    position: fixed;
+    top: 48px; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.55);
+    z-index: 8000;
+    align-items: center;
+    justify-content: center;
+}
+#spinner-overlay.visible { display: flex; }
+.spinner {
+    width: 44px; height: 44px;
+    border: 4px solid #e0e0e0;
+    border-top-color: #1976D2;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 </head>
 <body>
+<div id="spinner-overlay"><div class="spinner"></div></div>
+<script>
+(function() {
+    let active = 0;
+    const overlay = document.getElementById('spinner-overlay');
+    window._showLoading = function() {
+        active++;
+        overlay.classList.add('visible');
+    };
+    window._hideLoading = function() {
+        active = Math.max(0, active - 1);
+        if (active === 0) overlay.classList.remove('visible');
+    };
+    const _fetch = window.fetch;
+    window.fetch = function(...args) {
+        window._showLoading();
+        return _fetch.apply(this, args).finally(() => window._hideLoading());
+    };
+})();
+</script>
 
 <div class="tabs">
     <button class="tab-button active" onclick="switchTab('timesheet')">⏱️ <span class="tab-label">Timesheet</span></button>
