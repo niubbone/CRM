@@ -86,17 +86,11 @@ function displaySearchResults(clienti) {
                     <button class="btn-small btn-primary" onclick="event.stopPropagation(); loadClienteDetail('${cliente.id}')" title="Apri riepilogo cliente" style="font-size:12px;padding:4px 10px;">
                         🔍 Dettaglio
                     </button>
-                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickViewCliente('${cliente.id}')" title="Visualizza dati anagrafici">
-                        👁️
+                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickViewCliente('${cliente.id}')" title="Visualizza dati anagrafici" style="font-size:12px;padding:4px 10px;">
+                        👁️ Anagrafica
                     </button>
-                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickEditCliente('${cliente.id}')" title="Modifica cliente">
-                        ✏️
-                    </button>
-                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickCopyCliente(${JSON.stringify(cliente).replace(/"/g, '&quot;')})" title="Copia dati">
-                        📋
-                    </button>
-                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickExportVCard(${JSON.stringify(cliente).replace(/"/g, '&quot;')})" title="Esporta vCard">
-                        📇
+                    <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickEditCliente('${cliente.id}')" title="Modifica cliente" style="font-size:12px;padding:4px 10px;">
+                        ✏️ Modifica
                     </button>
                 </div>
             </div>
