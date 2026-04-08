@@ -11,7 +11,7 @@ import { formatDate, formatCurrency } from './utils.js';
 // Definisci API_URL globale
 const API_URL = (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL)
   ? CONFIG.APPS_SCRIPT_URL
-  : 'https://script.google.com/macros/s/AKfycbw9CdNzb8Tfkd31ogn-2SXXxJ6B8gLcx-2SgoLBLjc/exec';
+  : 'https://script.google.com/macros/s/AKfycbxodRCMoPa9VW2nphsazv8Ux72mebjCSKd48c0HKoCOsrG5Z-ZJFyzCWHt6qhCgPxkU/exec';
 
 /**
  * Popola il dropdown clienti nel tab proforma
