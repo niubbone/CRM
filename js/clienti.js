@@ -18,14 +18,29 @@ let currentClienteProdotti = []; // Per cache prodotti cliente
 /**
  * Ricerca clienti per nome, P.IVA, CF, email
  */
+let _searchDebounceTimer = null;
+
+function searchClienteDebounced() {
+    clearTimeout(_searchDebounceTimer);
+    const term = document.getElementById('cliente-search').value.trim();
+    if (term.length < 2) return;
+    _searchDebounceTimer = setTimeout(() => searchCliente(), 350);
+}
+
+function populateClienteSearchList() {
+    const dl = document.getElementById('cliente-search-list');
+    if (!dl || !window.clients || dl.children.length > 0) return;
+    window.clients.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.nome;
+        dl.appendChild(opt);
+    });
+}
+
 async function searchCliente() {
     const searchTerm = document.getElementById('cliente-search').value.trim();
-    
-    if (!searchTerm) {
-        alert('Inserisci un termine di ricerca');
-        return;
-    }
-    
+    if (!searchTerm) return;
+
     try {
         showNotification('clienti-info', '⏳ Ricerca in corso...', 'info');
         
@@ -1455,6 +1470,7 @@ function chiudiScalaExtraModal() {
 
 // Mantieni window.* solo per funzioni chiamate da HTML onclick
 window.searchCliente = searchCliente;
+window.searchClienteDebounced = searchClienteDebounced;
 window.loadClienteDetail = loadClienteDetail;
 window.closeClienteDetail = closeClienteDetail;
 window.openNewClienteForm = openNewClienteForm;
@@ -1634,6 +1650,7 @@ function displayClienteMovimenti(movimenti) {
 window.loadClienteMovimenti = loadClienteMovimenti;
 
 function initClienteTab() {
+    populateClienteSearchList();
     loadClienteMovimenti(null);
 }
 window.initClienteTab = initClienteTab;

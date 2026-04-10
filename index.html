@@ -1348,13 +1348,16 @@
             <h3>🔍 Ricerca Cliente</h3>
             
             <div class="search-controls">
-                <input 
-                    type="text" 
-                    id="cliente-search" 
-                    class="search-input" 
+                <input
+                    type="text"
+                    id="cliente-search"
+                    class="search-input"
+                    list="cliente-search-list"
                     placeholder="Cerca per nome, P.IVA, CF, email..."
+                    oninput="searchClienteDebounced()"
                     onkeypress="if(event.key === 'Enter') searchCliente()"
                 >
+                <datalist id="cliente-search-list"></datalist>
                 <button class="btn btn-primary" onclick="searchCliente()">
                     🔍 Cerca
                 </button>
