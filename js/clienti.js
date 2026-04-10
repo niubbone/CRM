@@ -23,7 +23,7 @@ function populateClienteSearchList() {
     if (!dl || !window.clients || dl.children.length > 0) return;
     window.clients.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.nome;
+        opt.value = c.Nome_Cliente || c.nome || '';
         dl.appendChild(opt);
     });
 }
