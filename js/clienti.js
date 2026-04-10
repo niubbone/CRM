@@ -18,15 +18,6 @@ let currentClienteProdotti = []; // Per cache prodotti cliente
 /**
  * Ricerca clienti per nome, P.IVA, CF, email
  */
-let _searchDebounceTimer = null;
-
-function searchClienteDebounced() {
-    clearTimeout(_searchDebounceTimer);
-    const term = document.getElementById('cliente-search').value.trim();
-    if (term.length < 2) return;
-    _searchDebounceTimer = setTimeout(() => searchCliente(), 350);
-}
-
 function populateClienteSearchList() {
     const dl = document.getElementById('cliente-search-list');
     if (!dl || !window.clients || dl.children.length > 0) return;
@@ -1470,7 +1461,6 @@ function chiudiScalaExtraModal() {
 
 // Mantieni window.* solo per funzioni chiamate da HTML onclick
 window.searchCliente = searchCliente;
-window.searchClienteDebounced = searchClienteDebounced;
 window.loadClienteDetail = loadClienteDetail;
 window.closeClienteDetail = closeClienteDetail;
 window.openNewClienteForm = openNewClienteForm;
