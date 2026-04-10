@@ -18,12 +18,23 @@ let currentClienteProdotti = []; // Per cache prodotti cliente
 /**
  * Ricerca clienti per nome, P.IVA, CF, email
  */
-function populateClienteSearchList() {
+async function populateClienteSearchList() {
     const dl = document.getElementById('cliente-search-list');
-    if (!dl || !window.clients || dl.children.length > 0) return;
-    window.clients.forEach(c => {
+    if (!dl) return;
+
+    // Se window.clients non è ancora caricato, fetchalo ora
+    if (!window.clients || window.clients.length === 0) {
+        try {
+            const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=get_data`);
+            const data = await res.json();
+            if (data.success && data.clients) window.clients = data.clients;
+        } catch(e) { return; }
+    }
+
+    if (dl.children.length > 0) return; // già popolato
+    (window.clients || []).forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.Nome_Cliente || c.nome || '';
+        opt.value = c.name || c.Nome_Cliente || c.nome || '';
         dl.appendChild(opt);
     });
 }
