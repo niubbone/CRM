@@ -430,23 +430,67 @@ function displayIntegrityResults(data) {
         
         // AVVISI
         if (data.warnings && data.warnings.length > 0) {
-            html += `
-                <div class="log-entry" data-level="WARNING">
-                    <div class="log-header">
-                        <span class="log-level warning">⚠️ AVVISI (${data.warnings.length})</span>
-                    </div>
-                    <div class="log-body">
-            `;
-            data.warnings.slice(0, 10).forEach(warning => {
-                html += `<strong>• ${warning.message}</strong><br>`;
-                if (warning.solution) {
-                    html += `<small style="color: #856404;">💡 ${warning.solution}</small><br>`;
+            // Separa le righe orfane dai warning normali
+            const orfaneWarning = data.warnings.find(w => w.category === 'RIGHE_ORFANE_PACCHETTO');
+            const altriWarnings = data.warnings.filter(w => w.category !== 'RIGHE_ORFANE_PACCHETTO');
+
+            if (altriWarnings.length > 0) {
+                html += `
+                    <div class="log-entry" data-level="WARNING">
+                        <div class="log-header">
+                            <span class="log-level warning">⚠️ AVVISI (${altriWarnings.length})</span>
+                        </div>
+                        <div class="log-body">
+                `;
+                altriWarnings.slice(0, 10).forEach(warning => {
+                    html += `<strong>• ${warning.message}</strong><br>`;
+                    if (warning.solution) {
+                        html += `<small style="color: #856404;">💡 ${warning.solution}</small><br>`;
+                    }
+                });
+                if (altriWarnings.length > 10) {
+                    html += `<small style="color: #666; font-style: italic;">... e altri ${altriWarnings.length - 10} avvisi</small>`;
                 }
-            });
-            if (data.warnings.length > 10) {
-                html += `<small style="color: #666; font-style: italic;">... e altri ${data.warnings.length - 10} avvisi</small>`;
+                html += `</div></div>`;
             }
-            html += `</div></div>`;
+
+            // Card dedicata per righe orfane con tabella + bottone riaggancia
+            if (orfaneWarning) {
+                const righe = orfaneWarning.righeOrfane || [];
+                const righeRows = righe.map(r => `
+                    <tr style="border-bottom:1px solid #f0f0f0;">
+                        <td style="padding:6px 8px;font-size:12px;color:#6c757d;">${r.idIntervento}</td>
+                        <td style="padding:6px 8px;">${r.nomeCliente}</td>
+                        <td style="padding:6px 8px;white-space:nowrap;">${r.data}</td>
+                        <td style="padding:6px 8px;font-size:12px;">${r.modAddebito}</td>
+                    </tr>`).join('');
+
+                html += `
+                    <div class="log-entry" data-level="WARNING" id="orfane-integrity-card">
+                        <div class="log-header">
+                            <span class="log-level warning">⚠️ RIGHE ORFANE PACCHETTI (${righe.length})</span>
+                        </div>
+                        <div class="log-body">
+                            <p style="margin:0 0 10px;">${orfaneWarning.message}</p>
+                            <div style="overflow-x:auto;margin-bottom:12px;">
+                                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                    <thead><tr style="background:#fff3cd;">
+                                        <th style="padding:6px 8px;text-align:left;">ID Intervento</th>
+                                        <th style="padding:6px 8px;text-align:left;">Cliente</th>
+                                        <th style="padding:6px 8px;text-align:left;">Data</th>
+                                        <th style="padding:6px 8px;text-align:left;">Mod. Addebito</th>
+                                    </tr></thead>
+                                    <tbody>${righeRows}</tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-warning btn-sm" id="orfane-riaggancia-btn" onclick="riagganciaApplicaDaIntegrity()">
+                                🔗 Riaggancia al pacchetto
+                            </button>
+                            <span id="orfane-riaggancia-status" style="margin-left:10px;font-size:13px;"></span>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         // AZIONE CONSIGLIATA
@@ -590,87 +634,28 @@ window.exportIntegrityReport = function() {
 };
 
 // =======================================================================
-// === RIAGGANCIA RIGHE ORFANE PACCHETTI ===
+// === RIAGGANCIA RIGHE ORFANE PACCHETTI (chiamata da Verifica Integrità) ===
 // =======================================================================
 
-window.riagganciaAnteprima = async function() {
-    const display = document.getElementById('orfane-display');
-    const applyBtn = document.getElementById('orfane-apply-btn');
-    display.innerHTML = '<p class="loading">⏳ Analisi in corso...</p>';
-    if (applyBtn) applyBtn.style.display = 'none';
-    try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=true`;
-        const res  = await fetch(url);
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-        display.innerHTML = buildOrfaneHTML(data);
-        if (applyBtn && data.agganciate > 0) applyBtn.style.display = 'inline-flex';
-    } catch(err) {
-        display.innerHTML = `<p style="color:#dc3545;">❌ Errore: ${err.message}</p>`;
-    }
-};
-
-window.riagganciaApplica = async function() {
-    if (!confirm(`Applicare le modifiche? Le righe verranno agganciate ai pacchetti trovati e quelle con "Errore Pacchetto" verranno impostate su "Scalato".`)) return;
-    const display = document.getElementById('orfane-display');
-    const applyBtn = document.getElementById('orfane-apply-btn');
-    display.innerHTML = '<p class="loading">⏳ Applicazione in corso...</p>';
-    if (applyBtn) applyBtn.style.display = 'none';
+window.riagganciaApplicaDaIntegrity = async function() {
+    if (!confirm('Applicare le modifiche? Le righe verranno agganciate ai pacchetti trovati e quelle con "Errore Pacchetto" verranno impostate su "Scalato".')) return;
+    const btn    = document.getElementById('orfane-riaggancia-btn');
+    const status = document.getElementById('orfane-riaggancia-status');
+    if (btn) btn.disabled = true;
+    if (status) status.textContent = '⏳ Applicazione in corso...';
     try {
         const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=false`;
         const res  = await fetch(url);
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
-        display.innerHTML = buildOrfaneHTML(data, true);
-        showNotification('diagnostic-info', `✅ ${data.agganciate} righe agganciate`, 'success');
+        if (status) status.innerHTML = `<span style="color:#28a745;">✅ ${data.agganciate} riga/e agganciate${data.errori > 0 ? ` (${data.errori} non agganciate)` : ''}</span>`;
+        if (btn) btn.style.display = 'none';
+        showNotification('diagnostic-info', `✅ ${data.agganciate} righe agganciate. Riesegui la verifica per confermare.`, 'success');
     } catch(err) {
-        display.innerHTML = `<p style="color:#dc3545;">❌ Errore: ${err.message}</p>`;
+        if (status) status.innerHTML = `<span style="color:#dc3545;">❌ ${err.message}</span>`;
+        if (btn) btn.disabled = false;
     }
 };
-
-function buildOrfaneHTML(data, applied = false) {
-    if (data.trovate === 0) {
-        return '<p style="padding:16px;color:#28a745;">✅ Nessuna riga orfana trovata. Tutti i timesheet sono correttamente agganciati.</p>';
-    }
-
-    const header = `
-        <div style="padding:12px 16px;background:#f8f9fa;border-radius:6px;margin-bottom:12px;display:flex;gap:24px;flex-wrap:wrap;">
-            <span>Righe orfane trovate: <strong>${data.trovate}</strong></span>
-            <span style="color:${data.agganciate>0?'#28a745':'#6c757d'}">Agganciabili: <strong>${data.agganciate}</strong></span>
-            ${data.errori > 0 ? `<span style="color:#dc3545">Non agganciabili: <strong>${data.errori}</strong></span>` : ''}
-            ${applied ? '<span style="background:#28a745;color:#fff;padding:2px 10px;border-radius:12px;font-size:12px;">✅ Applicate</span>' : '<span style="background:#fd7e14;color:#fff;padding:2px 10px;border-radius:12px;font-size:12px;">Anteprima</span>'}
-        </div>`;
-
-    const rows = data.righe.map(r => {
-        const canFix = !!r.idPacchettoAssegnato;
-        const rowStyle = !canFix ? 'background:#fff3f3;' : (applied && r.applicato ? 'background:#f0fff4;' : '');
-        return `<tr style="border-bottom:1px solid #f0f0f0;${rowStyle}">
-            <td style="padding:8px;font-size:12px;color:#6c757d;">${r.idIntervento}</td>
-            <td style="padding:8px;">${r.nomeCliente}</td>
-            <td style="padding:8px;white-space:nowrap;">${r.data}</td>
-            <td style="padding:8px;font-size:12px;">${r.modAddebito}</td>
-            <td style="padding:8px;font-weight:600;color:${canFix?'#1976D2':'#dc3545'};">${r.idPacchettoAssegnato || '—'}</td>
-            <td style="padding:8px;font-size:11px;color:#6c757d;">${r.motivazione}</td>
-            <td style="padding:8px;text-align:center;">${applied && r.applicato ? '✅' : (canFix ? '🔗' : '❌')}</td>
-        </tr>`;
-    }).join('');
-
-    return header + `
-        <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead><tr style="background:#f8f9fa;font-size:12px;">
-                <th style="padding:8px;text-align:left;">ID Intervento</th>
-                <th style="padding:8px;text-align:left;">Cliente</th>
-                <th style="padding:8px;text-align:left;">Data</th>
-                <th style="padding:8px;text-align:left;">Mod. Addebito</th>
-                <th style="padding:8px;text-align:left;">Pacchetto da agganciare</th>
-                <th style="padding:8px;text-align:left;">Motivazione</th>
-                <th style="padding:8px;text-align:center;">Stato</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-        </table>
-        </div>`;
-}
 
 /**
  * Visualizza log sistema
