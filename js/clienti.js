@@ -534,7 +534,7 @@ function displayClienteProdotti(prodotti) {
                 </div>
                 ${prodotto.tipo === 'Pacchetto' ? `
                 <div class="prodotto-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="openPacchettoDettaglio('${prodotto.id}', '${(prodotto.descrizione||'Pacchetto').replace(/'/g,"\\'")}')">
+                    <button class="btn btn-sm btn-secondary" onclick="openPacchettoDettaglio('${prodotto.id}', '${(prodotto.descrizione||'Pacchetto').replace(/'/g,"\\'")}', {nomeCliente:'${(prodotto.nomeCliente||'').replace(/'/g,"\\'")}',oreAcquistate:${prodotto.oreAcquistate||0},dataAcquisto:'${prodotto.dataInizio||''}',dataScadenza:'${prodotto.dataScadenza||''}'})">
                         📋 Dettaglio interventi
                     </button>
                 </div>` : prodotto.canRenew ? `
