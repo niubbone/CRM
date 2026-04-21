@@ -589,6 +589,89 @@ window.exportIntegrityReport = function() {
     showNotification('diagnostic-info', '✅ Report esportato', 'success');
 };
 
+// =======================================================================
+// === RIAGGANCIA RIGHE ORFANE PACCHETTI ===
+// =======================================================================
+
+window.riagganciaAnteprima = async function() {
+    const display = document.getElementById('orfane-display');
+    const applyBtn = document.getElementById('orfane-apply-btn');
+    display.innerHTML = '<p class="loading">⏳ Analisi in corso...</p>';
+    if (applyBtn) applyBtn.style.display = 'none';
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=true`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        display.innerHTML = buildOrfaneHTML(data);
+        if (applyBtn && data.agganciate > 0) applyBtn.style.display = 'inline-flex';
+    } catch(err) {
+        display.innerHTML = `<p style="color:#dc3545;">❌ Errore: ${err.message}</p>`;
+    }
+};
+
+window.riagganciaApplica = async function() {
+    if (!confirm(`Applicare le modifiche? Le righe verranno agganciate ai pacchetti trovati e quelle con "Errore Pacchetto" verranno impostate su "Scalato".`)) return;
+    const display = document.getElementById('orfane-display');
+    const applyBtn = document.getElementById('orfane-apply-btn');
+    display.innerHTML = '<p class="loading">⏳ Applicazione in corso...</p>';
+    if (applyBtn) applyBtn.style.display = 'none';
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=false`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        display.innerHTML = buildOrfaneHTML(data, true);
+        showNotification('diagnostic-info', `✅ ${data.agganciate} righe agganciate`, 'success');
+    } catch(err) {
+        display.innerHTML = `<p style="color:#dc3545;">❌ Errore: ${err.message}</p>`;
+    }
+};
+
+function buildOrfaneHTML(data, applied = false) {
+    if (data.trovate === 0) {
+        return '<p style="padding:16px;color:#28a745;">✅ Nessuna riga orfana trovata. Tutti i timesheet sono correttamente agganciati.</p>';
+    }
+
+    const header = `
+        <div style="padding:12px 16px;background:#f8f9fa;border-radius:6px;margin-bottom:12px;display:flex;gap:24px;flex-wrap:wrap;">
+            <span>Righe orfane trovate: <strong>${data.trovate}</strong></span>
+            <span style="color:${data.agganciate>0?'#28a745':'#6c757d'}">Agganciabili: <strong>${data.agganciate}</strong></span>
+            ${data.errori > 0 ? `<span style="color:#dc3545">Non agganciabili: <strong>${data.errori}</strong></span>` : ''}
+            ${applied ? '<span style="background:#28a745;color:#fff;padding:2px 10px;border-radius:12px;font-size:12px;">✅ Applicate</span>' : '<span style="background:#fd7e14;color:#fff;padding:2px 10px;border-radius:12px;font-size:12px;">Anteprima</span>'}
+        </div>`;
+
+    const rows = data.righe.map(r => {
+        const canFix = !!r.idPacchettoAssegnato;
+        const rowStyle = !canFix ? 'background:#fff3f3;' : (applied && r.applicato ? 'background:#f0fff4;' : '');
+        return `<tr style="border-bottom:1px solid #f0f0f0;${rowStyle}">
+            <td style="padding:8px;font-size:12px;color:#6c757d;">${r.idIntervento}</td>
+            <td style="padding:8px;">${r.nomeCliente}</td>
+            <td style="padding:8px;white-space:nowrap;">${r.data}</td>
+            <td style="padding:8px;font-size:12px;">${r.modAddebito}</td>
+            <td style="padding:8px;font-weight:600;color:${canFix?'#1976D2':'#dc3545'};">${r.idPacchettoAssegnato || '—'}</td>
+            <td style="padding:8px;font-size:11px;color:#6c757d;">${r.motivazione}</td>
+            <td style="padding:8px;text-align:center;">${applied && r.applicato ? '✅' : (canFix ? '🔗' : '❌')}</td>
+        </tr>`;
+    }).join('');
+
+    return header + `
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#f8f9fa;font-size:12px;">
+                <th style="padding:8px;text-align:left;">ID Intervento</th>
+                <th style="padding:8px;text-align:left;">Cliente</th>
+                <th style="padding:8px;text-align:left;">Data</th>
+                <th style="padding:8px;text-align:left;">Mod. Addebito</th>
+                <th style="padding:8px;text-align:left;">Pacchetto da agganciare</th>
+                <th style="padding:8px;text-align:left;">Motivazione</th>
+                <th style="padding:8px;text-align:center;">Stato</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+        </div>`;
+}
+
 /**
  * Visualizza log sistema
  */
