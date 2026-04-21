@@ -1247,9 +1247,15 @@ function renderStorico(pacchetti) {
 
 function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, totOre, totExtra, totCosto, dataAcquisto, dataScadenza, oreAcquistate) {
     const oggi = new Date().toLocaleDateString('it-IT');
-    const orePerc = oreAcquistate > 0 ? Math.min(100, Math.round((totOre / oreAcquistate) * 100)) : 0;
 
-    let righe = rows.map((r, i) => `
+    // Separa righe normali da quelle abbuonate
+    const righeNormali    = rows.filter(r => r.modAddebito !== 'Abbuonato');
+    const righeAbbuonate  = rows.filter(r => r.modAddebito === 'Abbuonato');
+    const oreAbbuonate    = righeAbbuonate.reduce((s, r) => s + (parseFloat(r.ore) || 0), 0);
+
+    const orePerc = oreAcquistate > 0 ? Math.min(100, Math.round((righeNormali.reduce((s,r) => s + (parseFloat(r.ore)||0), 0) / oreAcquistate) * 100)) : 0;
+
+    let righe = righeNormali.map((r, i) => `
         <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
             <td>${r.data || '—'}</td>
             <td class="desc">${r.descrizione || '—'}</td>
@@ -1258,6 +1264,34 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
             <td>${r.tipoIntervento || '—'}</td>
             <td class="right">€ ${parseFloat(r.costo).toFixed(2)}</td>
         </tr>`).join('');
+
+    const righeOmaggioHtml = righeAbbuonate.length > 0 ? `
+  <h3 style="color:#34a853;font-size:14px;margin-bottom:10px;border-bottom:2px solid #34a853;padding-bottom:6px;">🎁 Ore in omaggio</h3>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:28px;">
+    <thead>
+      <tr style="background:#34a853;color:#fff;">
+        <th style="padding:10px 12px;text-align:left;font-size:12px;">Data</th>
+        <th style="padding:10px 12px;text-align:left;font-size:12px;">Descrizione</th>
+        <th style="padding:10px 12px;text-align:center;font-size:12px;">Ore</th>
+        <th style="padding:10px 12px;text-align:left;font-size:12px;">Tipo</th>
+      </tr>
+    </thead>
+    <tbody>${righeAbbuonate.map((r, i) => `
+      <tr style="background:${i % 2 === 0 ? '#f0faf2' : '#fff'};">
+        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;">${r.data || '—'}</td>
+        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;max-width:300px;">${r.descrizione || '—'}</td>
+        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;text-align:center;color:#34a853;font-weight:600;">${r.ore}h</td>
+        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;">${r.tipoIntervento || '—'}</td>
+      </tr>`).join('')}
+    </tbody>
+    <tfoot>
+      <tr style="background:#34a853;color:#fff;">
+        <td colspan="2" style="padding:10px 12px;font-weight:700;text-align:right;">Totale ore in omaggio</td>
+        <td style="padding:10px 12px;font-weight:700;text-align:center;">${oreAbbuonate.toFixed(1)}h</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>` : '';
 
     const html = `<!DOCTYPE html>
 <html lang="it">
@@ -1384,6 +1418,8 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
       </tr>
     </tfoot>
   </table>
+
+  ${righeOmaggioHtml}
 
   <div class="footer">Studio Smart &mdash; Riepilogo generato automaticamente il ${oggi}</div>
 </div>

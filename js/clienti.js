@@ -664,7 +664,10 @@ function displayClienteTimesheet(timesheet) {
                         title="Converti in Da fatturare">💶</button>
                       <button class="timesheet-edit-btn" style="background:#1976D2;color:#fff;margin-left:4px;"
                         onclick="apriScalaInPacchetto(${ts.rowIndex},${oreActionabili})"
-                        title="Scala in un pacchetto esistente">📦</button>` : ''}
+                        title="Scala in un pacchetto esistente">📦</button>
+                      ${hasExtra ? `<button class="timesheet-edit-btn" style="background:#6f42c1;color:#fff;margin-left:4px;"
+                        onclick="abbuonaOreExtra(${ts.rowIndex},${ts.oreExtra},'${ts.idPacchetto || ''}')"
+                        title="Abbuona le ore extra (omaggio)">🎁</button>` : ''}` : ''}
                 </td>
             </tr>
         `;
@@ -1471,6 +1474,34 @@ function chiudiScalaExtraModal() {
     if (modal) modal.style.display = 'none';
 }
 
+/**
+ * Abbuona le ore extra di una riga timesheet come omaggio al cliente.
+ * @param {number} rowIndex - Indice riga timesheet
+ * @param {number} oreExtra - Ore extra da abbuonare
+ * @param {string} idPacchetto - ID del pacchetto di appartenenza
+ */
+async function abbuonaOreExtra(rowIndex, oreExtra, idPacchetto) {
+    if (!confirm(`Abbuonare ${oreExtra}h extra come omaggio al cliente? L'operazione è irreversibile.`)) return;
+
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=abbuona_ore_extra&row_index=${rowIndex}&id_pacchetto=${encodeURIComponent(idPacchetto || '')}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('clienti-info', `🎁 ${data.oreAbbuonate}h abbuonate come omaggio`, 'success');
+            if (currentCliente) {
+                loadClienteTimesheet(currentCliente.id);
+                loadClienteProdotti(currentCliente.id);
+            }
+        } else {
+            alert('❌ Errore: ' + (data.error || 'Errore sconosciuto'));
+        }
+    } catch(err) {
+        alert('❌ Errore di rete: ' + err.message);
+    }
+}
+
 // Mantieni window.* solo per funzioni chiamate da HTML onclick
 window.searchCliente = searchCliente;
 window.loadClienteDetail = loadClienteDetail;
@@ -1499,6 +1530,7 @@ window.convertiExtraDaFatturare = convertiExtraDaFatturare;
 window.apriScalaInPacchetto     = apriScalaInPacchetto;
 window.eseguiScalaExtra         = eseguiScalaExtra;
 window.chiudiScalaExtraModal    = chiudiScalaExtraModal;
+window.abbuonaOreExtra          = abbuonaOreExtra;
 
 // =======================================================================
 // === STORICO ABBONAMENTI QODNET CLIENTE ===

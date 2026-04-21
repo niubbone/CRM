@@ -92,10 +92,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Inizializza moduli essenziali
   await initTimesheet();
   initProforma();
-  
+
   // Esponi funzioni globali per onclick HTML
   exposeGlobalFunctions();
-  
+
+  // Carica badge ore extra in sospeso
+  loadOreExtraBadge();
+
   console.log('✅ Applicazione inizializzata con successo!');
 });
 
@@ -152,4 +155,27 @@ function exposeGlobalFunctions() {
   
   // switchTab è già esposta all'inizio del file come window.switchTab
   // downloadFrontendBackup viene esposta in utilities.js (caricato subito ora)
+}
+
+/**
+ * Carica il conteggio delle ore extra in sospeso e mostra il badge
+ * sul tab Clienti se ce ne sono.
+ */
+async function loadOreExtraBadge() {
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_ore_extra_count`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const badge = document.getElementById('clienti-extra-badge');
+    if (!badge) return;
+    if (data.success && data.count > 0) {
+      badge.textContent = data.count;
+      badge.style.display = 'inline-block';
+      badge.title = `${data.count} riga/e con ore extra in sospeso`;
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {
+    console.warn('loadOreExtraBadge: errore silenzioso', e);
+  }
 }

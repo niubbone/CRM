@@ -430,9 +430,10 @@ function displayIntegrityResults(data) {
         
         // AVVISI
         if (data.warnings && data.warnings.length > 0) {
-            // Separa le righe orfane dai warning normali
-            const orfaneWarning = data.warnings.find(w => w.category === 'RIGHE_ORFANE_PACCHETTO');
-            const altriWarnings = data.warnings.filter(w => w.category !== 'RIGHE_ORFANE_PACCHETTO');
+            // Separa i warning speciali dai normali
+            const orfaneWarning    = data.warnings.find(w => w.category === 'RIGHE_ORFANE_PACCHETTO');
+            const oreExtraWarning  = data.warnings.find(w => w.category === 'ORE_EXTRA_IN_SOSPESO');
+            const altriWarnings    = data.warnings.filter(w => w.category !== 'RIGHE_ORFANE_PACCHETTO' && w.category !== 'ORE_EXTRA_IN_SOSPESO');
 
             if (altriWarnings.length > 0) {
                 html += `
@@ -452,6 +453,46 @@ function displayIntegrityResults(data) {
                     html += `<small style="color: #666; font-style: italic;">... e altri ${altriWarnings.length - 10} avvisi</small>`;
                 }
                 html += `</div></div>`;
+            }
+
+            // Card dedicata per ore extra in sospeso
+            if (oreExtraWarning) {
+                const perCliente = oreExtraWarning.perCliente || [];
+                let clientiHtml = '';
+                perCliente.forEach(c => {
+                    const righeHtml = c.righe.map(r => `
+                        <tr style="border-bottom:1px solid #f8f0f0;">
+                            <td style="padding:5px 8px;font-size:12px;color:#6c757d;">${r.idIntervento}</td>
+                            <td style="padding:5px 8px;white-space:nowrap;">${r.data}</td>
+                            <td style="padding:5px 8px;text-align:center;color:#dc3545;font-weight:bold;">${r.oreExtra}h</td>
+                            <td style="padding:5px 8px;font-size:12px;color:#888;">${r.idPacchetto || '—'}</td>
+                        </tr>`).join('');
+                    clientiHtml += `
+                        <div style="margin-bottom:12px;">
+                            <div style="background:#e9ecef;padding:5px 10px;border-radius:3px;font-weight:600;font-size:13px;">${c.cliente}</div>
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <thead><tr style="background:#fce8e8;font-size:12px;">
+                                    <th style="padding:5px 8px;text-align:left;">ID Intervento</th>
+                                    <th style="padding:5px 8px;text-align:left;">Data</th>
+                                    <th style="padding:5px 8px;text-align:center;">Ore Extra</th>
+                                    <th style="padding:5px 8px;text-align:left;">Pacchetto</th>
+                                </tr></thead>
+                                <tbody>${righeHtml}</tbody>
+                            </table>
+                        </div>`;
+                });
+                html += `
+                    <div class="log-entry" data-level="WARNING">
+                        <div class="log-header">
+                            <span class="log-level warning">⏰ ORE EXTRA IN SOSPESO (${oreExtraWarning.message.match(/\d+/)[0]})</span>
+                        </div>
+                        <div class="log-body">
+                            <p style="margin:0 0 10px;"><strong>${oreExtraWarning.message}</strong><br>
+                            <small style="color:#856404;">💡 ${oreExtraWarning.solution}</small></p>
+                            ${clientiHtml}
+                            <small style="color:#888;">Gestisci le ore extra aprendo il dettaglio del cliente nella scheda Clienti.</small>
+                        </div>
+                    </div>`;
             }
 
             // Card dedicata per righe orfane con tabella + bottone riaggancia

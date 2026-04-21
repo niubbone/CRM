@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.5.7';
+export const VERSION = '4.6.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,20 +29,24 @@ export const VERSION = '4.5.7';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'QODNET Edition',
-  date: '8 Aprile 2026',
-  codename: 'Commerce',
+  name: 'Ore Extra Edition',
+  date: '21 Aprile 2026',
+  codename: 'Omaggio',
 
   // Changelog corrente versione
   changelog: [
-    'QODNET: nuova sezione vendite con inserimento contratti, rinnovi e riepilogo',
-    'Firme: collegamento fattura da riepilogo (numero + data) con calcolo ritenuta 20%',
-    'Spinner overlay su tutte le chiamate fetch (card centrata, non invasiva)',
-    'Cache tab per sessione: cambio tab non ricarica se dati già presenti',
-    'Invalidazione cache selettiva dopo ogni inserimento (solo tab interessate)',
-    'Pulsanti cliente semplificati: solo Dettaglio, Anagrafica, Modifica',
-    'Ordinamento fatture: tiebreaker per numero fattura in caso di stessa data',
-    'Fix: URL deployment stabile — nessun rischio perdita dati futura'
+    'Ore extra: rimossa email immediata al salvataggio — gestione differita',
+    'Ore extra: nuovo stato intermedio "sospeso" per decidere in seguito',
+    'Ore extra: bottone Abbuona (🎁) nel pannello cliente con conferma',
+    'Ore extra: trigger giornaliero invia reminder dopo 5 giorni di sospeso',
+    'Ore extra: email riepilogativa raggruppata per cliente con tabella dettaglio',
+    'Stampa pacchetto: sezione "Ore in omaggio" per righe Abbuonato',
+    'Badge rosso sul tab Clienti con conteggio ore extra in sospeso',
+    'Verifica Integrità: nuovo check ORE_EXTRA_IN_SOSPESO con tabella per cliente',
+    'Righe orfane: aggiunta ID_Pacchetto al check integrità e al riaggancia',
+    'Proforma: filtro stato Proforma/Fatturata corretto (valori backend allineati)',
+    'Proforma: funzione aggiornaProforma per aggiungere righe a proforma esistente',
+    'Ultimi movimenti: caricamento accordion on-demand (performance)'
   ],
   
   // Features principali
@@ -66,6 +70,25 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.6.0",
+    date: "21/04/2026",
+    type: "feature",
+    changes: [
+      "Ore extra: rimossa email immediata al salvataggio — gestione differita",
+      "Ore extra: nuovo bottone Abbuona (🎁) nel pannello cliente",
+      "Ore extra: trigger giornaliero invia reminder dopo 5 giorni di sospeso",
+      "Ore extra: email riepilogativa consolidata raggruppata per cliente",
+      "Stampa pacchetto: sezione 'Ore in omaggio' per righe Abbuonato",
+      "Badge rosso sul tab Clienti con conteggio ore extra in sospeso",
+      "Verifica Integrità: nuovo check ORE_EXTRA_IN_SOSPESO con tabella per cliente",
+      "Backend: nuove action abbuona_ore_extra e get_ore_extra_count",
+      "Righe orfane: check integrità integrato con bottone Riaggancia inline",
+      "Proforma: filtro stato corretto (Proforma/Fatturata)",
+      "Proforma: aggiornaProforma — aggiunge righe timesheet a proforma esistente",
+      "Ultimi movimenti: accordion on-demand per migliori performance"
+    ]
+  },
   {
     version: "4.5.7",
     date: "08/04/2026",
