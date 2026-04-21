@@ -1791,6 +1791,34 @@ function toggleOptionalFields() {
   </div>
 </div>
 
+<!-- Modal Aggiungi Voci Proforma -->
+<div id="aggiungiVociModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:700px;width:95%;">
+    <div class="modal-header">
+      <h3>➕ Aggiungi voci a proforma <span id="aggiorna-proforma-numero"></span></h3>
+      <button class="modal-close" onclick="closeAggiungiVociModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="aggiorna-proforma-info" style="background:#f8f9fa;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#495057;"></div>
+      <div id="aggiorna-voci-list" style="max-height:320px;overflow-y:auto;">
+        <p style="color:#6c757d;text-align:center;padding:20px;">⏳ Caricamento voci disponibili...</p>
+      </div>
+      <div id="aggiorna-proforma-info-box" style="display:none;margin-top:12px;padding:10px 14px;background:#e8f5e9;border-radius:6px;font-size:13px;"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:16px;">
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="aggiorna-send-email"> Reinvia email al cliente con PDF aggiornato
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:16px;border-top:1px solid #e9ecef;">
+      <button class="btn btn-secondary" onclick="closeAggiungiVociModal()">Annulla</button>
+      <button class="btn btn-primary" id="aggiorna-proforma-btn" onclick="confermAAggiungiVoci()" disabled>
+        ✅ Aggiorna proforma
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Fattura Diretta -->
 <div id="fatturaDirettaModal" class="modal">
   <div class="modal-content">

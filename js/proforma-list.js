@@ -256,27 +256,16 @@ function renderProformaList(proformeList) {
             
             ${proforma.stato !== 'Fatturata' && proforma.stato !== 'Pagata' ? `
               <div class="proforma-actions" style="padding: 12px 16px; border-top: 1px solid #e9ecef;">
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                   ${proforma.pdfFileId ? `
-                    <a href="https://drive.google.com/file/d/${proforma.pdfFileId}/view" target="_blank" 
-                       style="flex: 1; 
-                              background: #28a745; 
-                              color: white; 
-                              border: none; 
-                              padding: 10px 16px; 
-                              border-radius: 6px; 
-                              font-size: 14px; 
-                              font-weight: 500;
-                              cursor: pointer;
-                              text-align: center; 
-                              text-decoration: none; 
-                              display: inline-flex;
-                              align-items: center;
-                              justify-content: center;
-                              transition: background 0.2s ease;">
+                    <a href="https://drive.google.com/file/d/${proforma.pdfFileId}/view" target="_blank"
+                       style="flex:0 0 auto;background:#28a745;color:white;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
                       📄 PDF
                     </a>
                   ` : ''}
+                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${(proforma.cliente||'').replace(/'/g,\"\\'\")}')" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
+                    ➕ Aggiungi voci
+                  </button>
                   <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex: 2;">
                     📝 Emetti Fattura
                   </button>
@@ -721,3 +710,109 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Event listener filtro stato configurato');
   }
 });
+
+// =======================================================================
+// === AGGIUNGI VOCI A PROFORMA ESISTENTE ===
+// =======================================================================
+
+let _aggiungiVociState = { nProforma: null, cliente: null, importoCorrente: 0 };
+
+window.openAggiungiVociModal = async function(nProforma, cliente, importoCorrente) {
+  _aggiungiVociState = { nProforma, cliente, importoCorrente: parseFloat(importoCorrente) || 0 };
+
+  document.getElementById('aggiorna-proforma-numero').textContent = nProforma;
+  document.getElementById('aggiorna-proforma-info').innerHTML =
+    `Cliente: <strong>${cliente}</strong> &nbsp;|&nbsp; Totale attuale: <strong>€ ${(parseFloat(importoCorrente)||0).toFixed(2)}</strong>`;
+  document.getElementById('aggiorna-proforma-info-box').style.display = 'none';
+  document.getElementById('aggiorna-proforma-btn').disabled = true;
+  document.getElementById('aggiorna-send-email').checked = false;
+
+  const listDiv = document.getElementById('aggiorna-voci-list');
+  listDiv.innerHTML = '<p style="color:#6c757d;text-align:center;padding:20px;">⏳ Caricamento voci disponibili...</p>';
+  document.getElementById('aggiungiVociModal').style.display = 'flex';
+
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_timesheet_da_fatturare&cliente=${encodeURIComponent(cliente)}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Errore caricamento');
+
+    const items = data.timesheet || [];
+    if (items.length === 0) {
+      listDiv.innerHTML = '<p style="color:#6c757d;text-align:center;padding:20px;">Nessun intervento "Da fatturare" disponibile per questo cliente.</p>';
+      return;
+    }
+
+    listDiv.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#f8f9fa;">
+          <th style="padding:8px;width:32px;"></th>
+          <th style="padding:8px;text-align:left;">Data</th>
+          <th style="padding:8px;text-align:left;">Descrizione</th>
+          <th style="padding:8px;text-align:center;">Ore</th>
+          <th style="padding:8px;text-align:right;">€</th>
+        </tr></thead>
+        <tbody>
+          ${items.map(t => `
+            <tr style="border-bottom:1px solid #f0f0f0;" class="aggiorna-voce-row">
+              <td style="padding:8px;text-align:center;">
+                <input type="checkbox" class="aggiorna-voce-cb" data-rowindex="${t.rowIndex}" data-costo="${t.costo||0}" onchange="aggiornaVociSelezione()">
+              </td>
+              <td style="padding:8px;white-space:nowrap;">${t.dataItaliana||t.data||'—'}</td>
+              <td style="padding:8px;">${t.descrizione||'—'}</td>
+              <td style="padding:8px;text-align:center;">${t.ore||0}h</td>
+              <td style="padding:8px;text-align:right;">€ ${parseFloat(t.costo||0).toFixed(2)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(err) {
+    listDiv.innerHTML = `<p style="color:#dc3545;text-align:center;padding:20px;">❌ ${err.message}</p>`;
+  }
+};
+
+window.aggiornaVociSelezione = function() {
+  const checked = document.querySelectorAll('.aggiorna-voce-cb:checked');
+  const btn = document.getElementById('aggiorna-proforma-btn');
+  const infoBox = document.getElementById('aggiorna-proforma-info-box');
+  btn.disabled = checked.length === 0;
+
+  if (checked.length > 0) {
+    const addedCost = Array.from(checked).reduce((sum, cb) => sum + parseFloat(cb.dataset.costo||0), 0);
+    const nuovoTotale = _aggiungiVociState.importoCorrente + addedCost;
+    infoBox.style.display = 'block';
+    infoBox.innerHTML = `Voci selezionate: <strong>${checked.length}</strong> &nbsp;|&nbsp; Aggiunta: <strong>+ € ${addedCost.toFixed(2)}</strong> &nbsp;|&nbsp; Nuovo totale stimato: <strong>€ ${nuovoTotale.toFixed(2)}</strong>`;
+  } else {
+    infoBox.style.display = 'none';
+  }
+};
+
+window.confermAAggiungiVoci = async function() {
+  const checked = Array.from(document.querySelectorAll('.aggiorna-voce-cb:checked'));
+  if (!checked.length) return;
+
+  const rowIndexes = checked.map(cb => cb.dataset.rowindex).join(',');
+  const sendEmail  = document.getElementById('aggiorna-send-email').checked;
+  const btn = document.getElementById('aggiorna-proforma-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Aggiornamento...';
+
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=aggiorna_proforma&n_proforma=${encodeURIComponent(_aggiungiVociState.nProforma)}&timesheet_ids=${rowIndexes}&send_email=${sendEmail}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    closeAggiungiVociModal();
+    alert(`✅ Proforma ${data.nProforma} aggiornata!\nVoci aggiunte: ${data.vociAggiunte}\nNuovo totale: € ${data.nuovoTotale}`);
+    // Ricarica lista
+    if (window.allProformeData !== undefined) loadProformaList();
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = '✅ Aggiorna proforma';
+    alert('❌ Errore: ' + err.message);
+  }
+};
+
+window.closeAggiungiVociModal = function() {
+  document.getElementById('aggiungiVociModal').style.display = 'none';
+};
