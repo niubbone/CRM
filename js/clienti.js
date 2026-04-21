@@ -146,7 +146,8 @@ async function loadClienteDetail(clienteId) {
             loadClienteProdotti(clienteId);
             loadClienteTimesheet(clienteId);
             loadClienteQODNETStorico(clienteId);
-            loadClienteMovimenti(clienteId, currentCliente.nome);
+            // Movimenti: reset a stato collassato, carico solo su richiesta
+            resetMovimentiSection();
             
             // Scroll alla sezione prodotti
             document.getElementById('cliente-prodotti-section').scrollIntoView({ behavior: 'smooth' });
@@ -242,7 +243,7 @@ function closeClienteDetail() {
     document.getElementById('cliente-prodotti-section').style.display = 'none';
     document.getElementById('cliente-timesheet-section').style.display = 'none';
     document.getElementById('cliente-form').reset();
-    loadClienteMovimenti(null);
+    resetMovimentiSection();
 }
 
 /**
@@ -1588,12 +1589,39 @@ function renderQODNETProdottoTimeline(prodotto) {
 // === ULTIMI MOVIMENTI CLIENTE ===
 // =======================================================================
 
+function resetMovimentiSection() {
+    const contentDiv = document.getElementById('cliente-movimenti-content');
+    const arrow = document.getElementById('cliente-movimenti-arrow');
+    if (contentDiv) { contentDiv.style.display = 'none'; contentDiv.innerHTML = ''; contentDiv.dataset.loaded = ''; }
+    if (arrow) { arrow.textContent = '▶'; arrow.style.transform = ''; }
+}
+
+window.toggleMovimenti = async function() {
+    const contentDiv = document.getElementById('cliente-movimenti-content');
+    const arrow = document.getElementById('cliente-movimenti-arrow');
+    if (!contentDiv) return;
+    const isOpen = contentDiv.style.display !== 'none';
+    if (isOpen) {
+        contentDiv.style.display = 'none';
+        if (arrow) { arrow.textContent = '▶'; arrow.style.transform = ''; }
+    } else {
+        contentDiv.style.display = 'block';
+        if (arrow) { arrow.textContent = '▶'; arrow.style.transform = 'rotate(90deg)'; }
+        if (!contentDiv.dataset.loaded) {
+            const clienteId = currentCliente?.id || null;
+            const nomeCliente = currentCliente?.nome || null;
+            await loadClienteMovimenti(clienteId, nomeCliente);
+            contentDiv.dataset.loaded = '1';
+        }
+    }
+};
+
 async function loadClienteMovimenti(clienteId, nomeCliente) {
     const contentDiv = document.getElementById('cliente-movimenti-content');
     const titleEl = document.getElementById('cliente-movimenti-title');
     if (titleEl) {
-        titleEl.textContent = clienteId
-            ? `📋 Ultimi Movimenti — ${nomeCliente || clienteId}`
+        titleEl.textContent = clienteId && nomeCliente
+            ? `📋 Ultimi Movimenti — ${nomeCliente}`
             : '📋 Ultimi Movimenti';
     }
     contentDiv.innerHTML = '<p style="padding:10px;color:#6c757d;">⏳ Caricamento...</p>';
@@ -1652,7 +1680,6 @@ window.loadClienteMovimenti = loadClienteMovimenti;
 
 function initClienteTab() {
     populateClienteSearchList();
-    loadClienteMovimenti(null);
 }
 window.initClienteTab = initClienteTab;
 

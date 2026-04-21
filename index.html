@@ -1564,10 +1564,11 @@
              SEZIONE ULTIMI MOVIMENTI
         ========================= -->
         <div id="cliente-movimenti-section" class="clienti-section">
-            <h3 id="cliente-movimenti-title">📋 Ultimi Movimenti</h3>
-            <div id="cliente-movimenti-content">
-                <p style="padding:10px;color:#6c757d;">⏳ Caricamento...</p>
-            </div>
+            <h3 onclick="toggleMovimenti()" style="cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;">
+                <span id="cliente-movimenti-title">📋 Ultimi Movimenti</span>
+                <span id="cliente-movimenti-arrow" style="font-size:14px;color:#6c757d;transition:transform 0.2s;">▶</span>
+            </h3>
+            <div id="cliente-movimenti-content" style="display:none;"></div>
         </div>
         
     </div>
