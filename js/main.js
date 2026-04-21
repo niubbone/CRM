@@ -159,7 +159,8 @@ function exposeGlobalFunctions() {
 
 /**
  * Carica il conteggio delle ore extra in sospeso e mostra il badge
- * sul tab Clienti se ce ne sono.
+ * sul tab Clienti se ce ne sono. Il badge è cliccabile e mostra
+ * un popover rapido con la lista dei clienti e le ore.
  */
 async function loadOreExtraBadge() {
   try {
@@ -168,10 +169,69 @@ async function loadOreExtraBadge() {
     const data = await res.json();
     const badge = document.getElementById('clienti-extra-badge');
     if (!badge) return;
+
     if (data.success && data.count > 0) {
       badge.textContent = data.count;
       badge.style.display = 'inline-block';
-      badge.title = `${data.count} riga/e con ore extra in sospeso`;
+      badge.style.cursor = 'pointer';
+      badge.title = 'Clicca per vedere i clienti con ore extra';
+
+      // Popover già iniettato? Rimuovi e ricrea
+      const existing = document.getElementById('ore-extra-popover');
+      if (existing) existing.remove();
+
+      const popover = document.createElement('div');
+      popover.id = 'ore-extra-popover';
+      popover.style.cssText = `
+        display:none; position:fixed; z-index:9999;
+        background:#fff; border:1px solid #dee2e6; border-radius:8px;
+        box-shadow:0 4px 20px rgba(0,0,0,.15); padding:0; min-width:260px; max-width:340px;
+      `;
+
+      let rows = '';
+      (data.perCliente || []).forEach(c => {
+        const totH = c.righe.reduce((s, r) => s + (parseFloat(r.oreExtra) || 0), 0);
+        rows += `<tr>
+          <td style="padding:7px 12px;font-weight:600;">${c.cliente}</td>
+          <td style="padding:7px 12px;text-align:center;color:#dc3545;font-weight:700;">${totH}h</td>
+          <td style="padding:7px 12px;text-align:center;color:#888;font-size:12px;">${c.righe.length} riga${c.righe.length > 1 ? 'e' : ''}</td>
+        </tr>`;
+      });
+
+      popover.innerHTML = `
+        <div style="background:#dc3545;color:#fff;padding:10px 14px;border-radius:7px 7px 0 0;font-weight:600;font-size:13px;">
+          ⏰ Ore extra in sospeso (${data.count})
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:#f8f9fa;font-size:11px;text-transform:uppercase;color:#888;">
+            <th style="padding:6px 12px;text-align:left;">Cliente</th>
+            <th style="padding:6px 12px;text-align:center;">Ore</th>
+            <th style="padding:6px 12px;text-align:center;">Righe</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="padding:8px 12px;font-size:11px;color:#888;border-top:1px solid #f0f0f0;">
+          Apri la scheda del cliente per gestire le ore.
+        </div>`;
+
+      document.body.appendChild(popover);
+
+      // Mostra/nascondi al click sul badge
+      badge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (popover.style.display === 'none') {
+          const rect = badge.getBoundingClientRect();
+          popover.style.top  = (rect.bottom + 6) + 'px';
+          popover.style.left = Math.max(4, rect.left - 180) + 'px';
+          popover.style.display = 'block';
+        } else {
+          popover.style.display = 'none';
+        }
+      });
+
+      // Chiudi cliccando fuori
+      document.addEventListener('click', () => { popover.style.display = 'none'; }, { capture: false });
+
     } else {
       badge.style.display = 'none';
     }
