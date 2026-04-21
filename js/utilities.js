@@ -322,8 +322,11 @@ function displayIntegrityResults(data) {
         </div>
     `;
     
-    // STATO SISTEMA
-    if (data.healthy) {
+    // STATO SISTEMA — "integro" solo se non ci sono né errori né warning
+    const hasIssues   = data.issues   && data.issues.length   > 0;
+    const hasWarnings = data.warnings && data.warnings.length > 0;
+
+    if (!hasIssues && !hasWarnings) {
         html += `
             <div class="log-entry" data-level="SUCCESS">
                 <div class="log-header">
@@ -337,7 +340,7 @@ function displayIntegrityResults(data) {
         `;
     } else {
         // ERRORI CRITICI
-        if (data.issues && data.issues.length > 0) {
+        if (hasIssues) {
             const orphanIssues = data.issues.filter(i => i.type === 'orphan');
             const duplicateIssues = data.issues.filter(i => i.type === 'duplicate');
             const referenceIssues = data.issues.filter(i => i.type === 'reference');
