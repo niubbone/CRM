@@ -498,15 +498,24 @@ function displayIntegrityResults(data) {
                     </div>`;
             }
 
-            // Card dedicata per righe orfane con tabella + bottone riaggancia
+            // Card dedicata per righe orfane con gestione riga per riga
             if (orfaneWarning) {
                 const righe = orfaneWarning.righeOrfane || [];
                 const righeRows = righe.map(r => `
-                    <tr style="border-bottom:1px solid #f0f0f0;">
+                    <tr id="orfana-row-${r.rowIndex}" style="border-bottom:1px solid #f0f0f0;">
                         <td style="padding:6px 8px;font-size:12px;color:#6c757d;">${r.idIntervento}</td>
-                        <td style="padding:6px 8px;">${r.nomeCliente}</td>
+                        <td style="padding:6px 8px;font-weight:600;">${r.nomeCliente}</td>
                         <td style="padding:6px 8px;white-space:nowrap;">${r.data}</td>
                         <td style="padding:6px 8px;font-size:12px;">${r.modAddebito}</td>
+                        <td style="padding:6px 8px;white-space:nowrap;">
+                            <input id="orfana-input-${r.rowIndex}" type="text" placeholder="ID Pacchetto"
+                                style="width:110px;padding:3px 6px;border:1px solid #ced4da;border-radius:3px;font-size:12px;">
+                            <button onclick="assegnaRigaOrfana(${r.rowIndex})"
+                                style="margin-left:4px;padding:3px 8px;background:#1976D2;color:#fff;border:none;border-radius:3px;font-size:12px;cursor:pointer;">
+                                Assegna
+                            </button>
+                            <span id="orfana-status-${r.rowIndex}" style="margin-left:4px;font-size:12px;"></span>
+                        </td>
                     </tr>`).join('');
 
                 html += `
@@ -515,22 +524,27 @@ function displayIntegrityResults(data) {
                             <span class="log-level warning">⚠️ RIGHE ORFANE PACCHETTI (${righe.length})</span>
                         </div>
                         <div class="log-body">
-                            <p style="margin:0 0 10px;">${orfaneWarning.message}</p>
-                            <div style="overflow-x:auto;margin-bottom:12px;">
+                            <p style="margin:0 0 6px;">${orfaneWarning.message}</p>
+                            <p style="margin:0 0 10px;font-size:12px;color:#856404;">
+                                Inserisci l'ID del pacchetto da collegare e clicca Assegna per ciascuna riga.
+                                Puoi usare <strong>P0</strong> per le righe storiche senza pacchetto preciso.
+                            </p>
+                            <div style="overflow-x:auto;margin-bottom:4px;">
                                 <table style="width:100%;border-collapse:collapse;font-size:13px;">
                                     <thead><tr style="background:#fff3cd;">
                                         <th style="padding:6px 8px;text-align:left;">ID Intervento</th>
                                         <th style="padding:6px 8px;text-align:left;">Cliente</th>
                                         <th style="padding:6px 8px;text-align:left;">Data</th>
                                         <th style="padding:6px 8px;text-align:left;">Mod. Addebito</th>
+                                        <th style="padding:6px 8px;text-align:left;">Assegna pacchetto</th>
                                     </tr></thead>
                                     <tbody>${righeRows}</tbody>
                                 </table>
                             </div>
-                            <button class="btn btn-warning btn-sm" id="orfane-riaggancia-btn" onclick="riagganciaApplicaDaIntegrity()">
-                                🔗 Riaggancia al pacchetto
+                            <button class="btn btn-warning btn-sm" style="margin-top:8px;" onclick="caricaSuggerimentiOrfane()">
+                                🔍 Carica suggerimenti automatici
                             </button>
-                            <span id="orfane-riaggancia-status" style="margin-left:10px;font-size:13px;"></span>
+                            <span id="orfane-suggerimenti-status" style="margin-left:10px;font-size:13px;"></span>
                         </div>
                     </div>
                 `;
@@ -681,23 +695,67 @@ window.exportIntegrityReport = function() {
 // === RIAGGANCIA RIGHE ORFANE PACCHETTI (chiamata da Verifica Integrità) ===
 // =======================================================================
 
+// Kept for backwards compat but not exposed in new UI
 window.riagganciaApplicaDaIntegrity = async function() {
-    if (!confirm('Applicare le modifiche? Le righe verranno agganciate ai pacchetti trovati e quelle con "Errore Pacchetto" verranno impostate su "Scalato".')) return;
-    const btn    = document.getElementById('orfane-riaggancia-btn');
-    const status = document.getElementById('orfane-riaggancia-status');
-    if (btn) btn.disabled = true;
-    if (status) status.textContent = '⏳ Applicazione in corso...';
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=false`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    showNotification('diagnostic-info', `✅ ${data.agganciate} righe agganciate.`, 'success');
+};
+
+/**
+ * Assegna un pacchetto a una singola riga orfana (chiamata dal bottone Assegna inline)
+ */
+window.assegnaRigaOrfana = async function(rowIndex) {
+    const input  = document.getElementById(`orfana-input-${rowIndex}`);
+    const status = document.getElementById(`orfana-status-${rowIndex}`);
+    const row    = document.getElementById(`orfana-row-${rowIndex}`);
+    const idPacchetto = input ? input.value.trim() : '';
+
+    if (!idPacchetto) { if (status) status.textContent = '⚠️ Inserisci un ID'; return; }
+
+    if (status) status.textContent = '⏳';
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=false`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=assegna_singola_riga&row_index=${rowIndex}&id_pacchetto=${encodeURIComponent(idPacchetto)}`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Errore');
+        if (status) status.innerHTML = `<span style="color:#28a745;">✅ Assegnato</span>`;
+        if (input)  { input.disabled = true; }
+        if (row)    row.style.opacity = '0.5';
+    } catch(err) {
+        if (status) status.innerHTML = `<span style="color:#dc3545;">❌ ${err.message}</span>`;
+    }
+};
+
+/**
+ * Carica i suggerimenti automatici di pacchetto per le righe orfane (dry-run)
+ * e pre-compila i campi input
+ */
+window.caricaSuggerimentiOrfane = async function() {
+    const statusEl = document.getElementById('orfane-suggerimenti-status');
+    if (statusEl) statusEl.textContent = '⏳ Ricerca suggerimenti...';
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=true`;
         const res  = await fetch(url);
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
-        if (status) status.innerHTML = `<span style="color:#28a745;">✅ ${data.agganciate} riga/e agganciate${data.errori > 0 ? ` (${data.errori} non agganciate)` : ''}</span>`;
-        if (btn) btn.style.display = 'none';
-        showNotification('diagnostic-info', `✅ ${data.agganciate} righe agganciate. Riesegui la verifica per confermare.`, 'success');
+        let trovati = 0;
+        (data.righe || []).forEach(r => {
+            if (r.idPacchettoAssegnato) {
+                const input = document.getElementById(`orfana-input-${r.rowIndex}`);
+                if (input && !input.disabled) {
+                    input.value = r.idPacchettoAssegnato;
+                    input.style.borderColor = '#28a745';
+                    input.title = r.motivazione || '';
+                    trovati++;
+                }
+            }
+        });
+        if (statusEl) statusEl.innerHTML = `<span style="color:#28a745;">✅ ${trovati} suggerimenti caricati — verifica e clicca Assegna riga per riga</span>`;
     } catch(err) {
-        if (status) status.innerHTML = `<span style="color:#dc3545;">❌ ${err.message}</span>`;
-        if (btn) btn.disabled = false;
+        if (statusEl) statusEl.innerHTML = `<span style="color:#dc3545;">❌ ${err.message}</span>`;
     }
 };
 
