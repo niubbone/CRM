@@ -127,36 +127,45 @@ function displaySearchResults(clienti) {
  */
 async function loadClienteDetail(clienteId) {
     try {
-        showNotification('clienti-info', '⏳ Caricamento dettagli...', 'info');
-        
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_cliente&id=${encodeURIComponent(clienteId)}`;
+        showNotification('clienti-info', '⏳ Caricamento...', 'info');
+
+        // Singola chiamata unificata invece di 4 separata
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_cliente_full&id=${encodeURIComponent(clienteId)}`;
         const response = await fetch(url);
         const data = await response.json();
-        
+
         if (data.success && data.cliente) {
             currentCliente = data.cliente;
-            // Mostra solo prodotti e timesheet, NON il form di modifica
+
             document.getElementById('cliente-detail-section').style.display = 'none';
             document.getElementById('cliente-prodotti-section').style.display = 'block';
             document.getElementById('cliente-timesheet-section').style.display = 'block';
 
-            // Aggiungi bottone Modifica Cliente prima dei prodotti
             addModificaClienteButton();
 
-            loadClienteProdotti(clienteId);
-            loadClienteTimesheet(clienteId);
-            loadClienteQODNETStorico(clienteId);
-            // Movimenti: reset a stato collassato, carico solo su richiesta
+            // Usa i dati già ricevuti — nessuna ulteriore chiamata di rete
+            currentClienteProdotti = data.prodotti || [];
+            displayClienteProdotti(data.prodotti || []);
+            displayClienteTimesheet(data.timesheet || []);
+
+            // QODNET
+            const qodnetSection  = document.getElementById('cliente-qodnet-section');
+            const qodnetContent  = document.getElementById('cliente-qodnet-content');
+            if (data.qodnet && data.qodnet.length > 0) {
+                qodnetSection.style.display = 'block';
+                qodnetContent.innerHTML = data.qodnet.map(p => renderQODNETProdottoTimeline(p)).join('');
+            } else {
+                qodnetSection.style.display = 'none';
+            }
+
             resetMovimentiSection();
-            
-            // Scroll alla sezione prodotti
+
             document.getElementById('cliente-prodotti-section').scrollIntoView({ behavior: 'smooth' });
-            
             showNotification('clienti-info', '✅ Cliente caricato', 'success');
         } else {
             throw new Error(data.error || 'Errore caricamento');
         }
-        
+
     } catch (error) {
         console.error('Errore caricamento cliente:', error);
         showNotification('clienti-info', '❌ Errore caricamento cliente', 'error');
