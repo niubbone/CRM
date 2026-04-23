@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.1';
+export const VERSION = '4.7.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -63,6 +63,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.2",
+    date: "23/04/2026",
+    type: "fix",
+    changes: [
+      "Stampa pacchetto: righe 'Omaggio' integrate nella tabella principale con sfondo verde e '🎁 In omaggio' al posto del costo",
+      "Stampa pacchetto: card riepilogativa 'In omaggio' con totale ore in verde",
+      "Stampa pacchetto: footer tabella mostra ore in omaggio nella colonna Tipo"
+    ]
+  },
   {
     version: "4.7.1",
     date: "23/04/2026",

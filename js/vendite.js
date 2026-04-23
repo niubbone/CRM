@@ -1248,50 +1248,30 @@ function renderStorico(pacchetti) {
 function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, totOre, totExtra, totCosto, dataAcquisto, dataScadenza, oreAcquistate) {
     const oggi = new Date().toLocaleDateString('it-IT');
 
-    // Separa righe normali da quelle in omaggio
-    const righeNormali    = rows.filter(r => r.modAddebito !== 'Omaggio');
-    const righeAbbuonate  = rows.filter(r => r.modAddebito === 'Omaggio');
-    const oreAbbuonate    = righeAbbuonate.reduce((s, r) => s + (parseFloat(r.ore) || 0), 0);
+    const oreNormali   = rows.filter(r => r.modAddebito !== 'Omaggio').reduce((s,r) => s + (parseFloat(r.ore)||0), 0);
+    const oreAbbuonate = rows.filter(r => r.modAddebito === 'Omaggio').reduce((s,r) => s + (parseFloat(r.ore)||0), 0);
 
-    const orePerc = oreAcquistate > 0 ? Math.min(100, Math.round((righeNormali.reduce((s,r) => s + (parseFloat(r.ore)||0), 0) / oreAcquistate) * 100)) : 0;
+    const orePerc = oreAcquistate > 0 ? Math.min(100, Math.round((oreNormali / oreAcquistate) * 100)) : 0;
 
-    let righe = righeNormali.map((r, i) => `
-        <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
+    // Tutte le righe nella stessa tabella; le righe Omaggio in verde con costo "🎁 In omaggio"
+    let righe = rows.map((r, i) => {
+        const isOmaggio = r.modAddebito === 'Omaggio';
+        const rowBg = isOmaggio ? (i % 2 === 0 ? '#e8f5e9' : '#f0faf2') : (i % 2 === 0 ? '#f9f9f9' : '#fff');
+        const costoCell = isOmaggio
+            ? `<td class="right" style="color:#34a853;font-weight:600;">🎁 In omaggio</td>`
+            : `<td class="right">€ ${parseFloat(r.costo).toFixed(2)}</td>`;
+        return `
+        <tr style="background:${rowBg};">
             <td>${r.data || '—'}</td>
             <td class="desc">${r.descrizione || '—'}</td>
             <td class="center">${r.ore}h</td>
             <td class="center">${r.oreExtra > 0 ? '+' + r.oreExtra + 'h' : '—'}</td>
             <td>${r.tipoIntervento || '—'}</td>
-            <td class="right">€ ${parseFloat(r.costo).toFixed(2)}</td>
-        </tr>`).join('');
+            ${costoCell}
+        </tr>`;
+    }).join('');
 
-    const righeOmaggioHtml = righeAbbuonate.length > 0 ? `
-  <h3 style="color:#34a853;font-size:14px;margin-bottom:10px;border-bottom:2px solid #34a853;padding-bottom:6px;">🎁 Ore in omaggio</h3>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:28px;">
-    <thead>
-      <tr style="background:#34a853;color:#fff;">
-        <th style="padding:10px 12px;text-align:left;font-size:12px;">Data</th>
-        <th style="padding:10px 12px;text-align:left;font-size:12px;">Descrizione</th>
-        <th style="padding:10px 12px;text-align:center;font-size:12px;">Ore</th>
-        <th style="padding:10px 12px;text-align:left;font-size:12px;">Tipo</th>
-      </tr>
-    </thead>
-    <tbody>${righeAbbuonate.map((r, i) => `
-      <tr style="background:${i % 2 === 0 ? '#f0faf2' : '#fff'};">
-        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;">${r.data || '—'}</td>
-        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;max-width:300px;">${r.descrizione || '—'}</td>
-        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;text-align:center;color:#34a853;font-weight:600;">${r.ore}h</td>
-        <td style="padding:9px 12px;border-bottom:1px solid #e8f5e9;">${r.tipoIntervento || '—'}</td>
-      </tr>`).join('')}
-    </tbody>
-    <tfoot>
-      <tr style="background:#34a853;color:#fff;">
-        <td colspan="2" style="padding:10px 12px;font-weight:700;text-align:right;">Totale ore in omaggio</td>
-        <td style="padding:10px 12px;font-weight:700;text-align:center;">${oreAbbuonate.toFixed(1)}h</td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>` : '';
+    const righeOmaggioHtml = '';
 
     const html = `<!DOCTYPE html>
 <html lang="it">
@@ -1382,10 +1362,15 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
       <div class="m-label">Ore extra</div>
       <div class="m-value" style="color:${totExtra > 0 ? '#dc3545' : '#aaa'};">${totExtra > 0 ? '+' + totExtra.toFixed(1) + 'h' : '—'}</div>
     </div>
+    ${oreAbbuonate > 0 ? `
+    <div class="meta-card" style="border-color:#34a853;">
+      <div class="m-label" style="color:#34a853;">In omaggio</div>
+      <div class="m-value" style="color:#34a853;">🎁 ${oreAbbuonate.toFixed(1)}h</div>
+    </div>` : `
     <div class="meta-card">
       <div class="m-label">Totale €</div>
       <div class="m-value">€ ${totCosto.toFixed(2)}</div>
-    </div>
+    </div>`}
   </div>
 
   <div class="progress-wrap">
@@ -1413,7 +1398,7 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
         <td colspan="2" style="text-align:right;">TOTALE</td>
         <td class="center">${totOre.toFixed(2)}h</td>
         <td class="center">${totExtra > 0 ? '+' + totExtra.toFixed(2) + 'h' : '—'}</td>
-        <td></td>
+        <td style="color:#34a853;font-weight:600;">${oreAbbuonate > 0 ? '🎁 ' + oreAbbuonate.toFixed(1) + 'h omaggio' : ''}</td>
         <td class="right">€ ${totCosto.toFixed(2)}</td>
       </tr>
     </tfoot>
