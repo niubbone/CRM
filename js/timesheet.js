@@ -236,8 +236,8 @@ function handleFormSubmit(event) {
       // Attendi un attimo che il backend completi il salvataggio
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Recupera eventuali warning dal backend
-      const warningMessage = await getLastWarning();
+      // Recupera eventuali warning dal backend (bustCache=true: bypassata la cache SW)
+      const warningMessage = await getLastWarning(true);
       
       submitButton.value = "Salva Timesheet";
       submitButton.disabled = false;

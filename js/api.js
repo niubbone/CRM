@@ -103,13 +103,16 @@ export async function generateProforma(clientName, timesheetIds, causale, applic
 /**
  * Recupera l'ultimo warning generato dal backend
  */
-export async function getLastWarning() {
-  const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_last_warning`;
-  
+export async function getLastWarning(bustCache = false) {
+  // bustCache=true aggiunge un timestamp per aggirare la cache del service worker
+  // (usare sempre dopo un form submit, così il warning è sempre fresco)
+  const cacheBuster = bustCache ? `&_t=${Date.now()}` : '';
+  const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_last_warning${cacheBuster}`;
+
   try {
     const response = await fetch(url, { method: 'GET' });
     const data = await response.json();
-    
+
     if (data.success && data.warning) {
       return data.warning;
     }

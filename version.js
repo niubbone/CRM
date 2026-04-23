@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.4';
+export const VERSION = '4.7.5';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,9 +35,9 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
-    'Fix abbuonaOreExtra: split riga parziale + Omaggio/Pagato ora nella convalida dati',
-    '"Omaggio" e "Pagato" aggiunti alla convalida dati Mod_Addebito (dropdown foglio)',
-    'Funzione aggiornaConvalidaModAddebito() per aggiornare la colonna K esistente',
+    'Fix silenzioso: errori doPost ora visibili nel pannello dopo il submit',
+    'Fix filtro timesheet: confronto Mod_Addebito case-insensitive (Errore pacchetto/Pacchetto)',
+    'Fix warning post-insert: get_last_warning ora bypassa la cache SW (dati sempre freschi)',
   ],
   
   // Features principali
@@ -61,6 +61,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.5",
+    date: "23/04/2026",
+    type: "fix",
+    changes: [
+      "doPost catch: errore salvato in ScriptProperties, visibile via get_last_warning invece di sparire silenziosamente",
+      "getClienteTimesheet: filtro STATI_PENDENTI case-insensitive (risolve Errore pacchetto vs Errore Pacchetto)",
+      "getLastWarning(bustCache=true): dopo il submit del form bypassa la cache SW per dati sempre aggiornati"
+    ]
+  },
   {
     version: "4.7.4",
     date: "23/04/2026",
