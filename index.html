@@ -1552,7 +1552,15 @@
              SEZIONE TIMESHEET CLIENTE
         ========================= -->
         <div id="cliente-timesheet-section" class="clienti-section" style="display: none;">
-            <h3>⏱️ Timesheet Non Fatturati</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h3 style="margin:0;">⏱️ Timesheet Non Fatturati</h3>
+                <button id="btn-crea-proforma-cliente"
+                    onclick="creaProformaPerCliente(this.dataset.nome)"
+                    style="background:#1976D2;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;display:none;"
+                    data-nome="">
+                    📋 Crea Proforma
+                </button>
+            </div>
             <div id="cliente-timesheet-content">
                 <p class="empty-state">Seleziona un cliente per visualizzare i suoi timesheet</p>
             </div>

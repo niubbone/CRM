@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.6.0';
+export const VERSION = '4.7.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,24 +29,17 @@ export const VERSION = '4.6.0';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'Ore Extra Edition',
-  date: '21 Aprile 2026',
-  codename: 'Omaggio',
+  name: 'Pannello Cliente Edition',
+  date: '23 Aprile 2026',
+  codename: 'ProformaQuick',
 
   // Changelog corrente versione
   changelog: [
-    'Ore extra: rimossa email immediata al salvataggio — gestione differita',
-    'Ore extra: nuovo stato intermedio "sospeso" per decidere in seguito',
-    'Ore extra: bottone Abbuona (🎁) nel pannello cliente con conferma',
-    'Ore extra: trigger giornaliero invia reminder dopo 5 giorni di sospeso',
-    'Ore extra: email riepilogativa raggruppata per cliente con tabella dettaglio',
-    'Stampa pacchetto: sezione "Ore in omaggio" per righe Abbuonato',
-    'Badge rosso sul tab Clienti con conteggio ore extra in sospeso',
-    'Verifica Integrità: nuovo check ORE_EXTRA_IN_SOSPESO con tabella per cliente',
-    'Righe orfane: aggiunta ID_Pacchetto al check integrità e al riaggancia',
-    'Proforma: filtro stato Proforma/Fatturata corretto (valori backend allineati)',
-    'Proforma: funzione aggiornaProforma per aggiungere righe a proforma esistente',
-    'Ultimi movimenti: caricamento accordion on-demand (performance)'
+    'Mod_Addebito "Abbuonato" rinominato in "Omaggio"',
+    'Nuovo valore Mod_Addebito "Pagato" per pagamenti in contanti, con bottone 💵 nel pannello cliente',
+    'Bottone "Crea Proforma" nel pannello cliente accanto al titolo Timesheet Non Fatturati',
+    'Canoni & Firme ora visibili nel pannello cliente (fix strict equality backend)',
+    'Pannello cliente: prodotti raggruppati per tipo con intestazioni visive (Canoni, Pacchetti)',
   ],
   
   // Features principali
@@ -70,6 +63,27 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.1",
+    date: "23/04/2026",
+    type: "fix",
+    changes: [
+      "Mod_Addebito 'Abbuonato' rinominato in 'Omaggio' (backend + frontend)",
+      "Nuovo valore Mod_Addebito 'Pagato' per pagamenti in contanti",
+      "Bottone 💵 Pagato nel pannello timesheet cliente per righe Da fatturare",
+      "Backend segnaPagato: bypass convalida dati foglio sulla singola cella"
+    ]
+  },
+  {
+    version: "4.7.0",
+    date: "23/04/2026",
+    type: "feature",
+    changes: [
+      "Pannello cliente: bottone 'Crea Proforma' accanto all'intestazione Timesheet Non Fatturati",
+      "Pannello cliente: canoni e firme ora visibili in sezione dedicata (fix strict equality backend)",
+      "Pannello cliente: prodotti raggruppati per tipo (Canoni & Firme / Pacchetti) con intestazioni visive"
+    ]
+  },
   {
     version: "4.6.0",
     date: "21/04/2026",

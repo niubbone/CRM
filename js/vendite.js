@@ -1248,9 +1248,9 @@ function renderStorico(pacchetti) {
 function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, totOre, totExtra, totCosto, dataAcquisto, dataScadenza, oreAcquistate) {
     const oggi = new Date().toLocaleDateString('it-IT');
 
-    // Separa righe normali da quelle abbuonate
-    const righeNormali    = rows.filter(r => r.modAddebito !== 'Abbuonato');
-    const righeAbbuonate  = rows.filter(r => r.modAddebito === 'Abbuonato');
+    // Separa righe normali da quelle in omaggio
+    const righeNormali    = rows.filter(r => r.modAddebito !== 'Omaggio');
+    const righeAbbuonate  = rows.filter(r => r.modAddebito === 'Omaggio');
     const oreAbbuonate    = righeAbbuonate.reduce((s, r) => s + (parseFloat(r.ore) || 0), 0);
 
     const orePerc = oreAcquistate > 0 ? Math.min(100, Math.round((righeNormali.reduce((s,r) => s + (parseFloat(r.ore)||0), 0) / oreAcquistate) * 100)) : 0;

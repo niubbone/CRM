@@ -48,8 +48,15 @@ async function populateClientDropdown() {
       option.textContent = cliente.Nome_Cliente || cliente.nome;
       selectElement.appendChild(option);
     });
-    
+
     console.log('✅ Dropdown clienti popolato');
+
+    // Se è stato richiesto di aprire la proforma per un cliente specifico, selezionalo
+    if (window._pendingProformaCliente) {
+      selectElement.value = window._pendingProformaCliente;
+      window._pendingProformaCliente = null;
+      loadTimesheetForClient();
+    }
     
   } catch (error) {
     console.error('❌ Errore populateClientDropdown:', error);

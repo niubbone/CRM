@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.6.0';
+const SW_BUILD = '4.7.1';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -132,7 +132,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // STATIC ASSETS - Cache first, fallback to network
+  // INDEX.HTML - Network first (così gli aggiornamenti HTML sono sempre immediati)
+  if (url.pathname === BASE_PATH || url.pathname.endsWith('/index.html') || url.pathname === BASE_PATH.slice(0, -1)) {
+    event.respondWith(
+      fetch(request).then(response => {
+        const clone = response.clone();
+        caches.open(STATIC_CACHE).then(cache => cache.put(request, clone));
+        return response;
+      }).catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // STATIC ASSETS (JS/CSS) - Cache first, fallback to network
   if (STATIC_FILES.some(file => url.pathname === file || url.pathname.endsWith(file))) {
     event.respondWith(handleStaticRequest(request));
     return;

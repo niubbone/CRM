@@ -143,6 +143,13 @@ async function loadClienteDetail(clienteId) {
 
             addModificaClienteButton();
 
+            // Mostra bottone Crea Proforma nella sezione timesheet
+            const btnCreaProforma = document.getElementById('btn-crea-proforma-cliente');
+            if (btnCreaProforma) {
+                btnCreaProforma.dataset.nome = data.cliente.nome || '';
+                btnCreaProforma.style.display = 'inline-block';
+            }
+
             // Usa i dati già ricevuti — nessuna ulteriore chiamata di rete
             currentClienteProdotti = data.prodotti || [];
             displayClienteProdotti(data.prodotti || []);
@@ -202,10 +209,19 @@ function addModificaClienteButton() {
     btnExport.className = 'btn-modifica-cliente';
     btnExport.setAttribute('onclick', 'showExportDataModal()');
     btnExport.innerHTML = '📇 Esporta Dati Cliente';
-    
+
+    // Crea il bottone Crea Proforma
+    const btnProforma = document.createElement('button');
+    btnProforma.className = 'btn-modifica-cliente';
+    btnProforma.style.background = '#1976D2';
+    btnProforma.style.color = '#fff';
+    btnProforma.onclick = () => creaProformaPerCliente(currentCliente?.nome);
+    btnProforma.innerHTML = '📋 Crea Proforma';
+
     // Aggiungi i bottoni al container
     container.appendChild(btnModifica);
     container.appendChild(btnExport);
+    container.appendChild(btnProforma);
     
     // Inserisci il container come primo elemento dopo l'h3
     const h3 = prodottiSection.querySelector('h3');
@@ -253,6 +269,8 @@ function closeClienteDetail() {
     document.getElementById('cliente-timesheet-section').style.display = 'none';
     document.getElementById('cliente-form').reset();
     resetMovimentiSection();
+    const btnCreaProforma = document.getElementById('btn-crea-proforma-cliente');
+    if (btnCreaProforma) btnCreaProforma.style.display = 'none';
 }
 
 /**
@@ -475,88 +493,121 @@ async function loadClienteProdotti(clienteId) {
 }
 
 /**
- * Visualizza i prodotti del cliente
+ * Renderizza un singolo prodotto (helper interno)
+ */
+function _renderProdottoItem(prodotto) {
+    const tipoClass = prodotto.tipo.toLowerCase();
+    const statusClass = prodotto.stato.toLowerCase().replace(' ', '-');
+    return `
+        <div class="prodotto-item">
+            <div class="prodotto-header">
+                <span class="prodotto-type ${tipoClass}">${getEmojiForType(prodotto.tipo)} ${prodotto.tipo}</span>
+                <span class="prodotto-status ${statusClass}">${prodotto.stato}</span>
+            </div>
+            <div class="prodotto-body">
+                ${prodotto.descrizione ? `
+                <div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Descrizione</span>
+                    <span class="prodotto-info-value">${prodotto.descrizione}</span>
+                </div>` : ''}
+                ${prodotto.dataInizio ? `
+                <div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Data Inizio</span>
+                    <span class="prodotto-info-value">${prodotto.dataInizio}</span>
+                </div>` : ''}
+                ${prodotto.tipo === 'Pacchetto' && prodotto.oreAcquistate !== undefined ? `
+                <div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Ore acquistate</span>
+                    <span class="prodotto-info-value">${prodotto.oreAcquistate}h</span>
+                </div>
+                <div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Ore utilizzate</span>
+                    <span class="prodotto-info-value">${prodotto.oreUtilizzate}h</span>
+                </div>
+                <div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Ore residue</span>
+                    <span class="prodotto-info-value" style="font-weight:600;color:${prodotto.oreResidue <= 0 ? '#dc3545' : prodotto.oreResidue <= 5 ? '#fd7e14' : '#28a745'};">${prodotto.oreResidue}h</span>
+                </div>` : prodotto.oreResidue !== undefined ? `
+                <div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Ore Residue</span>
+                    <span class="prodotto-info-value">${prodotto.oreResidue}h</span>
+                </div>` : ''}
+                ${prodotto.dataScadenza ? (() => {
+                    const parts = prodotto.dataScadenza.split('/');
+                    const scad = new Date(parts[2], parts[1]-1, parts[0]);
+                    const giorni = Math.ceil((scad - new Date()) / 86400000);
+                    const color = giorni < 0 ? '#dc3545' : giorni <= 30 ? '#fd7e14' : '#28a745';
+                    const label = giorni < 0 ? `Scaduto da ${Math.abs(giorni)} giorni` : `${giorni} giorni alla scadenza`;
+                    return `<div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Scadenza</span>
+                    <span class="prodotto-info-value" style="color:${color};font-weight:600;">${prodotto.dataScadenza} — ${label}</span>
+                </div>`;
+                })() : ''}
+                ${prodotto.importo ? `
+                <div class="prodotto-info-item">
+                    <span class="prodotto-info-label">Importo</span>
+                    <span class="prodotto-info-value">€ ${prodotto.importo}</span>
+                </div>` : ''}
+            </div>
+            ${prodotto.tipo === 'Pacchetto' ? `
+            <div class="prodotto-actions">
+                <button class="btn btn-sm btn-secondary" onclick="openPacchettoDettaglio('${prodotto.id}', '${(prodotto.descrizione||'Pacchetto').replace(/'/g,"\\'")}', {nomeCliente:'${(prodotto.nomeCliente||'').replace(/'/g,"\\'")}',oreAcquistate:${prodotto.oreAcquistate||0},dataAcquisto:'${prodotto.dataInizio||''}',dataScadenza:'${prodotto.dataScadenza||''}'})">
+                    📋 Dettaglio interventi
+                </button>
+            </div>` : prodotto.canRenew ? `
+            <div class="prodotto-actions">
+                <button class="btn btn-sm btn-primary" onclick="renewProduct('${prodotto.id}', '${prodotto.tipo}')">
+                    🔄 Rinnova
+                </button>
+            </div>` : ''}
+        </div>
+    `;
+}
+
+/**
+ * Visualizza i prodotti del cliente, raggruppati per tipo:
+ * prima i Canoni e Firme attivi, poi i Pacchetti ore.
  */
 function displayClienteProdotti(prodotti) {
     const contentDiv = document.getElementById('cliente-prodotti-content');
-    
+
     if (!prodotti || prodotti.length === 0) {
         contentDiv.innerHTML = '<p class="empty-state">Nessun prodotto attivo per questo cliente</p>';
         return;
     }
-    
+
+    const canoni   = prodotti.filter(p => p.tipo === 'Canone');
+    const firme    = prodotti.filter(p => p.tipo === 'Firma');
+    const pacchetti= prodotti.filter(p => p.tipo === 'Pacchetto');
+    const altri    = prodotti.filter(p => p.tipo !== 'Canone' && p.tipo !== 'Firma' && p.tipo !== 'Pacchetto');
+
     let html = '';
-    
-    prodotti.forEach(prodotto => {
-        const tipoClass = prodotto.tipo.toLowerCase();
-        const statusClass = prodotto.stato.toLowerCase().replace(' ', '-');
-        
-        html += `
-            <div class="prodotto-item">
-                <div class="prodotto-header">
-                    <span class="prodotto-type ${tipoClass}">${getEmojiForType(prodotto.tipo)} ${prodotto.tipo}</span>
-                    <span class="prodotto-status ${statusClass}">${prodotto.stato}</span>
-                </div>
-                <div class="prodotto-body">
-                    ${prodotto.descrizione ? `
-                    <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Descrizione</span>
-                        <span class="prodotto-info-value">${prodotto.descrizione}</span>
-                    </div>` : ''}
-                    ${prodotto.dataInizio ? `
-                    <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Data Inizio</span>
-                        <span class="prodotto-info-value">${prodotto.dataInizio}</span>
-                    </div>` : ''}
-                    ${prodotto.tipo === 'Pacchetto' && prodotto.oreAcquistate !== undefined ? `
-                    <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Ore acquistate</span>
-                        <span class="prodotto-info-value">${prodotto.oreAcquistate}h</span>
-                    </div>
-                    <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Ore utilizzate</span>
-                        <span class="prodotto-info-value">${prodotto.oreUtilizzate}h</span>
-                    </div>
-                    <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Ore residue</span>
-                        <span class="prodotto-info-value" style="font-weight:600;color:${prodotto.oreResidue <= 0 ? '#dc3545' : prodotto.oreResidue <= 5 ? '#fd7e14' : '#28a745'};">${prodotto.oreResidue}h</span>
-                    </div>` : prodotto.oreResidue !== undefined ? `
-                    <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Ore Residue</span>
-                        <span class="prodotto-info-value">${prodotto.oreResidue}h</span>
-                    </div>` : ''}
-                    ${prodotto.dataScadenza ? (() => {
-                        const parts = prodotto.dataScadenza.split('/');
-                        const scad = new Date(parts[2], parts[1]-1, parts[0]);
-                        const giorni = Math.ceil((scad - new Date()) / 86400000);
-                        const color = giorni < 0 ? '#dc3545' : giorni <= 30 ? '#fd7e14' : '#28a745';
-                        const label = giorni < 0 ? `Scaduto da ${Math.abs(giorni)} giorni` : `${giorni} giorni alla scadenza`;
-                        return `<div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Scadenza</span>
-                        <span class="prodotto-info-value" style="color:${color};font-weight:600;">${prodotto.dataScadenza} — ${label}</span>
-                    </div>`;
-                    })() : ''}
-                    ${prodotto.importo ? `
-                    <div class="prodotto-info-item">
-                        <span class="prodotto-info-label">Importo</span>
-                        <span class="prodotto-info-value">€ ${prodotto.importo}</span>
-                    </div>` : ''}
-                </div>
-                ${prodotto.tipo === 'Pacchetto' ? `
-                <div class="prodotto-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="openPacchettoDettaglio('${prodotto.id}', '${(prodotto.descrizione||'Pacchetto').replace(/'/g,"\\'")}', {nomeCliente:'${(prodotto.nomeCliente||'').replace(/'/g,"\\'")}',oreAcquistate:${prodotto.oreAcquistate||0},dataAcquisto:'${prodotto.dataInizio||''}',dataScadenza:'${prodotto.dataScadenza||''}'})">
-                        📋 Dettaglio interventi
-                    </button>
-                </div>` : prodotto.canRenew ? `
-                <div class="prodotto-actions">
-                    <button class="btn btn-sm btn-primary" onclick="renewProduct('${prodotto.id}', '${prodotto.tipo}')">
-                        🔄 Rinnova
-                    </button>
-                </div>` : ''}
-            </div>
-        `;
-    });
-    
+
+    // Sezione Canoni & Firme
+    const canoniEFirme = [...canoni, ...firme];
+    if (canoniEFirme.length > 0) {
+        html += `<div style="margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;color:#198754;margin-bottom:8px;padding:6px 10px;background:#e8f5ee;border-radius:6px;border-left:3px solid #28a745;">
+                💰 Canoni & Firme Attivi (${canoniEFirme.length})
+            </div>`;
+        canoniEFirme.forEach(p => { html += _renderProdottoItem(p); });
+        html += `</div>`;
+    }
+
+    // Sezione Pacchetti
+    if (pacchetti.length > 0) {
+        if (canoniEFirme.length > 0) html += `<hr style="margin:12px 0;border:none;border-top:1px solid #e9ecef;">`;
+        html += `<div style="margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;color:#6f42c1;margin-bottom:8px;padding:6px 10px;background:#f0ebff;border-radius:6px;border-left:3px solid #6f42c1;">
+                📦 Pacchetti Ore (${pacchetti.length})
+            </div>`;
+        pacchetti.forEach(p => { html += _renderProdottoItem(p); });
+        html += `</div>`;
+    }
+
+    // Altri tipi eventuali
+    altri.forEach(p => { html += _renderProdottoItem(p); });
+
     contentDiv.innerHTML = html;
 }
 
@@ -606,7 +657,7 @@ async function loadClienteTimesheet(clienteId) {
  */
 function displayClienteTimesheet(timesheet) {
     const contentDiv = document.getElementById('cliente-timesheet-content');
-    
+
     if (!timesheet || timesheet.length === 0) {
         contentDiv.innerHTML = '<p class="empty-state">Nessun timesheet in sospeso per questo cliente</p>';
         return;
@@ -676,7 +727,10 @@ function displayClienteTimesheet(timesheet) {
                         title="Scala in un pacchetto esistente">📦</button>
                       ${hasExtra ? `<button class="timesheet-edit-btn" style="background:#6f42c1;color:#fff;margin-left:4px;"
                         onclick="abbuonaOreExtra(${ts.rowIndex},${ts.oreExtra},'${ts.idPacchetto || ''}')"
-                        title="Abbuona le ore extra (omaggio)">🎁</button>` : ''}` : ''}
+                        title="Ore extra in omaggio">🎁</button>` : ''}` : `
+                      <button class="timesheet-edit-btn" style="background:#fd7e14;color:#fff;margin-left:4px;"
+                        onclick="segnaPagatoContanti(${ts.rowIndex})"
+                        title="Segna come pagato in contanti">💵</button>`}
                 </td>
             </tr>
         `;
@@ -1277,6 +1331,28 @@ END:VCARD`;
     window.URL.revokeObjectURL(url);
 }
 
+/**
+ * Apre il tab Proforma con il cliente corrente già selezionato.
+ * Se il dropdown è già popolato (tab già visitata), imposta subito il valore e carica.
+ * Altrimenti memorizza il cliente in _pendingProformaCliente per essere applicato
+ * da populateClientDropdown in proforma.js dopo il caricamento.
+ */
+function creaProformaPerCliente(nomeCliente) {
+    if (!nomeCliente) { alert('Nessun cliente selezionato'); return; }
+    window._pendingProformaCliente = nomeCliente;
+    window.switchTab('proforma');
+    // Se il dropdown è già popolato (tab già visitata in questa sessione), applica subito
+    const select = document.getElementById('proforma_client_select');
+    if (select && select.options.length > 1) {
+        select.value = nomeCliente;
+        window._pendingProformaCliente = null;
+        if (typeof window.loadTimesheetForClient === 'function') {
+            window.loadTimesheetForClient();
+        }
+    }
+}
+window.creaProformaPerCliente = creaProformaPerCliente;
+
 // Export per uso come modulo
 export {
     searchCliente,
@@ -1511,6 +1587,26 @@ async function abbuonaOreExtra(rowIndex, oreExtra, idPacchetto) {
     }
 }
 
+/**
+ * Segna una riga timesheet come pagata in contanti.
+ */
+async function segnaPagatoContanti(rowIndex) {
+    if (!confirm('Segnare questa riga come pagata in contanti? La riga non verrà inclusa nelle prossime proforma.')) return;
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=segna_pagato&row_index=${rowIndex}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.success) {
+            showNotification('clienti-info', '💵 Riga segnata come pagata in contanti', 'success');
+            if (currentCliente) loadClienteTimesheet(currentCliente.id);
+        } else {
+            alert('❌ Errore: ' + (data.error || 'Errore sconosciuto'));
+        }
+    } catch(err) {
+        alert('❌ Errore di rete: ' + err.message);
+    }
+}
+
 // Mantieni window.* solo per funzioni chiamate da HTML onclick
 window.searchCliente = searchCliente;
 window.loadClienteDetail = loadClienteDetail;
@@ -1540,6 +1636,7 @@ window.apriScalaInPacchetto     = apriScalaInPacchetto;
 window.eseguiScalaExtra         = eseguiScalaExtra;
 window.chiudiScalaExtraModal    = chiudiScalaExtraModal;
 window.abbuonaOreExtra          = abbuonaOreExtra;
+window.segnaPagatoContanti      = segnaPagatoContanti;
 
 // =======================================================================
 // === STORICO ABBONAMENTI QODNET CLIENTE ===
