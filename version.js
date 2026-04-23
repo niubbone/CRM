@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.5';
+export const VERSION = '4.7.6';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -61,6 +61,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.6",
+    date: "23/04/2026",
+    type: "fix",
+    changes: [
+      "Frontend: isErrore usa .toLowerCase() — righe 'Errore pacchetto' mostrate correttamente (non più come 'Da fatturare')",
+      "Backend: doPost scrive 'Errore pacchetto' (p minuscola) coerente col dropdown RIF",
+      "Backend: convertiDaFatturare e riagganciaRigheOrfane usano confronto case-insensitive"
+    ]
+  },
   {
     version: "4.7.5",
     date: "23/04/2026",

@@ -688,7 +688,7 @@ function displayClienteTimesheet(timesheet) {
         totalOre  += parseFloat(ts.ore)  || 0;
         totalCosto+= parseFloat(ts.costo)|| 0;
 
-        const isErrore = ts.modAddebito === 'Errore Pacchetto';
+        const isErrore = ts.modAddebito?.toLowerCase() === 'errore pacchetto';
         const hasExtra = ts.oreExtra > 0;
         totalExtra += hasExtra ? (parseFloat(ts.oreExtra) || 0) : isErrore ? (parseFloat(ts.ore) || 0) : 0;
 
@@ -1082,7 +1082,7 @@ async function editTimesheet(rowIndex, idIntervento) {
 
         const ts = currentTimesheetData;
         const isExtra  = ts.oreExtra > 0;
-        const isErrore = ts.modAddebito === 'Errore Pacchetto';
+        const isErrore = ts.modAddebito?.toLowerCase() === 'errore pacchetto';
 
         // Determina modalità e ore da mostrare
         let mode = '';
