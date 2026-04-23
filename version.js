@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.2';
+export const VERSION = '4.7.3';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,11 +35,8 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
-    'Mod_Addebito "Abbuonato" rinominato in "Omaggio"',
-    'Nuovo valore Mod_Addebito "Pagato" per pagamenti in contanti, con bottone 💵 nel pannello cliente',
-    'Bottone "Crea Proforma" nel pannello cliente accanto al titolo Timesheet Non Fatturati',
-    'Canoni & Firme ora visibili nel pannello cliente (fix strict equality backend)',
-    'Pannello cliente: prodotti raggruppati per tipo con intestazioni visive (Canoni, Pacchetti)',
+    'Fix abbuonaOreExtra: split riga per casi parziali (Scalato + ore extra < durata totale)',
+    'Nuova riga Omaggio creata con solo le ore extra; riga originale ridotta alle ore scalate',
   ],
   
   // Features principali
@@ -63,6 +60,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.3",
+    date: "23/04/2026",
+    type: "fix",
+    changes: [
+      "Fix abbuonaOreExtra: caso parziale (Scalato + Durata_Ore > oreExtra) ora splitta la riga",
+      "Riga originale ridotta a (Durata_Ore - oreExtra) e mantiene stato 'Scalato'",
+      "Nuova riga aggiunta con solo le ore extra, Mod_Addebito='Omaggio', Costo_Finale=0"
+    ]
+  },
   {
     version: "4.7.2",
     date: "23/04/2026",
