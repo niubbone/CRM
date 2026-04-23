@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.3';
+export const VERSION = '4.7.4';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,8 +35,9 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
-    'Fix abbuonaOreExtra: split riga per casi parziali (Scalato + ore extra < durata totale)',
-    'Nuova riga Omaggio creata con solo le ore extra; riga originale ridotta alle ore scalate',
+    'Fix abbuonaOreExtra: split riga parziale + Omaggio/Pagato ora nella convalida dati',
+    '"Omaggio" e "Pagato" aggiunti alla convalida dati Mod_Addebito (dropdown foglio)',
+    'Funzione aggiornaConvalidaModAddebito() per aggiornare la colonna K esistente',
   ],
   
   // Features principali
@@ -60,6 +61,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.4",
+    date: "23/04/2026",
+    type: "fix",
+    changes: [
+      "'Omaggio' e 'Pagato' aggiunti alla convalida dati Mod_Addebito (non sovrascrivono più il dropdown)",
+      "Nuova funzione aggiornaConvalidaModAddebito() per allineare l'intera colonna K in una volta",
+      "abbuonaOreExtra e segnaPagato ora impostano la regola corretta invece di cancellarla"
+    ]
+  },
   {
     version: "4.7.3",
     date: "23/04/2026",
