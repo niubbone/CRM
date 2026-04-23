@@ -738,7 +738,7 @@ window.caricaSuggerimentiOrfane = async function() {
     if (statusEl) statusEl.textContent = '⏳ Ricerca suggerimenti...';
     try {
         const url = `${CONFIG.APPS_SCRIPT_URL}?action=riaggancia_righe_orfane&dry_run=true`;
-        const res  = await fetch(url);
+        const res  = await fetch(url, { noSpinner: true });
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
         let trovati = 0;

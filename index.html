@@ -243,6 +243,13 @@
     };
     const _fetch = window.fetch;
     window.fetch = function(...args) {
+        // Passa { noSpinner: true } come secondo argomento per chiamate silesiose
+        const opts = args[1];
+        if (opts && opts.noSpinner) {
+            const { noSpinner, ...rest } = opts;
+            args[1] = Object.keys(rest).length ? rest : undefined;
+            return _fetch.apply(this, args);
+        }
         window._showLoading();
         return _fetch.apply(this, args).finally(() => window._hideLoading());
     };

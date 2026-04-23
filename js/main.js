@@ -165,7 +165,7 @@ function exposeGlobalFunctions() {
 async function loadOreExtraBadge() {
   try {
     const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_ore_extra_count`;
-    const res  = await fetch(url);
+    const res  = await fetch(url, { noSpinner: true });
     const data = await res.json();
     const badge = document.getElementById('clienti-extra-badge');
     if (!badge) return;
