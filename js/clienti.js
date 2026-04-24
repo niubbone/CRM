@@ -362,7 +362,16 @@ async function saveClienteChanges(event) {
         if (data.success) {
             if (isNew) {
                 showNotification('clienti-info', `✅ Cliente creato con successo! ID: ${data.clienteId}`, 'success');
-                
+
+                // Aggiorna window.clients con la lista fresca (cache-bust per bypassare il SW)
+                try {
+                    const freshData = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=get_data&_t=${Date.now()}`);
+                    const freshJson = await freshData.json();
+                    if (freshJson.success && freshJson.clients) {
+                        window.clients = freshJson.clients;
+                    }
+                } catch(e) { /* non bloccante */ }
+
                 // Carica il cliente appena creato
                 setTimeout(() => {
                     loadClienteDetail(data.clienteId);

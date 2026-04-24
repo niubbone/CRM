@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.6';
+export const VERSION = '4.7.7';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -61,6 +61,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.7",
+    date: "24/04/2026",
+    type: "fix",
+    changes: [
+      "Backend createCliente: aggiunta invalidateCacheData() + flush dopo appendRow",
+      "Frontend: dopo creazione cliente ricarica window.clients con cache-bust (nuovo cliente subito disponibile nel dropdown timesheet)"
+    ]
+  },
   {
     version: "4.7.6",
     date: "23/04/2026",
