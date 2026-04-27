@@ -53,24 +53,25 @@ window.switchTab = function(tabName) {
   if (activeBtn && activeBtn.classList) activeBtn.classList.add('active');
 
   // Inizializza solo se non già caricata in questa sessione
-  if (_tabLoaded[tabName]) {
-    // Eccezione: se la proforma list è bloccata in stato loading, ricarica
-    if (tabName === 'proforma') {
-      const proformaContainer = document.getElementById('proforma-list-container');
-      if (proformaContainer && proformaContainer.innerHTML.includes('loading')) {
-        if (typeof loadProformaList === 'function') loadProformaList();
-      }
-    }
-    return;
+  // Per la proforma controlliamo lo stato del container prima di decidere
+  if (_tabLoaded[tabName] && tabName !== 'proforma') return;
+
+  if (tabName !== 'proforma') {
+    _tabLoaded[tabName] = true;
   }
-  _tabLoaded[tabName] = true;
 
   switch(tabName) {
-    case 'proforma':
+    case 'proforma': {
       if (typeof showProformaStep === 'function') showProformaStep(1);
-      if (typeof loadProformaList === 'function') loadProformaList();
       if (typeof populateClientDropdown === 'function') populateClientDropdown();
+      // Carica la lista solo se non c'è già contenuto reale (evita reload se dati già presenti)
+      if (typeof loadProformaList === 'function') {
+        const pc = document.getElementById('proforma-list-container');
+        const hasData = pc && !pc.innerHTML.includes('loading') && pc.innerHTML.trim() !== '' && !pc.querySelector('.error-state');
+        if (!hasData) loadProformaList();
+      }
       break;
+    }
     case 'utilities':
       if (typeof initUtilities === 'function') initUtilities();
       break;
