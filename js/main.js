@@ -53,7 +53,16 @@ window.switchTab = function(tabName) {
   if (activeBtn && activeBtn.classList) activeBtn.classList.add('active');
 
   // Inizializza solo se non già caricata in questa sessione
-  if (_tabLoaded[tabName]) return;
+  if (_tabLoaded[tabName]) {
+    // Eccezione: se la proforma list è bloccata in stato loading, ricarica
+    if (tabName === 'proforma') {
+      const proformaContainer = document.getElementById('proforma-list-container');
+      if (proformaContainer && proformaContainer.innerHTML.includes('loading')) {
+        if (typeof loadProformaList === 'function') loadProformaList();
+      }
+    }
+    return;
+  }
   _tabLoaded[tabName] = true;
 
   switch(tabName) {

@@ -508,10 +508,10 @@
     <div class="filters-row">
       <input type="text" id="filter-cliente-proforma" list="filter-cliente-proforma-list" placeholder="Tutti i clienti" autocomplete="off" style="min-width:200px;padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:14px;" oninput="filterProformaList()">
       <datalist id="filter-cliente-proforma-list"></datalist>
-      <select id="filter-anno-proforma" onchange="filterProformaList()" style="min-width: 100px;">
+      <select id="filter-anno-proforma" onchange="filterProformaLocal()" style="min-width: 100px;">
         <option value="">Tutti gli anni</option>
       </select>
-      <select id="filter-stato-proforma" onchange="filterProformaList()" style="min-width: 140px;">
+      <select id="filter-stato-proforma" onchange="filterProformaLocal()" style="min-width: 140px;">
         <option value="">Tutti gli stati</option>
         <option value="Proforma">📋 Non fatturata</option>
         <option value="Fatturata">✅ Fatturata</option>

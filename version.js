@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.7';
+export const VERSION = '4.7.8';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,9 +35,8 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
-    'Fix silenzioso: errori doPost ora visibili nel pannello dopo il submit',
-    'Fix filtro timesheet: confronto Mod_Addebito case-insensitive (Errore pacchetto/Pacchetto)',
-    'Fix warning post-insert: get_last_warning ora bypassa la cache SW (dati sempre freschi)',
+    'Fix proforma list: non si bloccava più silenziosamente al ritorno sul tab',
+    'Fix filtri anno/stato proforma: non triggeravano più inutili richieste server',
   ],
   
   // Features principali
@@ -61,6 +60,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.8",
+    date: "23/04/2026",
+    type: "fix",
+    changes: [
+      "Fix proforma list: tab tornava in loading silenzioso se l'utente navigava via durante il caricamento",
+      "Fix filtri anno/stato proforma: onchange ora usa filterProformaLocal() (nessuna richiesta server inutile)",
+      "Rimossi addEventListener duplicati per anno/stato filter (consolidati in HTML onchange)"
+    ]
+  },
   {
     version: "4.7.7",
     date: "24/04/2026",

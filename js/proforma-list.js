@@ -523,20 +523,26 @@ function applyLocalFilters(proformeList) {
 }
 
 /**
- * Filtra lista proforma
- * ✅ v3.2: Gestisce filtri cliente (server), anno e stato (locali)
+ * Filtra lista proforma per cliente (richiesta server)
  */
 function filterProformaList() {
   const selectCliente = document.getElementById('filter-cliente-proforma');
   if (!selectCliente) return;
-  
+
   const clienteSelezionato = selectCliente.value;
   console.log('🔍 Filtro proforma per cliente:', clienteSelezionato || 'TUTTI');
-  
+
   // Ricarica da server con filtro cliente (questo popola window.allProformeData)
   loadProformaList(clienteSelezionato || null);
-  
-  // I filtri anno/stato vengono applicati automaticamente in renderProformaList()
+}
+
+/**
+ * Filtra lista proforma localmente (anno e stato) — senza nuova richiesta al server
+ */
+function filterProformaLocal() {
+  if (window.allProformeData) {
+    renderProformaList(window.allProformeData);
+  }
 }
 
 /**
@@ -636,6 +642,7 @@ window.openFatturaModal = openFatturaModal;
 window.closeFatturaModal = closeFatturaModal;
 window.saveNumeroFattura = saveNumeroFattura;
 window.filterProformaList = filterProformaList;
+window.filterProformaLocal = filterProformaLocal;
 window.populateProformaClientFilter = populateProformaClientFilter;
 
 /**
@@ -685,30 +692,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.warn('⚠️ Modal fattura non trovato in DOM');
   }
   
-  // ✅ v3.2: Event listeners per filtri anno e stato (filtri locali)
-  const annoFilter = document.getElementById('filter-anno-proforma');
-  if (annoFilter) {
-    annoFilter.addEventListener('change', function() {
-      console.log('📅 Cambio filtro anno:', this.value || 'tutti');
-      // Ri-renderizza con filtri applicati (non ricarica da server)
-      if (window.allProformeData) {
-        renderProformaList(window.allProformeData);
-      }
-    });
-    console.log('✅ Event listener filtro anno configurato');
-  }
-  
-  const statoFilter = document.getElementById('filter-stato-proforma');
-  if (statoFilter) {
-    statoFilter.addEventListener('change', function() {
-      console.log('🏷️ Cambio filtro stato:', this.value || 'tutti');
-      // Ri-renderizza con filtri applicati (non ricarica da server)
-      if (window.allProformeData) {
-        renderProformaList(window.allProformeData);
-      }
-    });
-    console.log('✅ Event listener filtro stato configurato');
-  }
 });
 
 // =======================================================================
