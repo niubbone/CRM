@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.9';
+export const VERSION = '4.8.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,13 +30,13 @@ export const VERSION = '4.7.9';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Pannello Cliente Edition',
-  date: '23 Aprile 2026',
-  codename: 'ProformaQuick',
+  date: '27 Aprile 2026',
+  codename: 'ProformaFix',
 
   // Changelog corrente versione
   changelog: [
-    'Fix proforma list: non si bloccava più silenziosamente al ritorno sul tab',
-    'Fix filtri anno/stato proforma: non triggeravano più inutili richieste server',
+    'Fix proforma list: rimosso double-call onclick+addEventListener (causa root del blocco silenzioso)',
+    'Fix SW cache: bump versione forza invalidazione cache — nuovi file JS serviti immediatamente',
   ],
   
   // Features principali
@@ -60,6 +60,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.0",
+    date: "27/04/2026",
+    type: "fix",
+    changes: [
+      "Fix root cause proforma list bloccata: rimosso onclick dai pulsanti tab — elimina double-call che causava race condition",
+      "setupTabs() ora usa data-tab attribute — unica fonte di verità per navigazione tab",
+      "Bump versione SW forza invalidazione cache crm-v4.7.9 — file JS aggiornati subito senza stale-while-revalidate"
+    ]
+  },
   {
     version: "4.7.9",
     date: "27/04/2026",

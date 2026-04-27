@@ -48,8 +48,7 @@ window.switchTab = function(tabName) {
     return;
   }
 
-  const activeBtn = Array.from(document.querySelectorAll('.tab-button'))
-    .find(btn => btn && btn.textContent && btn.textContent.toLowerCase().includes(tabName));
+  const activeBtn = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
   if (activeBtn && activeBtn.classList) activeBtn.classList.add('active');
 
   // Inizializza solo se non già caricata in questa sessione
@@ -64,11 +63,11 @@ window.switchTab = function(tabName) {
     case 'proforma': {
       if (typeof showProformaStep === 'function') showProformaStep(1);
       if (typeof populateClientDropdown === 'function') populateClientDropdown();
-      // Carica la lista solo se non c'è già contenuto reale (evita reload se dati già presenti)
-      if (typeof loadProformaList === 'function') {
+      // Carica solo se non ci sono già card renderizzate (evita reload se dati presenti)
+      if (typeof window.loadProformaList === 'function') {
         const pc = document.getElementById('proforma-list-container');
-        const hasData = pc && !pc.innerHTML.includes('loading') && pc.innerHTML.trim() !== '' && !pc.querySelector('.error-state');
-        if (!hasData) loadProformaList();
+        const hasRealData = pc && pc.querySelector('.proforma-card');
+        if (!hasRealData) window.loadProformaList();
       }
       break;
     }
@@ -113,33 +112,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Setup navigazione tab
- * VERSIONE CORRETTA con caso Clienti aggiunto
+ * Setup navigazione tab - usa data-tab attribute, unica fonte di verità
  */
 function setupTabs() {
-  document.querySelectorAll('.tab-button').forEach(btn => {
+  document.querySelectorAll('.tab-button[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
-      let tabName;
-      
-      if (btn.textContent.includes('Timesheet')) {
-        tabName = 'timesheet';
-      } else if (btn.textContent.includes('Proforma')) {
-        tabName = 'proforma';
-      } else if (btn.textContent.includes('Vendite')) {
-        tabName = 'vendite';
-      } else if (btn.textContent.includes('Fatture')) {
-        tabName = 'fatture';
-      } else if (btn.textContent.includes('Clienti')) {  // ✅ FIX: AGGIUNTO CASO CLIENTI
-        tabName = 'clienti';
-      } else if (btn.textContent.includes('Utilities')) {
-        tabName = 'utilities';
-      }
-      
-      // ✅ FIX: Chiama switchTab solo se tabName è definito
+      const tabName = btn.dataset.tab;
       if (tabName) {
         window.switchTab(tabName);
-      } else {
-        console.warn('⚠️ Pulsante tab non riconosciuto:', btn.textContent);
       }
     });
   });
