@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.7.8';
+export const VERSION = '4.7.9';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -60,6 +60,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.7.9",
+    date: "27/04/2026",
+    type: "fix",
+    changes: [
+      "Fix definitivo proforma list: non usa più _tabLoaded, carica sempre se il container non ha dati reali",
+      "Risolto conflitto double-call onclick+addEventListener sui pulsanti tab"
+    ]
+  },
   {
     version: "4.7.8",
     date: "23/04/2026",
