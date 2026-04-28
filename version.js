@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.6';
+export const VERSION = '4.8.7';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -60,6 +60,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.7",
+    date: "28/04/2026",
+    type: "fix",
+    changes: [
+      "Fix grafico: rimosso !important da padding/width/margin-top su .btn-primary e .btn-secondary",
+      "I pulsanti affiancati ora hanno altezza uniforme — margin-top e width non bloccano più i flex layout"
+    ]
+  },
   {
     version: "4.8.6",
     date: "28/04/2026",
