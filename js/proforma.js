@@ -16,50 +16,26 @@ const API_URL = (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL)
 /**
  * Popola il dropdown clienti nel tab proforma
  */
-async function populateClientDropdown() {
-  console.log('🔄 populateClientDropdown() chiamato');
-  
-  const selectElement = document.getElementById('proforma_client_select');
-  if (!selectElement) {
-    console.error('❌ Elemento proforma_client_select non trovato');
-    return;
-  }
-  
-  try {
-    // Chiama API per ottenere clienti
-    const response = await fetch(`${API_URL}?action=get_data&timestamp=${Date.now()}`);
-    const data = await response.json();
-    
-    if (!data.success || !data.data || !data.data.clienti) {
-      console.error('❌ Errore caricamento clienti:', data.error);
-      return;
-    }
-    
-    const clienti = data.data.clienti;
-    console.log(`✅ Caricati ${clienti.length} clienti`);
-    
-    // Svuota dropdown
-    selectElement.innerHTML = '<option value="">-- Seleziona Cliente --</option>';
-    
-    // Popola dropdown
-    clienti.forEach(cliente => {
-      const option = document.createElement('option');
-      option.value = cliente.Nome_Cliente || cliente.nome;
-      option.textContent = cliente.Nome_Cliente || cliente.nome;
-      selectElement.appendChild(option);
-    });
+function populateClientDropdown() {
+  const clients = window.clients;
+  if (!clients || clients.length === 0) return;
 
-    console.log('✅ Dropdown clienti popolato');
+  const datalist = document.getElementById('proforma-client-list');
+  if (!datalist) return;
 
-    // Se è stato richiesto di aprire la proforma per un cliente specifico, selezionalo
-    if (window._pendingProformaCliente) {
-      selectElement.value = window._pendingProformaCliente;
-      window._pendingProformaCliente = null;
-      loadTimesheetForClient();
-    }
-    
-  } catch (error) {
-    console.error('❌ Errore populateClientDropdown:', error);
+  datalist.innerHTML = '';
+  clients.forEach(client => {
+    const option = document.createElement('option');
+    option.value = client.name || client.Nome_Cliente || client.nome || '';
+    datalist.appendChild(option);
+  });
+
+  // Se c'è un cliente pending (es. "Crea Proforma" dal pannello cliente), selezionalo
+  if (window._pendingProformaCliente) {
+    const input = document.getElementById('proforma_client_select');
+    if (input) input.value = window._pendingProformaCliente;
+    window._pendingProformaCliente = null;
+    loadTimesheetForClient();
   }
 }
 

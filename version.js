@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.1';
+export const VERSION = '4.8.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,8 +35,8 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
-    'Fix proforma list: MutationObserver autonomo su proforma-tab — carica la lista indipendentemente da switchTab',
-    'Bump SW 4.8.1: invalida cache 4.8.0 e serve file aggiornati',
+    'Fix populateClientDropdown: usava data.data.clienti (inesistente) invece di window.clients già caricato da timesheet.js',
+    'Fix: tentava di aggiungere <option> a un <input> invece che al <datalist>',
   ],
   
   // Features principali
@@ -60,6 +60,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.2",
+    date: "28/04/2026",
+    type: "fix",
+    changes: [
+      "Fix populateClientDropdown in proforma.js: usava data.data.clienti (struttura inesistente) invece di window.clients già caricato da timesheet.js",
+      "Fix: aggiungeva <option> all'<input> invece che al <datalist id='proforma-client-list'> — nessun effetto visibile",
+      "Rimossa chiamata API ridondante: i clienti sono già in window.clients dopo initTimesheet()"
+    ]
+  },
   {
     version: "4.8.1",
     date: "28/04/2026",
