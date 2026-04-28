@@ -121,14 +121,14 @@ input[type="submit"],
 .btn-primary {
     background-color: var(--success-color);
     color: white;
-    padding: 15px 20px;
+    padding: 15px 20px !important;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    width: 100%;
+    width: 100% !important;
     font-size: 18px;
     font-weight: 500;
-    margin-top: 20px;
+    margin-top: 20px !important;
     transition: background-color 0.3s ease;
     box-sizing: border-box;
 }
@@ -165,7 +165,7 @@ input[type="submit"]:disabled,
 .btn-secondary {
     background-color: var(--primary-color);
     color: white;
-    padding: 15px 20px;
+    padding: 15px 20px !important;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
@@ -198,6 +198,15 @@ input[type="submit"]:disabled,
     font-size: 18px;
     cursor: pointer;
     font-weight: 500;
+}
+
+/* Fix: in flex row, btn-primary non deve espandersi o scendere */
+.btn-row .btn-primary,
+.btn-row .btn-secondary,
+.cliente-card-actions .btn-primary,
+.cliente-card-actions .btn-secondary {
+    width: auto !important;
+    margin-top: 0 !important;
 }
 
 /* Checkbox Container */

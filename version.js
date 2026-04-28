@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.7';
+export const VERSION = '4.8.8';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -60,6 +60,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.8",
+    date: "28/04/2026",
+    type: "fix",
+    changes: [
+      "Fix grafico pulsanti affiancati: width:auto e margin-top:0 nei flex row (.btn-row, .cliente-card-actions)",
+      "Ripristinato !important in forms.css — pulsanti form tornano alla grandezza originale",
+      "Unificati div Salva/Annulla (cliente + timesheet modal) alla classe .btn-row"
+    ]
+  },
   {
     version: "4.8.7",
     date: "28/04/2026",
