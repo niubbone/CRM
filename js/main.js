@@ -63,12 +63,7 @@ window.switchTab = function(tabName) {
     case 'proforma': {
       if (typeof showProformaStep === 'function') showProformaStep(1);
       if (typeof populateClientDropdown === 'function') populateClientDropdown();
-      // Carica solo se non ci sono già card renderizzate (evita reload se dati presenti)
-      if (typeof window.loadProformaList === 'function') {
-        const pc = document.getElementById('proforma-list-container');
-        const hasRealData = pc && pc.querySelector('.proforma-card');
-        if (!hasRealData) window.loadProformaList();
-      }
+      // Il caricamento della lista è gestito dal MutationObserver in proforma-list.js
       break;
     }
     case 'utilities':

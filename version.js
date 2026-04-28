@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.0';
+export const VERSION = '4.8.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,13 +30,13 @@ export const VERSION = '4.8.0';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Pannello Cliente Edition',
-  date: '27 Aprile 2026',
+  date: '28 Aprile 2026',
   codename: 'ProformaFix',
 
   // Changelog corrente versione
   changelog: [
-    'Fix proforma list: rimosso double-call onclick+addEventListener (causa root del blocco silenzioso)',
-    'Fix SW cache: bump versione forza invalidazione cache — nuovi file JS serviti immediatamente',
+    'Fix proforma list: MutationObserver autonomo su proforma-tab — carica la lista indipendentemente da switchTab',
+    'Bump SW 4.8.1: invalida cache 4.8.0 e serve file aggiornati',
   ],
   
   // Features principali
@@ -60,6 +60,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.1",
+    date: "28/04/2026",
+    type: "fix",
+    changes: [
+      "Fix proforma list: MutationObserver su proforma-tab — caricamento completamente autonomo da switchTab/setupTabs",
+      "loadProformaList() non dipende più da main.js: si attiva ogni volta che proforma-tab acquista classe 'active'"
+    ]
+  },
   {
     version: "4.8.0",
     date: "27/04/2026",

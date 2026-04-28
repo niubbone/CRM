@@ -678,7 +678,7 @@ console.log('✅ proforma-list.js caricato - funzioni esposte su window');
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 DOMContentLoaded - inizializzazione proforma-list');
-  
+
   // Event listener per chiudere modal cliccando fuori
   const fatturaModal = document.getElementById('fatturaModal');
   if (fatturaModal) {
@@ -691,7 +691,33 @@ document.addEventListener('DOMContentLoaded', function() {
   } else {
     console.warn('⚠️ Modal fattura non trovato in DOM');
   }
-  
+
+  // =======================================================================
+  // CARICAMENTO AUTONOMO: MutationObserver su proforma-tab
+  // Indipendente da switchTab, setupTabs, main.js o onclick.
+  // Si attiva ogni volta che proforma-tab acquista la classe 'active'.
+  // =======================================================================
+  var proformaTab = document.getElementById('proforma-tab');
+  if (proformaTab) {
+    var observer = new MutationObserver(function(mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        if (mutations[i].attributeName === 'class' && proformaTab.classList.contains('active')) {
+          var pc = document.getElementById('proforma-list-container');
+          var hasRealData = pc && pc.querySelector('.proforma-card');
+          if (!hasRealData) {
+            console.log('🔍 MutationObserver: proforma-tab attivo → loadProformaList()');
+            loadProformaList();
+          }
+          break;
+        }
+      }
+    });
+    observer.observe(proformaTab, { attributes: true, attributeFilter: ['class'] });
+    console.log('✅ MutationObserver su proforma-tab configurato');
+  } else {
+    console.warn('⚠️ proforma-tab non trovato nel DOM');
+  }
+
 });
 
 // =======================================================================
