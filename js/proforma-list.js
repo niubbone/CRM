@@ -225,7 +225,8 @@ function renderProformaList(proformeList) {
         
         const dataFormatted = formatDateItalian(proforma.data);
         const importoFormatted = formatCurrency(proforma.importo);
-        
+        const clienteEscaped = (proforma.cliente || '').replace(/'/g, "\\'");
+
         // ✅ v3.2: Layout compatto come Cattura2.png
         return `
           <div class="proforma-card">
@@ -263,7 +264,7 @@ function renderProformaList(proformeList) {
                       📄 PDF
                     </a>
                   ` : ''}
-                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${(proforma.cliente||'').replace(/'/g,\"\\'\")}')" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
+                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}')" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
                     ➕ Aggiungi voci
                   </button>
                   <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex: 2;">

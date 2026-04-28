@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.3';
+export const VERSION = '4.8.4';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,13 +30,13 @@ export const VERSION = '4.8.3';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Pannello Cliente Edition',
-  date: '28 Aprile 2026',
+  date: '27 Aprile 2026',
   codename: 'ProformaFix',
 
   // Changelog corrente versione
   changelog: [
-    'Ripristino codice originale: rimossi MutationObserver, data-tab e altre modifiche intermedie',
-    'Unica modifica reale: fix populateClientDropdown in proforma.js (struttura risposta API errata)',
+    'Fix SyntaxError in proforma-list.js riga 266: clienteEscaped estratto prima del template literal',
+    'Risolto: proforma-list.js non caricava mai perché il file non veniva parsato dal browser',
   ],
   
   // Features principali
@@ -61,8 +61,17 @@ export const BUILD_INFO = {
 // ============================================
 export const CHANGELOG = [
   {
+    version: "4.8.4",
+    date: "27/04/2026",
+    type: "fix",
+    changes: [
+      "Fix SyntaxError in proforma-list.js riga 266: template literal annidato con .replace() e escape non valido",
+      "clienteEscaped estratto come variabile prima del return — proforma-list.js finalmente si carica"
+    ]
+  },
+  {
     version: "4.8.3",
-    date: "28/04/2026",
+    date: "27/04/2026",
     type: "cleanup",
     changes: [
       "Ripristino codice originale: rimossi MutationObserver, data-tab e modifiche intermedie (4.7.8→4.8.2)",
