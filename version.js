@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.5';
+export const VERSION = '4.8.6';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -60,6 +60,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.6",
+    date: "28/04/2026",
+    type: "fix",
+    changes: [
+      "Fix pannello cliente: chiudere il form modifica anagrafica non nasconde più prodotti e timesheet",
+      "Nuova closeClienteEditForm(): chiude solo il form, riporta la vista su Prodotti Attivi"
+    ]
+  },
   {
     version: "4.8.5",
     date: "28/04/2026",

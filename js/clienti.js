@@ -206,7 +206,7 @@ function showClienteDetail(cliente) {
 }
 
 /**
- * Chiude il dettaglio cliente
+ * Chiude il dettaglio cliente (torna alla ricerca, nasconde tutto)
  */
 function closeClienteDetail() {
     currentCliente = null;
@@ -217,6 +217,23 @@ function closeClienteDetail() {
     resetMovimentiSection();
     const btnCreaProforma = document.getElementById('btn-crea-proforma-cliente');
     if (btnCreaProforma) btnCreaProforma.style.display = 'none';
+}
+
+/**
+ * Chiude solo il form di modifica anagrafica.
+ * Se si tratta di un nuovo cliente (isNew), chiude tutto.
+ * Altrimenti mantiene prodotti e timesheet visibili.
+ */
+function closeClienteEditForm() {
+    if (currentCliente?.isNew) {
+        closeClienteDetail();
+        return;
+    }
+    document.getElementById('cliente-detail-section').style.display = 'none';
+    document.getElementById('cliente-form').reset();
+    // Riporta in primo piano la sezione prodotti
+    const prodottiSection = document.getElementById('cliente-prodotti-section');
+    if (prodottiSection) prodottiSection.scrollIntoView({ behavior: 'smooth' });
 }
 
 /**
@@ -1566,6 +1583,7 @@ async function segnaPagatoContanti(rowIndex) {
 window.searchCliente = searchCliente;
 window.loadClienteDetail = loadClienteDetail;
 window.closeClienteDetail = closeClienteDetail;
+window.closeClienteEditForm = closeClienteEditForm;
 window.openNewClienteForm = openNewClienteForm;
 window.copyClientData = copyClientData;
 window.exportVCard = exportVCard;
