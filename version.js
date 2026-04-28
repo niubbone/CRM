@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.4';
+export const VERSION = '4.8.5';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -60,6 +60,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.5",
+    date: "28/04/2026",
+    type: "cleanup",
+    changes: [
+      "Rimossi 3 pulsanti ridondanti sotto 'Prodotti Attivi' nel pannello cliente (Modifica, Esporta, Crea Proforma)",
+      "Le stesse azioni sono già disponibili nella sezione anagrafica e accanto al timesheet non fatturati"
+    ]
+  },
   {
     version: "4.8.4",
     date: "27/04/2026",

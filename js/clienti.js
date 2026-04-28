@@ -141,8 +141,6 @@ async function loadClienteDetail(clienteId) {
             document.getElementById('cliente-prodotti-section').style.display = 'block';
             document.getElementById('cliente-timesheet-section').style.display = 'block';
 
-            addModificaClienteButton();
-
             // Mostra bottone Crea Proforma nella sezione timesheet
             const btnCreaProforma = document.getElementById('btn-crea-proforma-cliente');
             if (btnCreaProforma) {
@@ -179,58 +177,6 @@ async function loadClienteDetail(clienteId) {
     }
 }
 
-/**
- * Aggiunge i bottoni Modifica e Esporta vCard nella sezione prodotti
- */
-function addModificaClienteButton() {
-    const prodottiSection = document.getElementById('cliente-prodotti-section');
-    
-    // Rimuovi container bottoni se presente
-    const existingContainer = prodottiSection.querySelector('.cliente-action-buttons');
-    if (existingContainer) {
-        existingContainer.remove();
-    }
-    
-    // Crea il container per i bottoni
-    const container = document.createElement('div');
-    container.className = 'cliente-action-buttons';
-    container.style.display = 'flex';
-    container.style.gap = '10px';
-    container.style.marginBottom = '15px';
-    
-    // Crea il bottone Modifica
-    const btnModifica = document.createElement('button');
-    btnModifica.className = 'btn-modifica-cliente';
-    btnModifica.onclick = openClienteEdit;
-    btnModifica.innerHTML = '✏️ Modifica Dati Cliente';
-    
-    // Crea il bottone Esporta Dati Cliente
-    const btnExport = document.createElement('button');
-    btnExport.className = 'btn-modifica-cliente';
-    btnExport.setAttribute('onclick', 'showExportDataModal()');
-    btnExport.innerHTML = '📇 Esporta Dati Cliente';
-
-    // Crea il bottone Crea Proforma
-    const btnProforma = document.createElement('button');
-    btnProforma.className = 'btn-modifica-cliente';
-    btnProforma.style.background = '#1976D2';
-    btnProforma.style.color = '#fff';
-    btnProforma.onclick = () => creaProformaPerCliente(currentCliente?.nome);
-    btnProforma.innerHTML = '📋 Crea Proforma';
-
-    // Aggiungi i bottoni al container
-    container.appendChild(btnModifica);
-    container.appendChild(btnExport);
-    container.appendChild(btnProforma);
-    
-    // Inserisci il container come primo elemento dopo l'h3
-    const h3 = prodottiSection.querySelector('h3');
-    if (h3) {
-        h3.insertAdjacentElement('afterend', container);
-    } else {
-        prodottiSection.insertBefore(container, prodottiSection.firstChild);
-    }
-}
 
 /**
  * Mostra il form con i dettagli del cliente
