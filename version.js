@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.2';
+export const VERSION = '4.8.3';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,8 +35,8 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
-    'Fix populateClientDropdown: usava data.data.clienti (inesistente) invece di window.clients già caricato da timesheet.js',
-    'Fix: tentava di aggiungere <option> a un <input> invece che al <datalist>',
+    'Ripristino codice originale: rimossi MutationObserver, data-tab e altre modifiche intermedie',
+    'Unica modifica reale: fix populateClientDropdown in proforma.js (struttura risposta API errata)',
   ],
   
   // Features principali
@@ -60,6 +60,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.3",
+    date: "28/04/2026",
+    type: "cleanup",
+    changes: [
+      "Ripristino codice originale: rimossi MutationObserver, data-tab e modifiche intermedie (4.7.8→4.8.2)",
+      "Unica modifica mantenuta: fix populateClientDropdown — usa window.clients + popola datalist corretto"
+    ]
+  },
   {
     version: "4.8.2",
     date: "28/04/2026",

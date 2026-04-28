@@ -3,11 +3,11 @@
 // =======================================================================
 import { initGlobalState } from './config.js';
 import { initTimesheet, openAddClientModal, closeAddClientModal, saveNewClient } from './timesheet.js';
-import { 
-  initProforma, 
-  showProformaStep, 
-  loadTimesheetForClient, 
-  selectAllTimesheet, 
+import {
+  initProforma,
+  showProformaStep,
+  loadTimesheetForClient,
+  selectAllTimesheet,
   deselectAllTimesheet,
   updateSelection,
   proceedToStep3,
@@ -48,24 +48,20 @@ window.switchTab = function(tabName) {
     return;
   }
 
-  const activeBtn = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
+  const activeBtn = Array.from(document.querySelectorAll('.tab-button'))
+    .find(btn => btn && btn.textContent && btn.textContent.toLowerCase().includes(tabName));
   if (activeBtn && activeBtn.classList) activeBtn.classList.add('active');
 
   // Inizializza solo se non già caricata in questa sessione
-  // Per la proforma controlliamo lo stato del container prima di decidere
-  if (_tabLoaded[tabName] && tabName !== 'proforma') return;
-
-  if (tabName !== 'proforma') {
-    _tabLoaded[tabName] = true;
-  }
+  if (_tabLoaded[tabName]) return;
+  _tabLoaded[tabName] = true;
 
   switch(tabName) {
-    case 'proforma': {
+    case 'proforma':
       if (typeof showProformaStep === 'function') showProformaStep(1);
+      if (typeof loadProformaList === 'function') loadProformaList();
       if (typeof populateClientDropdown === 'function') populateClientDropdown();
-      // Il caricamento della lista è gestito dal MutationObserver in proforma-list.js
       break;
-    }
     case 'utilities':
       if (typeof initUtilities === 'function') initUtilities();
       break;
@@ -86,13 +82,13 @@ window.switchTab = function(tabName) {
  */
 window.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Inizializzazione Studio Smart Timesheet...');
-  
+
   // Inizializza stato globale
   initGlobalState();
-  
+
   // Setup tab switching
   setupTabs();
-  
+
   // Inizializza moduli essenziali
   await initTimesheet();
   initProforma();
@@ -107,14 +103,33 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Setup navigazione tab - usa data-tab attribute, unica fonte di verità
+ * Setup navigazione tab
+ * VERSIONE CORRETTA con caso Clienti aggiunto
  */
 function setupTabs() {
-  document.querySelectorAll('.tab-button[data-tab]').forEach(btn => {
+  document.querySelectorAll('.tab-button').forEach(btn => {
     btn.addEventListener('click', () => {
-      const tabName = btn.dataset.tab;
+      let tabName;
+
+      if (btn.textContent.includes('Timesheet')) {
+        tabName = 'timesheet';
+      } else if (btn.textContent.includes('Proforma')) {
+        tabName = 'proforma';
+      } else if (btn.textContent.includes('Vendite')) {
+        tabName = 'vendite';
+      } else if (btn.textContent.includes('Fatture')) {
+        tabName = 'fatture';
+      } else if (btn.textContent.includes('Clienti')) {  // ✅ FIX: AGGIUNTO CASO CLIENTI
+        tabName = 'clienti';
+      } else if (btn.textContent.includes('Utilities')) {
+        tabName = 'utilities';
+      }
+
+      // ✅ FIX: Chiama switchTab solo se tabName è definito
       if (tabName) {
         window.switchTab(tabName);
+      } else {
+        console.warn('⚠️ Pulsante tab non riconosciuto:', btn.textContent);
       }
     });
   });
@@ -128,7 +143,7 @@ function exposeGlobalFunctions() {
   window.openAddClientModal = openAddClientModal;
   window.closeAddClientModal = closeAddClientModal;
   window.saveNewClient = saveNewClient;
-  
+
   // Proforma
   window.showProformaStep = showProformaStep;
   window.loadTimesheetForClient = loadTimesheetForClient;
@@ -137,7 +152,7 @@ function exposeGlobalFunctions() {
   window.updateSelection = updateSelection;
   window.proceedToStep3 = proceedToStep3;
   window.generateProformaFinal = generateProformaFinal;
-  
+
   // switchTab è già esposta all'inizio del file come window.switchTab
   // downloadFrontendBackup viene esposta in utilities.js (caricato subito ora)
 }

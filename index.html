@@ -257,12 +257,12 @@
 </script>
 
 <div class="tabs">
-    <button class="tab-button active" data-tab="timesheet">⏱️ <span class="tab-label">Timesheet</span></button>
-    <button class="tab-button" data-tab="proforma">📄 <span class="tab-label">Proforma</span></button>
-    <button class="tab-button" data-tab="fatture">🧾 <span class="tab-label">Fatture</span></button>
-    <button class="tab-button" data-tab="vendite">🛒 <span class="tab-label">Vendite</span></button>
-    <button class="tab-button" data-tab="clienti">👥 <span class="tab-label">Clienti</span><span id="clienti-extra-badge" style="display:none;background:#dc3545;color:#fff;border-radius:50%;font-size:11px;font-weight:bold;padding:1px 6px;margin-left:5px;vertical-align:middle;"></span></button>
-    <button class="tab-button" data-tab="utilities">⚙️ <span class="tab-label">Utilities</span></button>
+    <button class="tab-button active" onclick="switchTab('timesheet')">⏱️ <span class="tab-label">Timesheet</span></button>
+    <button class="tab-button" onclick="switchTab('proforma')">📄 <span class="tab-label">Proforma</span></button>
+    <button class="tab-button" onclick="switchTab('fatture')">🧾 <span class="tab-label">Fatture</span></button>
+    <button class="tab-button" onclick="switchTab('vendite')">🛒 <span class="tab-label">Vendite</span></button>
+    <button class="tab-button" onclick="switchTab('clienti')">👥 <span class="tab-label">Clienti</span><span id="clienti-extra-badge" style="display:none;background:#dc3545;color:#fff;border-radius:50%;font-size:11px;font-weight:bold;padding:1px 6px;margin-left:5px;vertical-align:middle;"></span></button>
+    <button class="tab-button" onclick="switchTab('utilities')">⚙️ <span class="tab-label">Utilities</span></button>
 </div>
 
 <!-- TAB TIMESHEET -->
