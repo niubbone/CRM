@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.8';
+export const VERSION = '4.8.9';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -60,6 +60,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.8.9",
+    date: "29/04/2026",
+    type: "fix",
+    changes: [
+      "Fix pulsanti proforma card: .btn-small ora sovrascrive padding/margin-top/width di .btn-primary con !important",
+      "PDF, Aggiungi voci ed Emetti Fattura ora hanno la stessa altezza"
+    ]
+  },
   {
     version: "4.8.8",
     date: "28/04/2026",
