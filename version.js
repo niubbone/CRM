@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.8.9';
+export const VERSION = '4.9.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,14 +29,17 @@ export const VERSION = '4.8.9';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'Pannello Cliente Edition',
-  date: '27 Aprile 2026',
-  codename: 'ProformaFix',
+  name: 'Fiscal Fix Edition',
+  date: '01 Luglio 2026',
+  codename: 'FiscalFix',
 
   // Changelog corrente versione
   changelog: [
-    'Fix SyntaxError in proforma-list.js riga 266: clienteEscaped estratto prima del template literal',
-    'Risolto: proforma-list.js non caricava mai perché il file non veniva parsato dal browser',
+    'calcolaFiscale() condivisa in crm_utils.js: subtotale→imponibile, ritenuta 20%, IVA 22%, netto',
+    'Fix fattura da proforma: imponibile e ritenuta ora corretti (era double IVA, ritenuta=0)',
+    'Fix aggiornaProforma: N_Proforma letto come Date da Sheets — somma voci ora corretta',
+    'Feat: generateProformaDaPacchetto — proforma da acquisto pacchetto ore (action: generate_proforma_pacchetto)',
+    'Tab Fatture: nuova colonna Ritenuta (migrazione automatica al primo accesso)',
   ],
   
   // Features principali
@@ -60,6 +63,18 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.9.0",
+    date: "01/07/2026",
+    type: "fix",
+    changes: [
+      "calcolaFiscale(subtotale, applicaQuota) in crm_utils.js: funzione pura condivisa per calcolo fiscale (ritenuta 20% sempre, IVA 22%, quota 4% opzionale)",
+      "Fix fattura da proforma (updateNumeroFattura): passava Importo_Totale (netto) come imponibile causando double IVA e ritenuta=0 — ora usa calcolaFiscale con subtotale corretto",
+      "Tab Fatture: aggiunta colonna Ritenuta (col M) con migrazione automatica su foglio esistente",
+      "Fix aggiornaProforma: Google Sheets legge '1/2026' come Date nel foglio Timesheet — confronto ora Date-aware, totali aggregati correttamente quando si aggiungono voci",
+      "Feat generate_proforma_pacchetto: nuova action backend + generateProformaDaPacchetto() — genera proforma da acquisto pacchetto ore con PDF, email e salvataggio record"
+    ]
+  },
   {
     version: "4.8.9",
     date: "29/04/2026",

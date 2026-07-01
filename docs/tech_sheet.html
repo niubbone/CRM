@@ -363,15 +363,27 @@
                         </tr>
                         <tr>
                             <td><code>genera_proforma</code></td>
-                            <td>cliente, mese, anno</td>
-                            <td>{success, docUrl, n_proforma}</td>
+                            <td>cliente, timesheet_ids, causale, applica_quota, canoni_ids?</td>
+                            <td>{success, proforma_number, totale}</td>
                             <td>-</td>
                         </tr>
                         <tr>
+                            <td><code>aggiorna_proforma</code></td>
+                            <td>n_proforma, timesheet_ids (CSV), send_email?</td>
+                            <td>{success, nuovoTotale, vociAggiunte}</td>
+                            <td>Aggiunge voci a proforma esistente</td>
+                        </tr>
+                        <tr>
+                            <td><code>generate_proforma_pacchetto</code></td>
+                            <td>id_pacchetto, applica_quota?</td>
+                            <td>{success, n_proforma, totale, pdf_file_id}</td>
+                            <td>Proforma da acquisto pacchetto ore</td>
+                        </tr>
+                        <tr>
                             <td><code>update_numero_fattura</code></td>
-                            <td>n_proforma, numero_fattura, pagato</td>
+                            <td>n_proforma, numero_fattura, data_fattura?, pagato?</td>
                             <td>{success}</td>
-                            <td>-</td>
+                            <td>Salva in tab Fatture con calcolo fiscale corretto</td>
                         </tr>
                         
                         <!-- FATTURE -->
@@ -501,6 +513,53 @@
                         </tr>
                         
                         <tr style="background: #f0f0f0; font-weight: 600;">
+                            <td colspan="3">crm_utils.js</td>
+                        </tr>
+                        <tr>
+                            <td><code>calcolaFiscale(subtotale, applicaQuota)</code></td>
+                            <td>Number, Boolean</td>
+                            <td>{subtotale, quota, imponibile, ritenuta, iva, lordo, netto}</td>
+                        </tr>
+
+                        <tr style="background: #f0f0f0; font-weight: 600;">
+                            <td colspan="3">Proforma.js</td>
+                        </tr>
+                        <tr>
+                            <td><code>generateProforma(clientName, timesheetIds, causale, applicaQuota, canoniIds)</code></td>
+                            <td>String, Array, String, Boolean, Array?</td>
+                            <td>{success, proforma_number, totale}</td>
+                        </tr>
+                        <tr>
+                            <td><code>aggiornaProforma(params)</code></td>
+                            <td>{nProforma, newTimesheetIds, sendEmail?}</td>
+                            <td>{success, nuovoTotale, vociAggiunte}</td>
+                        </tr>
+                        <tr>
+                            <td><code>generateProformaDaPacchetto(idPacchetto, applicaQuota)</code></td>
+                            <td>String, Boolean</td>
+                            <td>{success, n_proforma, totale, pdf_file_id}</td>
+                        </tr>
+                        <tr>
+                            <td><code>calculateProformaTotals(items, applicaQuota)</code></td>
+                            <td>Array&lt;{costo}&gt;, Boolean</td>
+                            <td>{subtotale, quotaIntegrativa, imponibile, ritenuta, iva, lordo, netto}</td>
+                        </tr>
+
+                        <tr style="background: #f0f0f0; font-weight: 600;">
+                            <td colspan="3">Fatture.js</td>
+                        </tr>
+                        <tr>
+                            <td><code>saveFatturaRecord(dati)</code></td>
+                            <td>{nFattura, nomeCliente, imponibile, ritenuta?, iva?, netto?, nProforma?, ...}</td>
+                            <td>{success, totale}</td>
+                        </tr>
+                        <tr>
+                            <td><code>calcolaImporti(imponibile, applicaRitenuta)</code></td>
+                            <td>Number, Boolean</td>
+                            <td>{imponibile, iva, ritenuta, totale} — usato solo per fatture dirette</td>
+                        </tr>
+
+                        <tr style="background: #f0f0f0; font-weight: 600;">
                             <td colspan="3">crm_email.gs</td>
                         </tr>
                         <tr>
@@ -624,8 +683,13 @@
                 </div>
                 
                 <div class="code-block">
-                    <strong>Proforma (12 col):</strong>
-                    <pre>A=N_Proforma | B=Data_Emissione | C=ID_Cliente | D=Nome_Cliente | E=Importo_Subtotale | F=Quota_4% | G=Importo_Totale | H=Causale | I=N_Fattura | J=Data_Fattura | K=Pagato | L=PDF_FileID</pre>
+                    <strong>Proforma (13 col):</strong>
+                    <pre>A=N_Proforma | B=Data_Emissione | C=ID_Cliente | D=Nome_Cliente | E=Importo_Subtotale | F=Quota_4% | G=Importo_Totale (netto) | H=Causale | I=N_Fattura | J=Data_Fattura | K=Pagato | L=PDF_FileID | M=Ore_Pacchetto</pre>
+                </div>
+
+                <div class="code-block">
+                    <strong>Fatture (13 col):</strong>
+                    <pre>A=N_Fattura | B=Data_Fattura | C=ID_Cliente | D=Nome_Cliente | E=Imponibile (S+quota) | F=IVA_22 | G=Importo_Totale (netto) | H=Descrizione | I=N_Proforma | J=Pagato | K=Data_Pagamento | L=Note | M=Ritenuta</pre>
                 </div>
                 
                 <div class="code-block">
