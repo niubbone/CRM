@@ -64,10 +64,10 @@ async function loadProformaList(clientName = null, retryCount = 0) {
       API_URL = CONFIG.APPS_SCRIPT_URL;
       console.log('✅ API URL da CONFIG globale');
     }
-    // Tentativo 3: Hardcoded fallback
+    // Tentativo 3: CONFIG non caricato
     else {
-      API_URL = 'https://script.google.com/macros/s/AKfycbxodRCMoPa9VW2nphsazv8Ux72mebjCSKd48c0HKoCOsrG5Z-ZJFyzCWHt6qhCgPxkU/exec';
-      console.warn('⚠️ Uso API URL fallback hardcoded');
+      clearTimeout(safetyTimeoutId);
+      throw new Error('API URL non disponibile - CONFIG non caricato correttamente');
     }
     
     if (!API_URL || API_URL.trim() === '') {
