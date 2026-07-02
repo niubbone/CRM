@@ -81,8 +81,12 @@ function updateUtilitiesVersionBox() {
         ${generateChangelogHTML()}
       </div>
 
+      <a href="/CRM/docs/manuale.html" target="_blank" class="doc-link">
+        📖 Manuale Utente
+      </a>
+
       <a href="/CRM/docs/architecture.html" target="_blank" class="doc-link">
-        📚 Visualizza Documentazione Architettura
+        📚 Documentazione Architettura
       </a>
     </div>
   `;

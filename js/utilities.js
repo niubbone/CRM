@@ -80,7 +80,7 @@ window.downloadFrontendBackup = async function() {
                 'js/clienti.js', 'js/vendite.js', 'js/proforma.js', 'js/proforma-list.js',
                 'js/timesheet.js', 'js/timesheet-list.js',
                 // Docs
-                'docs/architecture.html', 'docs/arc_backend.html',
+                'docs/manuale.html', 'docs/architecture.html', 'docs/arc_backend.html',
                 'docs/arc_frontend.html', 'docs/tech_sheet.html',
                 // Icons
                 'icons/favicon.ico', 'icons/favicon.svg', 'icons/favicon-96x96.png',
