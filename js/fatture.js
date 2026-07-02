@@ -4,6 +4,7 @@
 // =======================================================================
 
 let allFattureData = [];
+let _nfVociData = { timesheet: [], canoni: [] };
 
 async function loadFattureList(retryCount = 0) {
   const container = document.getElementById('fatture-list-container');
@@ -179,6 +180,14 @@ function openNuovaFatturaModal() {
   if (ritenuta) ritenuta.checked = false;
   const ritRow = document.getElementById('nf-ritenuta-row');
   if (ritRow) ritRow.style.display = 'none';
+  // Reset sezione voci
+  _nfVociData = { timesheet: [], canoni: [] };
+  const caricaBtn = document.getElementById('nf-carica-btn');
+  if (caricaBtn) { caricaBtn.style.display = 'block'; caricaBtn.disabled = false; caricaBtn.textContent = '➕ Collega timesheet / canoni (opzionale)'; }
+  const vociContainer = document.getElementById('nf-voci-container');
+  if (vociContainer) vociContainer.style.display = 'none';
+  const vociFooter = document.getElementById('nf-voci-footer');
+  if (vociFooter) vociFooter.style.display = 'none';
 
   const clientInput = document.getElementById('nf-cliente');
   const clientDatalist = document.getElementById('nf-cliente-list');
@@ -232,16 +241,26 @@ function aggiornaCalcoloIVA() {
 
 async function saveNuovaFattura(event) {
   event.preventDefault();
-  const nFattura    = document.getElementById('nf-numero')?.value?.trim();
-  const dataFattura = document.getElementById('nf-data')?.value?.trim();
-  const cliente     = document.getElementById('nf-cliente')?.value?.trim();
-  const imponibile  = document.getElementById('nf-imponibile')?.value?.trim();
-  const descrizione = document.getElementById('nf-descrizione')?.value?.trim();
-  const note        = document.getElementById('nf-note')?.value?.trim();
+  const nFattura      = document.getElementById('nf-numero')?.value?.trim();
+  const dataFattura   = document.getElementById('nf-data')?.value?.trim();
+  const cliente       = document.getElementById('nf-cliente')?.value?.trim();
+  const imponibile    = document.getElementById('nf-imponibile')?.value?.trim();
+  const descrizione   = document.getElementById('nf-descrizione')?.value?.trim();
+  const note          = document.getElementById('nf-note')?.value?.trim();
+  const applicaRit    = document.getElementById('nf-ritenuta')?.checked || false;
   if (!nFattura || !cliente || !imponibile) {
     alert('⚠️ Compila i campi obbligatori: Numero fattura, Cliente, Imponibile');
     return;
   }
+  // Raccogli voci selezionate
+  const allItems = [..._nfVociData.timesheet, ..._nfVociData.canoni];
+  const tsIds = [], canIds = [];
+  document.querySelectorAll('.nf-voce-cb:checked').forEach(cb => {
+    const item = allItems[parseInt(cb.dataset.index)];
+    if (!item) return;
+    if (item.tipo === 'CANONE' || item.idCanone) canIds.push(item.rowIndex);
+    else tsIds.push(item.rowIndex);
+  });
   const btn = document.getElementById('nf-submit-btn');
   btn.disabled = true; btn.textContent = '⏳ Salvataggio...';
   try {
@@ -253,13 +272,19 @@ async function saveNuovaFattura(event) {
       cliente,
       imponibile,
       descrizione: descrizione || '',
-      note: note || ''
+      note: note || '',
+      applica_ritenuta: applicaRit ? 'true' : 'false'
     });
+    if (tsIds.length)  params.append('timesheet_ids', tsIds.join(','));
+    if (canIds.length) params.append('canoni_ids', canIds.join(','));
     const response = await fetch(`${API_URL}?${params.toString()}`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore salvataggio');
     window.markTabDirty && window.markTabDirty('fatture');
-    alert('✅ Fattura ' + nFattura + ' inserita con successo!');
+    let msg = '✅ Fattura ' + nFattura + ' inserita con successo!';
+    if (result.timesheetMarcati) msg += '\n' + result.timesheetMarcati + ' timesheet marcati.';
+    if (result.canoniMarcati) msg += '\n' + result.canoniMarcati + ' canoni marcati.';
+    alert(msg);
     closeNuovaFatturaModal();
     loadFattureList();
   } catch(error) {
@@ -365,17 +390,75 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-window.loadFattureList        = loadFattureList;
-window.initFattureTab         = initFattureTab;
-window.applyFattureFilters    = applyFattureFilters;
-window.resetFattureFilters    = resetFattureFilters;
-window.openNuovaFatturaModal  = openNuovaFatturaModal;
-window.closeNuovaFatturaModal = closeNuovaFatturaModal;
-window.aggiornaCalcoloIVA     = aggiornaCalcoloIVA;
-window.saveNuovaFattura       = saveNuovaFattura;
-window.openPagamentoModal     = openPagamentoModal;
-window.closePagamentoModal    = closePagamentoModal;
-window.savePagamento          = savePagamento;
-window.annullaPagamento       = annullaPagamento;
+window.loadFattureList         = loadFattureList;
+window.initFattureTab          = initFattureTab;
+window.applyFattureFilters     = applyFattureFilters;
+window.resetFattureFilters     = resetFattureFilters;
+window.openNuovaFatturaModal   = openNuovaFatturaModal;
+window.closeNuovaFatturaModal  = closeNuovaFatturaModal;
+window.aggiornaCalcoloIVA      = aggiornaCalcoloIVA;
+window.saveNuovaFattura        = saveNuovaFattura;
+window.openPagamentoModal      = openPagamentoModal;
+window.closePagamentoModal     = closePagamentoModal;
+window.savePagamento           = savePagamento;
+window.annullaPagamento        = annullaPagamento;
+window.caricaVociFatturaDiretta = caricaVociFatturaDiretta;
+window.aggiornaSelezioneVoci   = aggiornaSelezioneVoci;
 
-console.log('✅ fatture.js v1.1 caricato');
+async function caricaVociFatturaDiretta() {
+  const cliente = document.getElementById('nf-cliente')?.value?.trim();
+  if (!cliente) { alert('⚠️ Inserisci prima il cliente'); return; }
+  const btn = document.getElementById('nf-carica-btn');
+  const container = document.getElementById('nf-voci-container');
+  btn.textContent = '⏳ Caricamento...';
+  btn.disabled = true;
+  _nfVociData = { timesheet: [], canoni: [] };
+  try {
+    const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
+    if (!API_URL) throw new Error('CONFIG non disponibile');
+    const res  = await fetch(`${API_URL}?action=get_timesheet_da_fatturare&cliente=${encodeURIComponent(cliente)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Errore caricamento');
+    _nfVociData.timesheet = data.timesheet || [];
+    _nfVociData.canoni    = data.canoni    || [];
+    const allItems = [..._nfVociData.timesheet, ..._nfVociData.canoni];
+    const listEl = document.getElementById('nf-voci-list');
+    if (allItems.length === 0) {
+      listEl.innerHTML = '<div style="padding:12px;color:#6c757d;text-align:center;">Nessuna voce da fatturare per questo cliente</div>';
+    } else {
+      listEl.innerHTML = allItems.map((item, i) => {
+        const isCanone = item.tipo === 'CANONE' || !!item.idCanone;
+        const dataStr  = isCanone ? (item.dataScadenza || item.data) : (item.dataItaliana || item.data || '—');
+        const desc     = isCanone ? (item.descrizione || 'Canone') : (item.descrizione || item.modalita || '');
+        const costo    = parseFloat(isCanone ? (item.importo || item.costo) : item.costo) || 0;
+        const icon     = isCanone ? '📅' : '🕐';
+        return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+          <input type="checkbox" class="nf-voce-cb" data-index="${i}" data-costo="${costo}" onchange="aggiornaSelezioneVoci()">
+          <span style="flex:1;font-size:12px;">${icon} <strong>${dataStr}</strong> — ${desc}</span>
+          <span style="font-weight:600;white-space:nowrap;font-size:12px;">€ ${costo.toFixed(2).replace('.',',')}</span>
+        </label>`;
+      }).join('');
+    }
+    container.style.display = 'block';
+    btn.style.display = 'none';
+  } catch(err) {
+    btn.textContent = '❌ ' + err.message;
+    btn.disabled = false;
+  }
+}
+
+function aggiornaSelezioneVoci() {
+  const checked = Array.from(document.querySelectorAll('.nf-voce-cb:checked'));
+  const footer  = document.getElementById('nf-voci-footer');
+  if (checked.length === 0) {
+    footer.style.display = 'none';
+    return;
+  }
+  const total = checked.reduce((sum, cb) => sum + parseFloat(cb.dataset.costo || 0), 0);
+  footer.style.display = 'block';
+  footer.textContent = `${checked.length} voce${checked.length > 1 ? 'i' : ''} selezionate — Subtotale: € ${total.toFixed(2).replace('.',',')}`;
+  document.getElementById('nf-imponibile').value = total.toFixed(2);
+  aggiornaCalcoloIVA();
+}
+
+console.log('✅ fatture.js v1.2 caricato');

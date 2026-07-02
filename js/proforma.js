@@ -8,10 +8,7 @@
 import { getTimesheetDaFatturare, generateProforma } from './api.js';
 import { formatDate, formatCurrency } from './utils.js';
 
-// Definisci API_URL globale
-const API_URL = (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL)
-  ? CONFIG.APPS_SCRIPT_URL
-  : 'https://script.google.com/macros/s/AKfycbxodRCMoPa9VW2nphsazv8Ux72mebjCSKd48c0HKoCOsrG5Z-ZJFyzCWHt6qhCgPxkU/exec';
+const API_URL = window.CONFIG?.APPS_SCRIPT_URL || '';
 
 /**
  * Popola il dropdown clienti nel tab proforma
@@ -382,9 +379,8 @@ function switchProformaView(view) {
   event.target.classList.add('active');
   
   // Mostra vista corretta
-  document.getElementById('proforma-lista-view').style.display     = view === 'lista'             ? 'block' : 'none';
-  document.getElementById('proforma-diretta-view').style.display   = view === 'proforma-diretta'  ? 'block' : 'none';
-  document.getElementById('fattura-diretta-view').style.display    = view === 'fattura-diretta'   ? 'block' : 'none';
+  document.getElementById('proforma-lista-view').style.display   = view === 'lista'            ? 'block' : 'none';
+  document.getElementById('proforma-diretta-view').style.display = view === 'proforma-diretta' ? 'block' : 'none';
 
   if (view === 'proforma-diretta') {
     initProformaDiretta();
@@ -630,184 +626,6 @@ async function submitEmettiFattura(e) {
   }
 }
 
-// Esponi funzioni globalmente (funzioni lista gestite da proforma-list.js)
-// window.populateProformaClientFilter = populateProformaClientFilter; // RIMOSSO - gestito da proforma-list.js
-// window.loadProformaList = loadProformaList; // RIMOSSO - gestito da proforma-list.js
-window.openEmettiFatturaModal = openEmettiFatturaModal;
-window.closeEmettiFatturaModal = closeEmettiFatturaModal;
-window.submitEmettiFattura = submitEmettiFattura;
-/**
- * Apre modal fattura diretta
- */
-function openFatturaDirettaModal() {
-  const totalSelected = (window.selectedTimesheet?.length || 0) + (window.selectedCanoni?.length || 0);
-  if (totalSelected === 0) {
-    alert('⚠️ Seleziona almeno un timesheet o canone');
-    return;
-  }
-  
-  const clientName = document.getElementById('proforma_client_select').value;
-  
-  // ✅ Calcola subtotale da timesheet + canoni
-  let subtotale = 0;
-  
-  window.currentTimesheetData.forEach((row) => {
-    if (window.selectedTimesheet?.includes(row.rowIndex)) {
-      const costo = parseFloat(row.costo || 0);
-      subtotale += costo;
-    }
-  });
-  
-  window.currentCanoniData.forEach((row) => {
-    if (window.selectedCanoni?.includes(row.rowIndex)) {
-      const importo = parseFloat(row.importo || row.costo || 0);
-      subtotale += importo;
-    }
-  });
-  
-  // Popola modal
-  document.getElementById('fattura-diretta-cliente').textContent = clientName;
-  document.getElementById('fattura-diretta-count').textContent = totalSelected;
-  document.getElementById('fattura-diretta-subtotale').textContent = formatCurrency(subtotale);
-  
-  // Imposta causale default
-  const oggi = new Date().toLocaleDateString('it-IT');
-  document.getElementById('fattura-diretta-causale').value = `Servizi di consulenza e formazione al ${oggi}`;
-  
-  // Reset checkbox
-  document.getElementById('fattura-diretta-quota').checked = false;
-  document.getElementById('fattura-diretta-pagato').checked = false;
-  
-  // Aggiorna totali preview
-  updateFatturaDirettaTotals();
-  
-  // Mostra modal
-  const modal = document.getElementById('fatturaDirettaModal');
-  modal.classList.add('active');
-}
-
-/**
- * Chiude modal fattura diretta
- */
-function closeFatturaDirettaModal() {
-  const modal = document.getElementById('fatturaDirettaModal');
-  if (modal) modal.classList.remove('active');
-}
-
-/**
- * Aggiorna totali preview fattura diretta
- */
-function updateFatturaDirettaTotals() {
-  let subtotale = 0;
-  
-  // ✅ Calcola da timesheet selezionati
-  window.currentTimesheetData.forEach((row) => {
-    if (window.selectedTimesheet?.includes(row.rowIndex)) {
-      const costo = parseFloat(row.costo || 0);
-      subtotale += costo;
-    }
-  });
-  
-  // ✅ Calcola da canoni selezionati
-  window.currentCanoniData.forEach((row) => {
-    if (window.selectedCanoni?.includes(row.rowIndex)) {
-      const importo = parseFloat(row.importo || row.costo || 0);
-      subtotale += importo;
-    }
-  });
-  
-  const applicaQuota = document.getElementById('fattura-diretta-quota').checked;
-  const quotaIntegrativa = applicaQuota ? subtotale * 0.04 : 0;
-  const imponibile = subtotale + quotaIntegrativa;
-  const iva = imponibile * 0.22;
-  const totale = imponibile + iva;
-  
-  document.getElementById('fd-preview-subtotale').textContent = formatCurrency(subtotale);
-  document.getElementById('fd-quota-row').style.display = applicaQuota ? 'flex' : 'none';
-  document.getElementById('fd-preview-quota').textContent = formatCurrency(quotaIntegrativa);
-  document.getElementById('fd-preview-imponibile').textContent = formatCurrency(imponibile);
-  document.getElementById('fd-preview-iva').textContent = formatCurrency(iva);
-  document.getElementById('fd-preview-totale').textContent = formatCurrency(totale);
-}
-
-/**
- * Genera fattura diretta finale
- */
-async function generateFatturaDirettaFinal(event) {
-  event.preventDefault();
-  
-  const clientName = document.getElementById('proforma_client_select').value;
-  const numeroFattura = document.getElementById('fattura-diretta-numero').value.trim();
-  const causale = document.getElementById('fattura-diretta-causale').value.trim();
-  const applicaQuota = document.getElementById('fattura-diretta-quota').checked;
-  const pagato = document.getElementById('fattura-diretta-pagato').checked;
-  
-  if (!numeroFattura) {
-    alert('⚠️ Inserisci il numero fattura');
-    return;
-  }
-  
-  if (!causale) {
-    alert('⚠️ Inserisci la causale');
-    return;
-  }
-  
-  const submitBtn = document.getElementById('fattura-diretta-submit-btn');
-  const originalText = submitBtn.textContent;
-  submitBtn.disabled = true;
-  submitBtn.textContent = '⏳ Generazione in corso...';
-  
-  try {
-    const API_URL = window.CONFIG?.APPS_SCRIPT_URL || '';
-    
-    const params = new URLSearchParams({
-      action: 'generate_fattura_diretta',
-      client_name: clientName,
-      timesheet_ids: window.selectedTimesheet.join(','),
-      numero_fattura: numeroFattura,
-      causale: causale,
-      applica_quota: applicaQuota,
-      pagato: pagato
-    });
-    
-    const response = await fetch(`${API_URL}?${params}`);
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Errore generazione fattura');
-    }
-    
-    alert(`✅ Fattura ${numeroFattura} generata e sincronizzata!\n\n` +
-          `Cliente: ${result.cliente}\n` +
-          `Timesheet: ${result.timesheet_count}\n` +
-          `Totale: € ${result.totale}\n\n` +
-          `La fattura è stata registrata in "Fatture Smart".`);
-    
-    closeFatturaDirettaModal();
-    
-    // Reset e torna a step 1
-    setTimeout(() => {
-      showProformaStep(1);
-      document.getElementById('proforma_client_select').value = '';
-    }, 1000);
-    
-  } catch (error) {
-    console.error('Errore:', error);
-    alert('❌ Errore: ' + error.message);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalText;
-  }
-}
-
-// Event listener per checkbox quota
-document.addEventListener('DOMContentLoaded', function() {
-  const quotaCheckbox = document.getElementById('fattura-diretta-quota');
-  if (quotaCheckbox) {
-    quotaCheckbox.addEventListener('change', updateFatturaDirettaTotals);
-  }
-});
-
 // =======================================================================
 // === PROFORMA DIRETTA ===
 // =======================================================================
@@ -919,13 +737,6 @@ function resetProformaDiretta() {
 
 // Esponi funzioni globalmente per onclick HTML
 window.switchProformaView = switchProformaView;
-window.openFatturaDirettaModal = openFatturaDirettaModal;
-window.closeFatturaDirettaModal = closeFatturaDirettaModal;
-window.generateFatturaDirettaFinal = generateFatturaDirettaFinal;
-
-// Esponi funzioni lista proforma globalmente per onclick HTML (gestite da proforma-list.js)
-// window.populateProformaClientFilter = populateProformaClientFilter; // RIMOSSO - gestito da proforma-list.js
-// window.loadProformaList = loadProformaList; // RIMOSSO - gestito da proforma-list.js
 window.openEmettiFatturaModal = openEmettiFatturaModal;
 window.closeEmettiFatturaModal = closeEmettiFatturaModal;
 window.submitEmettiFattura = submitEmettiFattura;
