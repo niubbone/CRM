@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tech Sheet - CRM Studio Smart</title>
+    <title>Quick Reference - CRM Studio Smart v4.9.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -14,7 +14,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1600px;
             margin: 0 auto;
@@ -22,69 +22,44 @@
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px;
+            padding: 30px 40px;
         }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 8px;
-        }
-        
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.95;
-        }
-        
-        .breadcrumb {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            margin-bottom: 10px;
-        }
-        
-        .breadcrumb a {
-            color: white;
-            text-decoration: none;
-        }
-        
-        .breadcrumb a:hover {
-            text-decoration: underline;
-        }
-        
-        .content {
-            padding: 40px;
-        }
-        
-        .section {
-            margin-bottom: 40px;
-        }
-        
+
+        .header h1 { font-size: 2.2rem; margin-bottom: 6px; }
+        .header p { font-size: 1rem; opacity: 0.9; }
+
+        .breadcrumb { font-size: 0.9rem; opacity: 0.85; margin-bottom: 10px; }
+        .breadcrumb a { color: white; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+
+        .content { padding: 40px; }
+
+        .section { margin-bottom: 48px; }
+
         .section-title {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: #667eea;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
             border-bottom: 3px solid #667eea;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
-        
+
         .quick-nav {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin: 20px 0;
-            padding: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 36px;
+            padding: 16px;
             background: #f8f9fa;
             border-radius: 8px;
         }
-        
+
         .quick-nav a {
-            padding: 10px 16px;
+            padding: 10px 14px;
             background: white;
             color: #667eea;
             text-decoration: none;
@@ -92,95 +67,93 @@
             border: 2px solid #667eea;
             font-weight: 600;
             text-align: center;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
-        
-        .quick-nav a:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
+
+        .quick-nav a:hover { background: #667eea; color: white; }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 12px 0;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-size: 0.9rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            font-size: 0.88rem;
         }
-        
-        thead {
-            background: #667eea;
-            color: white;
+
+        thead { background: #667eea; color: white; }
+        th { padding: 9px 12px; text-align: left; font-weight: 600; }
+        td { padding: 7px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f9f9f9; }
+
+        .group-row td {
+            background: #f0eefd !important;
+            font-weight: 700;
+            color: #5a3db8;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 5px 12px;
         }
-        
-        th {
-            padding: 10px 12px;
-            text-align: left;
-            font-weight: 600;
-        }
-        
-        td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        tr:hover {
-            background: #f5f5f5;
-        }
-        
+
         code {
             background: #f0f0f0;
-            padding: 2px 6px;
+            padding: 1px 5px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
             font-size: 0.85em;
-            color: #d63031;
+            color: #c0392b;
         }
-        
+
         pre {
             background: #f8f9fa;
-            padding: 12px;
+            padding: 14px;
             border-radius: 6px;
             overflow-x: auto;
             border-left: 4px solid #667eea;
-            font-size: 0.85rem;
-        }
-        
-        .code-block {
+            font-size: 0.84rem;
             margin: 12px 0;
         }
-        
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 6px;
-        }
-        
-        .badge-get { background: #81ecec; color: #00b894; }
-        .badge-post { background: #ffeaa7; color: #d63031; }
-        .badge-cache { background: #a29bfe; color: #6c5ce7; }
-        
-        .compact-table td {
-            padding: 6px 10px;
-            font-size: 0.85rem;
-        }
-        
+
         .info-box {
-            background: #e3f2fd;
+            background: #e8f4fd;
             border-left: 4px solid #2196f3;
             padding: 12px 16px;
             margin: 12px 0;
             border-radius: 4px;
             font-size: 0.9rem;
         }
-        
+
+        .warn-box {
+            background: #fff8e1;
+            border-left: 4px solid #ff9800;
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .formula-box {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 14px 16px;
+            margin: 12px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.88rem;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 12px 0;
+        }
+
         .back-link {
             display: inline-block;
             margin-top: 30px;
@@ -193,766 +166,500 @@
             font-weight: 600;
             transition: all 0.3s;
         }
-        
-        .back-link:hover {
-            background: #667eea;
-            color: white;
-        }
-        
-        @media (max-width: 768px) {
+
+        .back-link:hover { background: #667eea; color: white; }
+
+        @media (max-width: 900px) {
             .content { padding: 20px; }
+            .two-col { grid-template-columns: 1fr; }
             table { font-size: 0.8rem; }
-            .quick-nav { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="breadcrumb">
-                <a href="architecture.html">← Architettura</a> / Tech Sheet
-            </div>
-            <h1>⚡ Quick Reference Sheet</h1>
-            <p>Cheat Sheet per Sviluppo Rapido - CRM Studio Smart v4.5.6</p>
+<div class="container">
+    <div class="header">
+        <div class="breadcrumb"><a href="architecture.html">← Architettura</a> / Quick Reference</div>
+        <h1>⚡ Quick Reference</h1>
+        <p>Manuale rapido CRM Studio Smart — v4.9.0 · Backend @241 · 2026-07-02</p>
+    </div>
+
+    <div class="content">
+
+        <!-- NAV -->
+        <div class="quick-nav">
+            <a href="#deploy">🚀 Deploy</a>
+            <a href="#fiscale">💶 Formula Fiscale</a>
+            <a href="#api">🔌 API Endpoints</a>
+            <a href="#backend-fn">📘 Backend Functions</a>
+            <a href="#sheets">📋 Sheets Columns</a>
+            <a href="#states">🔄 Stati Campi</a>
+            <a href="#frontend-fn">📗 Frontend Functions</a>
+            <a href="#patterns">🔧 Patterns</a>
         </div>
-        
-        <div class="content">
-            
-            <!-- QUICK NAV -->
-            <div class="quick-nav">
-                <a href="#api">🔌 API Endpoints</a>
-                <a href="#backend">📘 Backend Functions</a>
-                <a href="#frontend">📗 Frontend Functions</a>
-                <a href="#sheets">📋 Sheets Columns</a>
-                <a href="#patterns">🔧 Common Patterns</a>
-                <a href="#css">🎨 CSS Classes</a>
-            </div>
-            
-            <!-- API ENDPOINTS -->
-            <div class="section" id="api">
-                <h2 class="section-title">🔌 API Endpoints Quick Reference</h2>
-                
-                <div class="info-box">
-                    <strong>Base URL:</strong> <code>https://script.google.com/macros/s/[DEPLOYMENT_ID]/exec</code><br>
-                    <strong>Format:</strong> <code>?action=ACTION_NAME&param1=value1&param2=value2</code>
-                </div>
-                
-                <table class="compact-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">Endpoint</th>
-                            <th style="width: 35%;">Parametri</th>
-                            <th style="width: 30%;">Response</th>
-                            <th style="width: 10%;">Cache</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- SISTEMA -->
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="4">📋 SISTEMA</td>
-                        </tr>
-                        <tr>
-                            <td><code>test_connection</code></td>
-                            <td>-</td>
-                            <td>{success, version}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_logs</code></td>
-                            <td>limit (100)</td>
-                            <td>{success, data:[]}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>cache_info</code></td>
-                            <td>-</td>
-                            <td>{keys:[], stats:{}}</td>
-                            <td>-</td>
-                        </tr>
-                        
-                        <!-- CLIENTI -->
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="4">👥 CLIENTI</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_data</code></td>
-                            <td>-</td>
-                            <td>{clients:[], config:{}}</td>
-                            <td><span class="badge badge-cache">CACHE 5m</span></td>
-                        </tr>
-                        <tr>
-                            <td><code>add_client</code></td>
-                            <td>client_name, client_email, telefono, cellulare</td>
-                            <td>{success, message}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>search_clienti</code></td>
-                            <td>search</td>
-                            <td>{success, clienti:[]}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>update_client</code></td>
-                            <td>id, client_name, client_email, ...</td>
-                            <td>{success}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>delete_client</code></td>
-                            <td>id</td>
-                            <td>{success}</td>
-                            <td>-</td>
-                        </tr>
-                        
-                        <!-- TIMESHEET -->
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="4">⏱️ TIMESHEET</td>
-                        </tr>
-                        <tr>
-                            <td><code>insert_timesheet</code></td>
-                            <td>cliente, data, ore, descrizione, modalita_addebito</td>
-                            <td>{success, id}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_timesheet</code></td>
-                            <td>cliente?, data_inizio, data_fine</td>
-                            <td>{success, data:[]}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>delete_timesheet</code></td>
-                            <td>id</td>
-                            <td>{success}</td>
-                            <td>-</td>
-                        </tr>
-                        
-                        <!-- PACCHETTI -->
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="4">📦 PACCHETTI</td>
-                        </tr>
-                        <tr>
-                            <td><code>insert_pacchetto</code></td>
-                            <td>cliente_nome, ore_totali, importo, descrizione, data_inizio</td>
-                            <td>{success, id_pacchetto}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_pacchetti</code></td>
-                            <td>cliente?</td>
-                            <td>{success, data:[]}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_pacchetto_attivo</code></td>
-                            <td>cliente</td>
-                            <td>{success, pacchetto:{}}</td>
-                            <td>-</td>
-                        </tr>
-                        
-                        <!-- PROFORMA -->
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="4">📄 PROFORMA</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_proforma_list</code></td>
-                            <td>-</td>
-                            <td>{success, data:[]}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>genera_proforma</code></td>
-                            <td>cliente, timesheet_ids, causale, applica_quota, canoni_ids?</td>
-                            <td>{success, proforma_number, totale}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>aggiorna_proforma</code></td>
-                            <td>n_proforma, timesheet_ids (CSV), send_email?</td>
-                            <td>{success, nuovoTotale, vociAggiunte}</td>
-                            <td>Aggiunge voci a proforma esistente</td>
-                        </tr>
-                        <tr>
-                            <td><code>generate_proforma_pacchetto</code></td>
-                            <td>id_pacchetto, applica_quota?</td>
-                            <td>{success, n_proforma, totale, pdf_file_id}</td>
-                            <td>Proforma da acquisto pacchetto ore</td>
-                        </tr>
-                        <tr>
-                            <td><code>update_numero_fattura</code></td>
-                            <td>n_proforma, numero_fattura, data_fattura?, pagato?</td>
-                            <td>{success}</td>
-                            <td>Salva in tab Fatture con calcolo fiscale corretto</td>
-                        </tr>
-                        
-                        <!-- FATTURE -->
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="4">🧾 FATTURE</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_fatture_list</code></td>
-                            <td>cliente?, anno?, stato?</td>
-                            <td>{success, fatture[]}</td>
-                            <td>Filtri opzionali</td>
-                        </tr>
-                        <tr>
-                            <td><code>insert_fattura_diretta</code></td>
-                            <td>cliente, importo, descrizione, data</td>
-                            <td>{success, n_fattura}</td>
-                            <td>Senza proforma</td>
-                        </tr>
-                        <tr>
-                            <td><code>update_pagamento_fattura</code></td>
-                            <td>n_fattura, pagato, data_pagamento?</td>
-                            <td>{success}</td>
-                            <td>-</td>
-                        </tr>
 
-                        <!-- VENDITE -->
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="4">💼 VENDITE</td>
-                        </tr>
-                        <tr>
-                            <td><code>insert_canone</code></td>
-                            <td>cliente_nome, descrizione, importo, data_inizio, durata_anni</td>
-                            <td>{success, canoneId}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>insert_firma</code></td>
-                            <td>cliente_nome, tipo, importo, data_inizio, durata_anni</td>
-                            <td>{success, firmaId}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>get_scadenze</code></td>
-                            <td>giorni (90)</td>
-                            <td>{success, data:{canoni, firme, tutti}}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>rinnova_canone</code></td>
-                            <td>canone_id, descrizione, importo, durata_anni</td>
-                            <td>{success, nuovoCanoneId}</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><code>rinnova_firma</code></td>
-                            <td>firma_id, tipo, importo, durata_anni</td>
-                            <td>{success, nuovaFirmaId}</td>
-                            <td>-</td>
-                        </tr>
+        <!-- DEPLOY -->
+        <div class="section" id="deploy">
+            <h2 class="section-title">🚀 Deploy Workflow</h2>
+
+            <div class="two-col">
+                <div>
+                    <strong>Backend (Apps Script)</strong>
+                    <pre><code>cd "C:\Dropbox\- PROGETTI\- LOCAL COPY\CRM\Backend"
+
+# 1. Push files
+clasp push
+
+# 2. Crea versione
+clasp version "Descrizione breve"
+# Output: Created version 241
+
+# 3. Redeploy in produzione
+clasp redeploy AKfycbxodRCMoPa9VW2nphsazv8Ux72mebjCSKd48c0HKoCOsrG5Z-ZJFyzCWHt6qhCgPxkU --versionNumber 241</code></pre>
+                    <div class="warn-box">Mai <code>clasp deploy</code> senza <code>--deploymentId</code>: crea un secondo deployment inutile.</div>
+                </div>
+                <div>
+                    <strong>Frontend (GitHub Pages)</strong>
+                    <pre><code>cd "C:\Dropbox\- PROGETTI\- LOCAL COPY\CRM\Frontend"
+
+git add js/fatture.js index.html  # file specifici
+git commit -m "feat: descrizione"
+git push origin main
+# → auto-deploy su GitHub Pages in ~1 min</code></pre>
+                    <div class="info-box"><strong>URL produzione:</strong> <code>https://niubbone.github.io/CRM/</code></div>
+                </div>
+            </div>
+
+            <strong>Versioni backend chiave</strong>
+            <table>
+                <thead><tr><th>Ver.</th><th>Cosa</th></tr></thead>
+                <tbody>
+                    <tr><td>@235-236</td><td>calcolaFiscale + fix fattura da proforma + colonna Ritenuta</td></tr>
+                    <tr><td>@237</td><td>Fix aggiornaProforma Date-aware</td></tr>
+                    <tr><td>@238</td><td>generateProformaDaPacchetto</td></tr>
+                    <tr><td>@239</td><td>Quick wins: B2 router, B1 rounding, B6 headers, B5 LockService, F4 VERSION, F1 URL</td></tr>
+                    <tr><td>@240</td><td>Consolida fattura diretta: rimuove dal wizard, aggiunge ritenuta + link timesheet/canoni</td></tr>
+                    <tr><td><strong>@241</strong></td><td><strong>Multi-proforma: saveFatturaRecord accoda proforma CSV + somma importi; updatePagamentoFattura propaga a tutte</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FORMULA FISCALE -->
+        <div class="section" id="fiscale">
+            <h2 class="section-title">💶 Formula Fiscale (Regime Ordinario)</h2>
+
+            <div class="formula-box">
+S (subtotale)
+│
+├── quota = S × 4%   (solo se applicaQuota=true — Cassa Previdenziale)
+│
+imponibile = S + quota
+ritenuta   = imponibile × 20%      ← sempre applicata
+IVA        = imponibile × 22%
+lordo      = imponibile + IVA
+netto      = lordo − ritenuta      ← questo va in Importo_Totale su Sheets
+            </div>
+
+            <div class="warn-box">
+                <strong>Regola:</strong> Usare sempre <code>calcolaFiscale(subtotale, applicaQuota)</code> in crm_utils.js. Non calcolare IVA/ritenuta manualmente in nessun altro file.
+            </div>
+
+            <pre><code>// crm_utils.js
+const f = calcolaFiscale(1000, false);
+// → { subtotale:1000, quota:0, imponibile:1000, ritenuta:200, iva:220, lordo:1220, netto:1020 }
+
+const f2 = calcolaFiscale(1000, true);
+// → { subtotale:1000, quota:40, imponibile:1040, ritenuta:208, iva:228.80, lordo:1268.80, netto:1060.80 }</code></pre>
+        </div>
+
+        <!-- API ENDPOINTS -->
+        <div class="section" id="api">
+            <h2 class="section-title">🔌 API Endpoints</h2>
+
+            <div class="info-box">
+                <strong>Base URL:</strong> <code>https://script.google.com/macros/s/AKfycbxodRCMoPa9VW2nphsazv8Ux72mebjCSKd48c0HKoCOsrG5Z-ZJFyzCWHt6qhCgPxkU/exec</code><br>
+                <strong>Formato:</strong> GET <code>?action=NOME&param1=v1&param2=v2</code> — risposta JSON <code>{success:bool, ...}</code>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:22%">Action</th>
+                        <th style="width:38%">Parametri</th>
+                        <th style="width:40%">Response / Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="group-row"><td colspan="3">Sistema</td></tr>
+                    <tr><td><code>test_connection</code></td><td>—</td><td>{success, version, lastUpdate}</td></tr>
+                    <tr><td><code>get_version</code></td><td>—</td><td>{version, lastUpdate}</td></tr>
+                    <tr><td><code>get_logs</code></td><td>limit? (def 100)</td><td>{success, data:[]}</td></tr>
+                    <tr><td><code>clean_logs</code></td><td>days? (def 30)</td><td>{success, deleted:N}</td></tr>
+                    <tr><td><code>check_integrity</code></td><td>—</td><td>{success, issues:[], stats:{}}</td></tr>
+                    <tr><td><code>cache_info</code></td><td>—</td><td>{keys:[], stats:{}}</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Clienti</td></tr>
+                    <tr><td><code>get_data</code></td><td>—</td><td>{clients:[], config:{}} — <em>cache 5min</em></td></tr>
+                    <tr><td><code>add_client</code></td><td>client_name, client_email, telefono?, cellulare?</td><td>{success, message}</td></tr>
+                    <tr><td><code>search_clienti</code></td><td>search</td><td>{success, clienti:[]}</td></tr>
+                    <tr><td><code>get_cliente</code></td><td>id</td><td>{success, cliente:{}}</td></tr>
+                    <tr><td><code>update_client</code></td><td>id, client_name, client_email, ...</td><td>{success}</td></tr>
+                    <tr><td><code>delete_client</code></td><td>id</td><td>{success}</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Timesheet</td></tr>
+                    <tr><td><code>insert_timesheet</code></td><td>cliente, data, ore, descrizione, modalita_addebito, tipo?, mod_esecuzione?, costo?, variazioni?</td><td>{success, id}</td></tr>
+                    <tr><td><code>get_timesheet</code></td><td>cliente?, data_inizio?, data_fine?</td><td>{success, data:[]}</td></tr>
+                    <tr><td><code>get_timesheet_month</code></td><td>mese, anno</td><td>{success, entries:[]}</td></tr>
+                    <tr><td><code>get_timesheet_da_fatturare</code></td><td>cliente</td><td>{success, timesheet:[], canoni:[]} — voci con Mod_Addebito=Da fatturare</td></tr>
+                    <tr><td><code>delete_timesheet</code></td><td>id</td><td>{success}</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Pacchetti Ore</td></tr>
+                    <tr><td><code>insert_pacchetto</code></td><td>cliente_nome, ore_totali, importo, descrizione?, data_inizio?</td><td>{success, id_pacchetto}</td></tr>
+                    <tr><td><code>get_pacchetti</code></td><td>cliente?</td><td>{success, data:[]}</td></tr>
+                    <tr><td><code>get_pacchetto_attivo</code></td><td>cliente</td><td>{success, pacchetto:{} o null}</td></tr>
+                    <tr><td><code>update_residuo_pacchetto</code></td><td>id_pacchetto, ore_consumate</td><td>{success}</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Proforma</td></tr>
+                    <tr><td><code>get_proforma_list</code></td><td>—</td><td>{success, data:[]}</td></tr>
+                    <tr><td><code>get_proforma_data</code></td><td>cliente, mese, anno</td><td>{success, timesheet:[], canoni:[], totale_ore:N}</td></tr>
+                    <tr><td><code>get_proforma_details</code></td><td>n_proforma</td><td>{success, data:{N_Proforma, Nome_Cliente, Importo_Subtotale, Quota_4%, Importo_Totale, N_Fattura, Pagato}}</td></tr>
+                    <tr><td><code>genera_proforma</code></td><td>cliente, timesheet_ids (CSV numeri riga), causale, applica_quota (true/false), canoni_ids? (CSV)</td><td>{success, proforma_number, pdf_file_id, totale}</td></tr>
+                    <tr><td><code>aggiorna_proforma</code></td><td>n_proforma, timesheet_ids (CSV), send_email? (true/false)</td><td>{success, nuovoTotale, vociAggiunte}</td></tr>
+                    <tr><td><code>generate_proforma_pacchetto</code></td><td>id_pacchetto, applica_quota? (true/false)</td><td>{success, n_proforma, totale, pdf_file_id}</td></tr>
+                    <tr><td><code>update_numero_fattura</code></td><td>n_proforma, numero_fattura, data_fattura?, pagato?</td><td>{success} — crea/aggiorna riga in Fatture con calcolaFiscale corretto; supporta multi-proforma</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Fatture</td></tr>
+                    <tr><td><code>get_fatture_list</code></td><td>cliente?, anno?, pagato? (SI/NO)</td><td>{success, data:[], totali:{count, imponibile, totale, daPagare}}</td></tr>
+                    <tr><td><code>insert_fattura_diretta</code></td><td>n_fattura, data_fattura?, cliente, imponibile, descrizione?, note?, applica_ritenuta? (true/false), timesheet_ids? (CSV), canoni_ids? (CSV)</td><td>{success, timesheetMarcati:N, canoniMarcati:N}</td></tr>
+                    <tr><td><code>update_pagamento_fattura</code></td><td>n_fattura, pagato (SI/NO), data_pagamento?, note?</td><td>{success, proformaAggiornata} — propaga a tutte le proforma CSV</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Canoni</td></tr>
+                    <tr><td><code>insert_canone</code></td><td>cliente_nome, descrizione, importo, data_inizio, durata_anni?</td><td>{success, canoneId}</td></tr>
+                    <tr><td><code>get_canoni</code></td><td>cliente?, stato?</td><td>{success, data:[]}</td></tr>
+                    <tr><td><code>rinnova_canone</code></td><td>canone_id, descrizione, importo, durata_anni</td><td>{success, nuovoCanoneId}</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Firme Digitali</td></tr>
+                    <tr><td><code>insert_firma</code></td><td>cliente_nome, tipo (Token/Remota), importo, data_inizio</td><td>{success, firmaId} — durata fissa 3 anni</td></tr>
+                    <tr><td><code>get_firme</code></td><td>cliente?, stato?</td><td>{success, data:[]}</td></tr>
+                    <tr><td><code>rinnova_firma</code></td><td>firma_id, tipo, importo</td><td>{success, nuovaFirmaId}</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Scadenze &amp; Rinnovi</td></tr>
+                    <tr><td><code>get_scadenze</code></td><td>giorni? (def 90)</td><td>{success, data:{canoni:[], firme:[], tutti:[]}}</td></tr>
+                    <tr><td><code>get_storico_rinnovi</code></td><td>prodotto_id, tipo (canone/firma)</td><td>{success, data:[]}</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BACKEND FUNCTIONS -->
+        <div class="section" id="backend-fn">
+            <h2 class="section-title">📘 Backend — Funzioni Chiave</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:30%">Funzione (file)</th>
+                        <th style="width:35%">Firma</th>
+                        <th style="width:35%">Return / Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="group-row"><td colspan="3">crm_utils.js</td></tr>
+                    <tr><td><code>calcolaFiscale</code></td><td>(subtotale:Number, applicaQuota:Boolean)</td><td>{subtotale, quota, imponibile, ritenuta, iva, lordo, netto}</td></tr>
+                    <tr><td><code>validateClient</code></td><td>(nomeCliente:String)</td><td>{valid:Boolean, clientId?, error?}</td></tr>
+                    <tr><td><code>getSpreadsheet</code></td><td>()</td><td>SpreadsheetApp.openById(ID)</td></tr>
+                    <tr><td><code>writeLog</code></td><td>(level, action, message, data)</td><td>void — scrive in foglio Log</td></tr>
+                    <tr><td><code>formatDateForFrontend</code></td><td>(dateVal)</td><td>String 'DD/MM/YYYY'</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Fatture.js</td></tr>
+                    <tr><td><code>saveFatturaRecord</code></td><td>(dati:{nFattura, nomeCliente, imponibile, ritenuta?, iva?, netto?, nProforma?, dataFattura?, note?})</td><td>{success, totale} oppure {success, multiProforma:true, totale} se aggiunge a fattura esistente con N_Proforma CSV</td></tr>
+                    <tr><td><code>getFatturaByNumero</code></td><td>(nFattura:String)</td><td>{rowIndex:Number, data:Array} oppure null</td></tr>
+                    <tr><td><code>calcolaImporti</code></td><td>(imponibile:Number, applicaRitenuta:Boolean)</td><td>{imponibile, iva, ritenuta, totale} — solo per fatture dirette senza proforma</td></tr>
+                    <tr><td><code>insertFatturaDirecta</code></td><td>(params)</td><td>Wrapper per insert_fattura_diretta: valida, chiama calcolaFiscale se applica_ritenuta, marca timesheet/canoni, chiama saveFatturaRecord</td></tr>
+                    <tr><td><code>sincronizzaPagamentoProforma_</code></td><td>(nProforma:String, pagato:Boolean)</td><td>void — aggiorna Pagato nel foglio Proforma, gestisce celle Date</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Proforma.js</td></tr>
+                    <tr><td><code>generateProforma</code></td><td>(clientName, timesheetIds[], causale, applicaQuota, canoniIds[])</td><td>{success, proforma_number, pdf_file_id, totale}</td></tr>
+                    <tr><td><code>generateProformaDaPacchetto</code></td><td>(idPacchetto:String, applicaQuota:Boolean)</td><td>{success, n_proforma, totale, pdf_file_id}</td></tr>
+                    <tr><td><code>aggiornaProforma</code></td><td>(params:{nProforma, newTimesheetIds[], sendEmail?})</td><td>{success, nuovoTotale, vociAggiunte}</td></tr>
+                    <tr><td><code>calculateProformaTotals</code></td><td>(items:[{costo}], applicaQuota)</td><td>{subtotale, quotaIntegrativa, imponibile, ritenuta, iva, lordo, netto} — delega a calcolaFiscale</td></tr>
+                    <tr><td><code>generateProformaNumber</code></td><td>()</td><td>String "N/YYYY" — atomico via LockService (legge/scrive foglio RIF L2)</td></tr>
+                    <tr><td><code>getProformaDetails</code></td><td>(nProforma:String)</td><td>{N_Proforma, Data_Emissione, Nome_Cliente, Importo_Subtotale, Quota_4%, Importo_Totale} — Date-aware</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Clienti.js</td></tr>
+                    <tr><td><code>insertClient</code></td><td>(params)</td><td>{success, clientId:"C_YYYY_###"}</td></tr>
+                    <tr><td><code>searchClienti</code></td><td>(query:String)</td><td>Array&lt;Cliente&gt; — partial match, case-insensitive</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Cache.js</td></tr>
+                    <tr><td><code>getCachedData</code></td><td>(key, fetchFn, ttl=300)</td><td>Any — aggiunge _fromCache:true se da cache</td></tr>
+                    <tr><td><code>invalidateCacheClienti</code></td><td>()</td><td>void — da chiamare dopo ogni INSERT/UPDATE/DELETE clienti</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SHEETS COLUMNS -->
+        <div class="section" id="sheets">
+            <h2 class="section-title">📋 Google Sheets — Struttura Colonne</h2>
+
+            <p style="margin-bottom:12px; color:#555;">Le colonne qui sotto rispecchiano l'ordine reale in ogni foglio. Gli indici (0-based) sono usati nei <code>COLS</code> object del backend.</p>
+
+            <pre><code><strong>Clienti</strong> (A–P, 16 col):
+A=ID_Cliente | B=Nome_Cliente | C=Indirizzo | D=CAP | E=Città | F=P.IVA | G=CF
+H=SDI | I=Email | J=Referente | K=ATTIVO | L=Titolo | M=Cellulare | N=Tel. | O=NOTE | P=WKI
+
+<strong>Timesheet</strong> (A–S, 19 col):
+A=ID_Intervento | B=ID_Cliente | C=Nome_Cliente | D=DATA | E=START | F=STOP
+G=Tipo_Intervento | H=Mod_Esecuzione | I=Durata_Ore | J=Chiamata | K=Mod_Addebito
+L=ID_Pacchetto | M=EXTRA | N=Descrizione | O=Costo | P=Variazioni | Q=Costo_Finale
+R=N_Proforma | S=N_Fattura
+
+<strong>Pacchetti</strong> (A–L, 12 col):
+A=ID_Pacchetto | B=ID_Cliente | C=Nome_Cliente | D=Data_Acquisto | E=Data_Scadenza
+F=Descrizione | G=Ore_Acquistate | H=Ore_Utilizzate | I=Ore_Residue | J=STATO | K=Importo | L=Costo_Orario
+
+<strong>Proforma</strong> (A–M, 13 col):
+A=N_Proforma | B=Data_Emissione | C=ID_Cliente | D=Nome_Cliente | E=Importo_Subtotale
+F=Quota_4% | G=Importo_Totale (=netto) | H=Causale | I=N_Fattura | J=Data_Fattura
+K=Pagato | L=PDF_FileID | M=Ore_Pacchetto
+⚠️ N_Proforma formato "M/YYYY" viene interpretato come Date da Sheets — sempre gestire con Date-aware check
+
+<strong>Fatture</strong> (A–M, 13 col):
+A=N_Fattura | B=Data_Fattura | C=ID_Cliente | D=Nome_Cliente | E=Imponibile (=S+quota)
+F=IVA_22 | G=Importo_Totale (=netto = lordo−ritenuta) | H=Descrizione | I=N_Proforma
+J=Pagato | K=Data_Pagamento | L=Note | M=Ritenuta
+ℹ️ I=N_Proforma può essere una lista CSV ("1/2026, 2/2026") per fatture multi-proforma
+
+<strong>Canoni</strong> (A–L, 12 col):
+A=ID_Canone | B=ID_Precedente | C=ID_Cliente | D=Nome_Cliente | E=Descrizione
+F=Data_Inizio | G=Data_Scadenza | H=Importo | I=STATO | J=Data_Fattura | K=N_Fattura | L=Event_ID
+(+ colonna Fatturazione per stato ciclo proforma)
+
+<strong>Firme</strong> (A–M, 13 col):
+A=ID_Firma | B=ID_Precedente | C=ID_Cliente | D=Nome_Cliente | E=Tipo | F=Data_Inizio
+G=Data_Scadenza (+3 anni) | H=Importo | I=STATO | J=Acquisto | K=N_Fattura | L=Event_ID | M=Note
+
+<strong>RIF</strong> (config):
+L2 = ultimo numero proforma | M2 = anno corrente proforma
+
+<strong>Log</strong>:
+A=Timestamp | B=Level | C=Action | D=Message | E=User | F=Data (JSON)</code></pre>
+        </div>
+
+        <!-- STATI CAMPI -->
+        <div class="section" id="states">
+            <h2 class="section-title">🔄 Stati dei Campi Chiave</h2>
+
+            <div class="two-col">
+                <div>
+                    <strong>Timesheet · Mod_Addebito</strong>
+                    <table>
+                        <thead><tr><th>Valore</th><th>Significato</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>Da fatturare</code></td><td>Voce aperta, visibile in generazione proforma</td></tr>
+                            <tr><td><code>Proformato</code></td><td>Inclusa in una proforma emessa</td></tr>
+                            <tr><td><code>Pagato</code></td><td>Fattura pagata</td></tr>
+                            <tr><td><code>Omaggio</code></td><td>Non fatturabile</td></tr>
+                            <tr><td><code>Scalato</code></td><td>Scalato da pacchetto ore</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <strong>Canoni · Fatturazione</strong>
+                    <table>
+                        <thead><tr><th>Valore</th><th>Significato</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>Da fatturare</code></td><td>Disponibile per proforma</td></tr>
+                            <tr><td><code>Proformato</code></td><td>Incluso in proforma</td></tr>
+                        </tbody>
+                    </table>
+
+                    <strong style="display:block; margin-top:16px;">Proforma · Pagato</strong>
+                    <table>
+                        <thead><tr><th>Valore</th><th>Significato</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>SI</code></td><td>Pagata</td></tr>
+                            <tr><td><code>""</code> (vuoto)</td><td>Non pagata</td></tr>
+                        </tbody>
+                    </table>
+
+                    <strong style="display:block; margin-top:16px;">Fatture · Pagato</strong>
+                    <table>
+                        <thead><tr><th>Valore</th><th>Significato</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>SI</code></td><td>Pagata</td></tr>
+                            <tr><td><code>NO</code></td><td>Da pagare</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="margin-top:16px;">
+                <strong>Canoni/Firme · STATO</strong>
+                <table>
+                    <thead><tr><th>Valore</th><th>Significato</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>ATTIVO</code></td><td>In corso</td></tr>
+                        <tr><td><code>SCADUTO</code></td><td>Data scadenza passata</td></tr>
+                        <tr><td><code>RINNOVATO</code></td><td>Sostituito da nuovo ID</td></tr>
                     </tbody>
                 </table>
             </div>
-            
-            <!-- BACKEND FUNCTIONS -->
-            <div class="section" id="backend">
-                <h2 class="section-title">📘 Backend Functions</h2>
-                
-                <table class="compact-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 30%;">Funzione</th>
-                            <th style="width: 40%;">Parametri</th>
-                            <th style="width: 30%;">Return</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">Clienti.gs</td>
-                        </tr>
-                        <tr>
-                            <td><code>insertClient(params)</code></td>
-                            <td>{client_name, client_email, ...}</td>
-                            <td>{success, clientId}</td>
-                        </tr>
-                        <tr>
-                            <td><code>validateClient(nome)</code></td>
-                            <td>String nome_cliente</td>
-                            <td>{valid, clientId, error?}</td>
-                        </tr>
-                        <tr>
-                            <td><code>searchClienti(query)</code></td>
-                            <td>String search_term</td>
-                            <td>Array&lt;Cliente&gt;</td>
-                        </tr>
-                        <tr>
-                            <td><code>generateClientID()</code></td>
-                            <td>-</td>
-                            <td>String "C_YYYY_###"</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">Timesheet.gs</td>
-                        </tr>
-                        <tr>
-                            <td><code>insertTimesheet(params)</code></td>
-                            <td>{cliente, data, ore, ...}</td>
-                            <td>{success, id}</td>
-                        </tr>
-                        <tr>
-                            <td><code>getTimesheet(params)</code></td>
-                            <td>{cliente?, data_inizio, data_fine}</td>
-                            <td>Array&lt;Entry&gt;</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">Cache.gs</td>
-                        </tr>
-                        <tr>
-                            <td><code>getCachedData(key, fn, ttl)</code></td>
-                            <td>String, Function, Number(300)</td>
-                            <td>Any (with _fromCache flag)</td>
-                        </tr>
-                        <tr>
-                            <td><code>invalidateCacheClienti()</code></td>
-                            <td>-</td>
-                            <td>void</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">crm_utils.js</td>
-                        </tr>
-                        <tr>
-                            <td><code>calcolaFiscale(subtotale, applicaQuota)</code></td>
-                            <td>Number, Boolean</td>
-                            <td>{subtotale, quota, imponibile, ritenuta, iva, lordo, netto}</td>
-                        </tr>
+        </div>
 
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">Proforma.js</td>
-                        </tr>
-                        <tr>
-                            <td><code>generateProforma(clientName, timesheetIds, causale, applicaQuota, canoniIds)</code></td>
-                            <td>String, Array, String, Boolean, Array?</td>
-                            <td>{success, proforma_number, totale}</td>
-                        </tr>
-                        <tr>
-                            <td><code>aggiornaProforma(params)</code></td>
-                            <td>{nProforma, newTimesheetIds, sendEmail?}</td>
-                            <td>{success, nuovoTotale, vociAggiunte}</td>
-                        </tr>
-                        <tr>
-                            <td><code>generateProformaDaPacchetto(idPacchetto, applicaQuota)</code></td>
-                            <td>String, Boolean</td>
-                            <td>{success, n_proforma, totale, pdf_file_id}</td>
-                        </tr>
-                        <tr>
-                            <td><code>calculateProformaTotals(items, applicaQuota)</code></td>
-                            <td>Array&lt;{costo}&gt;, Boolean</td>
-                            <td>{subtotale, quotaIntegrativa, imponibile, ritenuta, iva, lordo, netto}</td>
-                        </tr>
+        <!-- FRONTEND FUNCTIONS -->
+        <div class="section" id="frontend-fn">
+            <h2 class="section-title">📗 Frontend — Funzioni Chiave</h2>
 
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">Fatture.js</td>
-                        </tr>
-                        <tr>
-                            <td><code>saveFatturaRecord(dati)</code></td>
-                            <td>{nFattura, nomeCliente, imponibile, ritenuta?, iva?, netto?, nProforma?, ...}</td>
-                            <td>{success, totale}</td>
-                        </tr>
-                        <tr>
-                            <td><code>calcolaImporti(imponibile, applicaRitenuta)</code></td>
-                            <td>Number, Boolean</td>
-                            <td>{imponibile, iva, ritenuta, totale} — usato solo per fatture dirette</td>
-                        </tr>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:28%">Funzione (file)</th>
+                        <th style="width:72%">Descrizione</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="group-row"><td colspan="2">config.js</td></tr>
+                    <tr><td><code>window.CONFIG.APPS_SCRIPT_URL</code></td><td>URL produzione backend — source of truth; non usare URL hardcoded altrove</td></tr>
 
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">crm_email.gs</td>
-                        </tr>
-                        <tr>
-                            <td><code>sendScadenzaEmail(dest, tipo, dati)</code></td>
-                            <td>String, String, Object</td>
-                            <td>void</td>
-                        </tr>
-                        <tr>
-                            <td><code>getEmailTemplate(tipo)</code></td>
-                            <td>String tipo_email</td>
-                            <td>String HTML</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- FRONTEND FUNCTIONS -->
-            <div class="section" id="frontend">
-                <h2 class="section-title">📗 Frontend Functions</h2>
-                
-                <table class="compact-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 30%;">Funzione</th>
-                            <th style="width: 40%;">Parametri</th>
-                            <th style="width: 30%;">Return</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">main.js</td>
-                        </tr>
-                        <tr>
-                            <td><code>initializeApp()</code></td>
-                            <td>-</td>
-                            <td>Promise&lt;void&gt;</td>
-                        </tr>
-                        <tr>
-                            <td><code>switchTab(tabName)</code></td>
-                            <td>String 'dashboard'|'clienti'|...</td>
-                            <td>void</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">clienti.js</td>
-                        </tr>
-                        <tr>
-                            <td><code>loadClients()</code></td>
-                            <td>-</td>
-                            <td>Promise&lt;void&gt;</td>
-                        </tr>
-                        <tr>
-                            <td><code>addClient()</code></td>
-                            <td>-</td>
-                            <td>Promise&lt;void&gt;</td>
-                        </tr>
-                        <tr>
-                            <td><code>searchClients(query)</code></td>
-                            <td>String</td>
-                            <td>void (updates UI)</td>
-                        </tr>
-                        <tr>
-                            <td><code>populateClientSelects()</code></td>
-                            <td>-</td>
-                            <td>void</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">api.js</td>
-                        </tr>
-                        <tr>
-                            <td><code>apiCall(action, params)</code></td>
-                            <td>String, Object</td>
-                            <td>Promise&lt;Result&gt;</td>
-                        </tr>
-                        <tr>
-                            <td><code>fetchWithRetry(url, retries)</code></td>
-                            <td>String, Number</td>
-                            <td>Promise&lt;Response&gt;</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="3">utils.js</td>
-                        </tr>
-                        <tr>
-                            <td><code>formatDate(dateString)</code></td>
-                            <td>String ISO</td>
-                            <td>String 'DD/MM/YYYY'</td>
-                        </tr>
-                        <tr>
-                            <td><code>formatCurrency(number)</code></td>
-                            <td>Number</td>
-                            <td>String '€ 1.234,56'</td>
-                        </tr>
-                        <tr>
-                            <td><code>debounce(fn, delay)</code></td>
-                            <td>Function, Number(300)</td>
-                            <td>Function (debounced)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- SHEETS COLUMNS -->
-            <div class="section" id="sheets">
-                <h2 class="section-title">📋 Google Sheets Columns</h2>
-                
-                <div class="code-block">
-                    <strong>Clienti (16 col):</strong>
-                    <pre>A=ID_Cliente | B=Nome_Cliente | C=Indirizzo | D=CAP | E=Città | F=P.IVA | G=CF | H=SDI | I=Email | J=Referente | K=ATTIVO | L=Titolo | M=Cellulare | N=Tel. | O=NOTE | P=WKI</pre>
-                </div>
-                
-                <div class="code-block">
-                    <strong>Timesheet (19 col):</strong>
-                    <pre>A=ID_Intervento | B=ID_Cliente | C=Nome_Cliente | D=DATA | E=START | F=STOP | G=Tipo_Intervento | H=Mod_Esecuzione | I=Durata_Ore | J=Chiamata | K=Mod_Addebito | L=ID_Pacchetto | M=EXTRA | N=Descrizione | O=Costo | P=Variazioni | Q=Costo_Finale | R=N_Proforma | S=N_Fattura</pre>
-                </div>
-                
-                <div class="code-block">
-                    <strong>Pacchetti (12 col):</strong>
-                    <pre>A=ID_Pacchetto | B=ID_Cliente | C=Nome_Cliente | D=Data_Acquisto | E=Data_Scadenza | F=Descrizione | G=Ore_Acquistate | H=Ore_Utilizzate | I=Ore_Residue | J=STATO | K=Importo | L=Costo_Orario</pre>
-                </div>
-                
-                <div class="code-block">
-                    <strong>Proforma (13 col):</strong>
-                    <pre>A=N_Proforma | B=Data_Emissione | C=ID_Cliente | D=Nome_Cliente | E=Importo_Subtotale | F=Quota_4% | G=Importo_Totale (netto) | H=Causale | I=N_Fattura | J=Data_Fattura | K=Pagato | L=PDF_FileID | M=Ore_Pacchetto</pre>
-                </div>
+                    <tr class="group-row"><td colspan="2">main.js</td></tr>
+                    <tr><td><code>initializeApp()</code></td><td>Entry point: carica clienti, setup tabs, attiva tab default</td></tr>
+                    <tr><td><code>switchTab(tabName)</code></td><td>Mostra tab 'clienti'|'timesheet'|'vendite'|'proforma'|'fatture'|'utilities'</td></tr>
 
-                <div class="code-block">
-                    <strong>Fatture (13 col):</strong>
-                    <pre>A=N_Fattura | B=Data_Fattura | C=ID_Cliente | D=Nome_Cliente | E=Imponibile (S+quota) | F=IVA_22 | G=Importo_Totale (netto) | H=Descrizione | I=N_Proforma | J=Pagato | K=Data_Pagamento | L=Note | M=Ritenuta</pre>
-                </div>
-                
-                <div class="code-block">
-                    <strong>Canoni (12 col):</strong>
-                    <pre>A=ID_Canone | B=ID_Precedente | C=ID_Cliente | D=Nome_Cliente | E=Descrizione | F=Data_Inizio | G=Data_Scadenza | H=Importo | I=STATO | J=Data_Fattura | K=N_Fattura | L=Event_ID</pre>
-                </div>
-                
-                <div class="code-block">
-                    <strong>Firme (13 col):</strong>
-                    <pre>A=ID_Firma | B=ID_Precedente | C=ID_Cliente | D=Nome_Cliente | E=Tipo | F=Data_Inizio | G=Data_Scadenza | H=Importo | I=STATO | J=Acquisto | K=N_Fattura | L=Event_ID | M=Note</pre>
-                </div>
-                
-                <div class="code-block">
-                    <strong>System_Log (6 col):</strong>
-                    <pre>A=Timestamp | B=Level | C=Action | D=Message | E=User | F=Data</pre>
-                </div>
-            </div>
-            
-            <!-- COMMON PATTERNS -->
-            <div class="section" id="patterns">
-                <h2 class="section-title">🔧 Common Patterns</h2>
-                
-                <div class="subsection">
-                    <h3 style="color: #764ba2; margin-bottom: 12px;">API Call Pattern</h3>
-<pre><code>// Frontend
-const response = await fetch(`${API_URL}?action=add_client&cliente=${name}&client_email=${email}`);
-const result = await response.json();
+                    <tr class="group-row"><td colspan="2">clienti.js</td></tr>
+                    <tr><td><code>loadClients()</code></td><td>Fetch <code>get_data</code>, popola <code>window.clients</code> e tutti i datalist</td></tr>
+                    <tr><td><code>addClient()</code></td><td>Legge form, valida email, chiama <code>add_client</code></td></tr>
+                    <tr><td><code>populateClientSelects()</code></td><td>Aggiorna tutti gli &lt;input list="..."&gt; con i clienti attuali</td></tr>
 
-if (result.success) {
-  alert('✅ Success!');
-} else {
-  alert('❌ Error: ' + result.error);
-}
-</code></pre>
-                </div>
-                
-                <div class="subsection">
-                    <h3 style="color: #764ba2; margin-bottom: 12px;">Backend Insert Pattern</h3>
-<pre><code>// Backend .gs
-function insertSomething(params) {
-  try {
-    const ss = getSpreadsheet();
-    const sheet = ss.getSheetByName('SheetName');
-    
-    // Validate
-    const validation = validateClient(params.cliente_nome);
-    if (!validation.valid) throw new Error(validation.error);
-    
-    // Generate ID
-    const id = generateID();
-    
-    // Prepare row
-    const newRow = [id, params.field1, params.field2, new Date()];
-    
-    // Insert
-    const lastRow = sheet.getLastRow();
-    sheet.getRange(lastRow + 1, 1, 1, newRow.length).setValues([newRow]);
-    
-    // Log & cache
-    writeLog('SUCCESS', 'INSERT', 'Created: ' + id);
-    invalidateCache();
-    
-    return {success: true, id: id};
-  } catch (error) {
-    return {success: false, error: error.message};
-  }
-}
-</code></pre>
-                </div>
-                
-                <div class="subsection">
-                    <h3 style="color: #764ba2; margin-bottom: 12px;">Modal Pattern</h3>
-<pre><code>// HTML
-&lt;div id="my-modal" class="modal"&gt;
-  &lt;div class="modal-content"&gt;
-    &lt;h2&gt;Title&lt;/h2&gt;
-    &lt;form onsubmit="handleSubmit(); return false;"&gt;
-      &lt;!-- fields --&gt;
-      &lt;button type="submit"&gt;Save&lt;/button&gt;
-    &lt;/form&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
+                    <tr class="group-row"><td colspan="2">proforma.js</td></tr>
+                    <tr><td><code>loadProformaData()</code></td><td>Step 1→2: carica timesheet+canoni per cliente/mese selezionato</td></tr>
+                    <tr><td><code>generaProforma()</code></td><td>Raccoglie checkbox selezionate, chiama <code>genera_proforma</code></td></tr>
+                    <tr><td><code>switchProformaView(view)</code></td><td>Cambia vista: 'selection'|'list'</td></tr>
+                    <tr><td><code>aggiornaCalcoloIVA()</code></td><td>Ricalcola preview fiscale nel form Step 2 usando calcolaFiscale lato client</td></tr>
 
-// JavaScript
-function showModal(id) {
-  document.getElementById(id).style.display = 'flex';
-}
+                    <tr class="group-row"><td colspan="2">proforma-list.js</td></tr>
+                    <tr><td><code>loadProformaList()</code></td><td>Carica e renderizza la lista proforma dal backend</td></tr>
+                    <tr><td><code>saveNumeroFattura(nProforma)</code></td><td>Step 3: apre modal input N_Fattura, chiama <code>update_numero_fattura</code></td></tr>
+                    <tr><td><code>confermAAggiungiVoci(nProforma)</code></td><td>Chiama <code>aggiorna_proforma</code> per aggiungere timesheet a proforma esistente</td></tr>
 
-function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
-  document.querySelector(`#${id} form`).reset();
-}
-</code></pre>
-                </div>
-                
-                <div class="subsection">
-                    <h3 style="color: #764ba2; margin-bottom: 12px;">Debounced Search Pattern</h3>
-<pre><code>// Utility
-function debounce(func, delay = 300) {
-  let timeout;
-  return function(...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), delay);
-  };
-}
+                    <tr class="group-row"><td colspan="2">fatture.js</td></tr>
+                    <tr><td><code>loadFatture()</code></td><td>Carica lista fatture con filtri attivi (cliente, anno, stato)</td></tr>
+                    <tr><td><code>openNuovaFatturaModal()</code></td><td>Apre modal nuova fattura diretta, resetta stato voci</td></tr>
+                    <tr><td><code>saveNuovaFattura()</code></td><td>Raccoglie form + checkbox timesheet/canoni + ritenuta, chiama <code>insert_fattura_diretta</code></td></tr>
+                    <tr><td><code>caricaVociFatturaDiretta()</code></td><td>Carica timesheet+canoni Da fatturare per il cliente selezionato nella modal</td></tr>
+                    <tr><td><code>aggiornaSelezioneVoci()</code></td><td>Somma importi selezionati e aggiorna il campo imponibile</td></tr>
+                    <tr><td><code>aggiornaPagamento(nFattura, pagato)</code></td><td>Chiama <code>update_pagamento_fattura</code></td></tr>
 
-// Usage
-const debouncedSearch = debounce((query) => {
-  searchClients(query);
-}, 300);
+                    <tr class="group-row"><td colspan="2">utils.js</td></tr>
+                    <tr><td><code>formatDate(dateString)</code></td><td>ISO → 'DD/MM/YYYY'</td></tr>
+                    <tr><td><code>formatCurrency(number)</code></td><td>Number → '€ 1.234,56'</td></tr>
+                    <tr><td><code>debounce(fn, delay=300)</code></td><td>Wrapper debounce per ricerche live</td></tr>
+                    <tr><td><code>showNotification(msg, type)</code></td><td>Toast notification (success|error|info)</td></tr>
+                </tbody>
+            </table>
+        </div>
 
-// Attach to input
-document.getElementById('search').addEventListener('input', (e) => {
-  debouncedSearch(e.target.value);
+        <!-- COMMON PATTERNS -->
+        <div class="section" id="patterns">
+            <h2 class="section-title">🔧 Pattern Comuni</h2>
+
+            <div class="two-col">
+                <div>
+                    <strong>API call da frontend</strong>
+                    <pre><code>const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
+if (!API_URL) throw new Error('CONFIG non caricato');
+
+const params = new URLSearchParams({
+  action: 'insert_timesheet',
+  cliente: 'Mario Rossi',
+  ore: 2,
+  data: '2026-07-02'
 });
-</code></pre>
+const res = await fetch(`${API_URL}?${params}`);
+const data = await res.json();
+if (!data.success) throw new Error(data.error);</code></pre>
                 </div>
-                
-                <div class="subsection">
-                    <h3 style="color: #764ba2; margin-bottom: 12px;">Cache Pattern (Backend)</h3>
-<pre><code>function getCachedData(key, fetchFunction, ttl = 300) {
-  const cache = CacheService.getScriptCache();
-  let data = cache.get(key);
-  
-  if (!data) {
-    data = fetchFunction();
-    cache.put(key, JSON.stringify(data), ttl);
-  } else {
-    data = JSON.parse(data);
-    data._fromCache = true;
+                <div>
+                    <strong>Date-aware per N_Proforma (backend)</strong>
+                    <pre><code>// Google Sheets può salvare "1/2026" come Date
+let cellVal = values[i][nProformaCol];
+if (cellVal instanceof Date && !isNaN(cellVal.getTime())) {
+  cellVal = (cellVal.getMonth() + 1) + '/' + cellVal.getFullYear();
+} else {
+  cellVal = (cellVal || '').toString().trim();
+}
+if (cellVal === nProforma.toString().trim()) { ... }</code></pre>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div>
+                    <strong>Insert pattern (backend .gs)</strong>
+                    <pre><code>function insertAlgo(params) {
+  try {
+    const validation = validateClient(params.cliente);
+    if (!validation.valid) return { success:false, error:validation.error };
+
+    const sheet = getSpreadsheet().getSheetByName('Foglio');
+    const row = [params.campo1, params.campo2, new Date()];
+    sheet.getRange(sheet.getLastRow()+1, 1, 1, row.length).setValues([row]);
+    SpreadsheetApp.flush();
+
+    writeLog('INFO', 'INSERT_X', 'Inserito ' + params.campo1, {});
+    return { success: true };
+  } catch(err) {
+    Logger.log('ERRORE: ' + err.message);
+    return { success: false, error: err.message };
   }
-  
-  return data;
+}</code></pre>
+                </div>
+                <div>
+                    <strong>Cache pattern (backend)</strong>
+                    <pre><code>// Leggi con cache
+const data = getCachedData('clienti_list',
+  () => getClientiFromSheet(),
+  300  // TTL secondi
+);
+
+// Invalida dopo scrittura
+function insertClient(params) {
+  // ... insert ...
+  invalidateCacheClienti();
+  return { success: true };
+}</code></pre>
+
+                    <strong style="display:block; margin-top:12px;">LockService (per counter atomici)</strong>
+                    <pre><code>const lock = LockService.getScriptLock();
+try {
+  lock.waitLock(10000);
+  // operazione critica
+  SpreadsheetApp.flush();
+} catch(e) { /* fallback */ }
+finally { lock.releaseLock(); }</code></pre>
+                </div>
+            </div>
+
+            <strong>Modal pattern (frontend)</strong>
+            <pre><code>// HTML: &lt;div id="my-modal" class="modal" style="display:none"&gt;...&lt;/div&gt;
+
+function openMyModal() {
+  document.getElementById('my-modal').style.display = 'flex';
+  document.getElementById('my-form').reset();
+  // init stato
 }
 
-// Usage
-const clients = getCachedData('clienti_list', () => {
-  return getClientiFromSheet();
-}, 300);
-</code></pre>
-                </div>
-            </div>
-            
-            <!-- CSS CLASSES -->
-            <div class="section" id="css">
-                <h2 class="section-title">🎨 CSS Classes Reference</h2>
-                
-                <table class="compact-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 30%;">Classe</th>
-                            <th style="width: 70%;">Uso</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="2">Layout</td>
-                        </tr>
-                        <tr>
-                            <td><code>.container</code></td>
-                            <td>Main container (max-width: 1200px, centered)</td>
-                        </tr>
-                        <tr>
-                            <td><code>.form-container</code></td>
-                            <td>Form wrapper (padding, background)</td>
-                        </tr>
-                        <tr>
-                            <td><code>.tab-content</code></td>
-                            <td>Tab panel (hidden by default, .active shows)</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="2">Components</td>
-                        </tr>
-                        <tr>
-                            <td><code>.modal</code></td>
-                            <td>Modal overlay (display: none → flex)</td>
-                        </tr>
-                        <tr>
-                            <td><code>.modal-content</code></td>
-                            <td>Modal box (centered, white bg)</td>
-                        </tr>
-                        <tr>
-                            <td><code>.btn</code></td>
-                            <td>Base button style</td>
-                        </tr>
-                        <tr>
-                            <td><code>.btn-primary</code></td>
-                            <td>Primary button (blue gradient)</td>
-                        </tr>
-                        <tr>
-                            <td><code>.btn-secondary</code></td>
-                            <td>Secondary button (gray)</td>
-                        </tr>
-                        
-                        <tr style="background: #f0f0f0; font-weight: 600;">
-                            <td colspan="2">Utilities</td>
-                        </tr>
-                        <tr>
-                            <td><code>.utility-section</code></td>
-                            <td>Utility card wrapper</td>
-                        </tr>
-                        <tr>
-                            <td><code>.utility-card</code></td>
-                            <td>Individual utility item</td>
-                        </tr>
-                        <tr>
-                            <td><code>.info-box</code></td>
-                            <td>Info message box (blue border-left)</td>
-                        </tr>
-                        <tr>
-                            <td><code>.version-card</code></td>
-                            <td>Version display box (white bg, centered)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- KEYBOARD SHORTCUTS -->
-            <div class="section">
-                <h2 class="section-title">⌨️ Development Shortcuts</h2>
-                
-                <table class="compact-table">
-                    <thead>
-                        <tr>
-                            <th>Task</th>
-                            <th>Command</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Update versione</td>
-                            <td>Modifica <code>version.js</code> (VERSION + CHANGELOG) → Git push</td>
-                        </tr>
-                        <tr>
-                            <td>Deploy backend</td>
-                            <td>Apps Script → Deploy → New version</td>
-                        </tr>
-                        <tr>
-                            <td>Clear cache backend</td>
-                            <td>API call: <code>?action=cache_info</code> poi rimuovi keys</td>
-                        </tr>
-                        <tr>
-                            <td>Hard refresh frontend</td>
-                            <td>Ctrl + Shift + R (Chrome/Firefox)</td>
-                        </tr>
-                        <tr>
-                            <td>View logs</td>
-                            <td>Utilities tab → Visualizza Log</td>
-                        </tr>
-                        <tr>
-                            <td>Test API endpoint</td>
-                            <td>Browser: <code>[API_URL]?action=test_connection</code></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- NAVIGATION -->
-            <div style="text-align: center; margin-top: 40px;">
-                <a href="architecture.html" class="back-link">← Torna al Riepilogo</a>
-            </div>
+function closeMyModal() {
+  document.getElementById('my-modal').style.display = 'none';
+}
+
+// Chiudi su click overlay
+document.getElementById('my-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeMyModal();
+});</code></pre>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="architecture.html" class="back-link">← Torna al Riepilogo</a>
         </div>
     </div>
+</div>
 </body>
 </html>

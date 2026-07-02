@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Studio Smart - Architettura v4.0</title>
+    <title>CRM Studio Smart - Architettura v4.9.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -220,10 +220,35 @@
         <div class="header">
             <h1>🏗️ CRM Studio Smart</h1>
             <p style="font-size: 1.1rem; margin-top: 10px;">Architettura & Documentazione Tecnica</p>
-            <div class="version-badge">Versione 4.5.6 - Aprile 2026</div>
+            <div class="version-badge">Versione 4.9.0 - Luglio 2026</div>
         </div>
         
         <div class="content">
+            <!-- COMPONENTI -->
+            <div class="section">
+                <h2 class="section-title">📦 Componenti Principali</h2>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>📘 Backend Reference</h3>
+                        <p>16 file Google Apps Script: API endpoints, struttura Google Sheets, funzioni core, sistema log, micro-cache.</p>
+                        <a href="arc_backend.html" class="card-link">Apri Backend Docs →</a>
+                    </div>
+
+                    <div class="card">
+                        <h3>📗 Frontend Reference</h3>
+                        <p>12 moduli JavaScript: struttura SPA, UI components, state management, PWA e Service Worker.</p>
+                        <a href="arc_frontend.html" class="card-link">Apri Frontend Docs →</a>
+                    </div>
+
+                    <div class="card">
+                        <h3>⚡ Quick Reference</h3>
+                        <p>Manuale rapido: tutti gli endpoint API, funzioni chiave backend/frontend, colonne Sheets, deploy workflow, formula fiscale.</p>
+                        <a href="tech_sheet.html" class="card-link">Apri Quick Reference →</a>
+                    </div>
+                </div>
+            </div>
+
             <!-- OVERVIEW -->
             <div class="section">
                 <h2 class="section-title">🎯 Overview Progetto</h2>
@@ -245,11 +270,11 @@
                 
                 <div class="stats-grid">
                     <div class="stat-box">
-                        <span class="stat-number">~9.000</span>
+                        <span class="stat-number">~12.000</span>
                         <span class="stat-label">Righe di Codice</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number">14</span>
+                        <span class="stat-number">16</span>
                         <span class="stat-label">File Backend (.gs)</span>
                     </div>
                     <div class="stat-box">
@@ -257,7 +282,7 @@
                         <span class="stat-label">File Frontend (.js)</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number">33+</span>
+                        <span class="stat-number">45+</span>
                         <span class="stat-label">API Endpoints</span>
                     </div>
                 </div>
@@ -441,31 +466,6 @@ ESEMPIO: Inserimento Nuovo Cliente
                 </div>
             </div>
             
-            <!-- COMPONENTI -->
-            <div class="section">
-                <h2 class="section-title">📦 Componenti Principali</h2>
-                
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>📘 Backend Reference</h3>
-                        <p>Google Apps Script: API endpoints, funzioni core, gestione database Google Sheets, micro-caching, sistema log completo</p>
-                        <a href="arc_backend.html" class="card-link">Apri Backend Docs →</a>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>📗 Frontend Reference</h3>
-                        <p>JavaScript modules: struttura codice, UI components, state management, PWA features, Service Worker strategy</p>
-                        <a href="arc_frontend.html" class="card-link">Apri Frontend Docs →</a>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>⚡ Quick Reference</h3>
-                        <p>Cheat sheet sviluppo: endpoints API, funzioni chiave, pattern comuni, esempi codice ready-to-use</p>
-                        <a href="tech_sheet.html" class="card-link">Apri Tech Sheet →</a>
-                    </div>
-                </div>
-            </div>
-            
             <!-- DEPLOYMENT -->
             <div class="section">
                 <h2 class="section-title">🚀 Deployment & Infrastructure</h2>
@@ -544,7 +544,10 @@ ESEMPIO: Inserimento Nuovo Cliente
                         ✅ <strong>Sistema Rinnovi:</strong> Storico completo rinnovi canoni/firme, chain tracking
                     </div>
                     <div class="feature-item">
-                        ✅ <strong>Fatture:</strong> Lista fatture con filtri, fatture dirette, gestione pagamenti, note credito
+                        ✅ <strong>Fatture:</strong> Lista fatture con filtri, fattura diretta (con collegamento timesheet/canoni opzionale), fattura da proforma, multi-proforma su stessa fattura, gestione pagamenti, note credito
+                    </div>
+                    <div class="feature-item">
+                        ✅ <strong>Proforma avanzata:</strong> Generazione da timesheet, da canoni, da pacchetti ore; aggiunta voci a proforma esistente; numerazione atomica (LockService)
                     </div>
                     <div class="feature-item">
                         ✅ <strong>Sistema Log:</strong> Tracciamento completo operazioni, data integrity check, query log avanzate
@@ -630,34 +633,34 @@ ESEMPIO: Inserimento Nuovo Cliente
                 
                 <div class="card-grid">
                     <div class="card">
-                        <h3>✅ Completato (v4.0)</h3>
+                        <h3>✅ Completato (fino a v4.9)</h3>
                         <ul style="margin-left: 20px; line-height: 2;">
-                            <li>Backend refactoring completo</li>
-                            <li>PWA implementation</li>
-                            <li>Micro-cache system</li>
-                            <li>Sistema rinnovi</li>
-                            <li>Version management</li>
+                            <li>Backend refactoring completo (16 file .gs)</li>
+                            <li>PWA installabile + Service Worker</li>
+                            <li>Micro-cache sistema (+70% perf)</li>
+                            <li>Sistema rinnovi canoni/firme</li>
+                            <li>Flusso fiscale completo (calcolaFiscale)</li>
+                            <li>Tab Fatture con ritenuta e multi-proforma</li>
+                            <li>Proforma da pacchetti ore</li>
+                            <li>Fattura diretta con link timesheet/canoni</li>
                         </ul>
                     </div>
-                    
+
                     <div class="card">
-                        <h3>🔄 In Progress (v4.1)</h3>
+                        <h3>⚠️ Debito tecnico noto</h3>
                         <ul style="margin-left: 20px; line-height: 2;">
-                            <li>Frontend refactoring (modules)</li>
-                            <li>Enhanced error handling</li>
-                            <li>Advanced analytics dashboard</li>
-                            <li>Export improvements</li>
+                            <li>N_Proforma formato M/YYYY → interpretato come Date da Sheets (B3)</li>
+                            <li>Mod_Addebito stati non uniformi tra moduli (D3)</li>
+                            <li>Matching cliente non univoco (D4)</li>
                         </ul>
                     </div>
-                    
+
                     <div class="card">
-                        <h3>📋 Planned (v4.2+)</h3>
+                        <h3>📋 Backlog</h3>
                         <ul style="margin-left: 20px; line-height: 2;">
-                            <li>Multi-user support</li>
-                            <li>Advanced reporting</li>
-                            <li>Mobile app (native)</li>
-                            <li>API v2 (GraphQL?)</li>
-                            <li>Real-time collaboration</li>
+                            <li>Dashboard analytics avanzata</li>
+                            <li>Export CSV/Excel da Fatture</li>
+                            <li>Notifiche scadenze in-app (banner)</li>
                         </ul>
                     </div>
                 </div>

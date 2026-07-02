@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backend Reference - CRM Studio Smart</title>
+    <title>Backend Reference - CRM Studio Smart v4.9.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -200,7 +200,7 @@
                 <a href="architecture.html">← Architettura</a> / Backend Reference
             </div>
             <h1>📘 Backend Reference</h1>
-            <p>Google Apps Script - API Endpoints - Database Structure</p>
+            <p>Google Apps Script - API Endpoints - Database Structure — v4.9.0</p>
         </div>
         
         <div class="content">
@@ -214,35 +214,36 @@
 Backend (Google Apps Script)
 │
 ├── 🔀 ROUTER & CORE
-│   ├── Codice.gs                    → doGet(e), doPost(e), switch/case routing
-│   ├── crm_utils.gs                 → Utilities unificate, validation, helpers
-│   ├── crm_email.gs                 → Template email, invio automatico
-│   └── Cache.gs                     → Micro-cache layer (+70% performance)
+│   ├── Codice.js                    → doGet(e), doPost(e), switch/case routing (45+ actions)
+│   ├── crm_utils.js                 → calcolaFiscale, validation, helpers, VERSION
+│   ├── crm_email.js                 → Template email, invio automatico notifiche
+│   └── Cache.js                     → Micro-cache layer (+70% performance, TTL 5m)
 │
 ├── 📊 GESTIONE DATI
-│   ├── Clienti.gs                   → CRUD clienti, search, validation
-│   ├── Timesheet.gs                 → Insert/get timesheet, ore tracking
-│   ├── Pacchetti.gs                 → Gestione pacchetti ore, residui
-│   └── Proforma.gs                  → Generazione proforma, template Docs
+│   ├── Clienti.js                   → CRUD clienti, search, validateClient
+│   ├── Timesheet.js                 → Insert/get timesheet, filtri, get_da_fatturare
+│   ├── Pacchetti.js                 → Gestione pacchetti ore, residui, proforma
+│   ├── Proforma.js                  → Genera proforma PDF, aggiorna, da-pacchetto, LockService
+│   └── Fatture.js                   → Tab Fatture, fattura diretta, multi-proforma, pagamenti
 │
 ├── 💼 VENDITE & PRODOTTI
-│   ├── Canoni.gs                    → Gestione canoni periodici
-│   ├── Firme.gs                     → Gestione firme digitali
-│   └── Rinnovi.gs                   → Sistema rinnovi automatici
+│   ├── Canoni.js                    → Gestione canoni periodici, fatturazione
+│   ├── Firme.js                     → Gestione firme digitali (Token/Remota, 3 anni)
+│   └── Rinnovi.js                   → Sistema rinnovi automatici, chain storico
 │
 ├── 📅 SCADENZE & NOTIFICHE
-│   └── Calendar.gs                  → Google Calendar integration
+│   └── Calendar.js                  → Google Calendar integration, eventi automatici
 │
 └── 🛠️ UTILITIES
-    └── trigger.gs                   → Trigger temporali, automazioni
+    ├── QODNET.js                    → Integrazione QODNET
+    └── Trigger.js                   → Trigger temporali, automazioni
 
-TOTALE: 13 file .gs
+TOTALE: 16 file .js
 </pre>
                 </div>
                 
                 <div class="info-box">
-                    <strong>💡 Nota Refactoring v4.0:</strong> Consolidati utilities (crm_utils.gs + crm_email.gs), 
-                    router unificato in Codice.gs, cache centralizzata. Eliminati ~1.500 righe duplicate.
+                    <strong>💡 v4.9.0:</strong> Aggiunto modulo Fatture.js (tab Fatture con ritenuta, multi-proforma, fattura diretta con link timesheet/canoni). Aggiunta <code>calcolaFiscale()</code> come funzione fiscale centralizzata. LockService per numerazione proforma atomica.
                 </div>
             </div>
             
@@ -447,22 +448,71 @@ TOTALE: 13 file .gs
                             <tr>
                                 <td><code>get_proforma_data</code></td>
                                 <td>cliente, mese, anno</td>
-                                <td>{success:true, timesheet:[], totale_ore:N}</td>
+                                <td>{success:true, timesheet:[], canoni:[], totale_ore:N}</td>
+                            </tr>
+                            <tr>
+                                <td><code>get_proforma_details</code></td>
+                                <td>n_proforma</td>
+                                <td>{success:true, data:{N_Proforma, Nome_Cliente, Importo_Subtotale, Quota_4%, Importo_Totale, ...}}</td>
                             </tr>
                             <tr>
                                 <td><code>genera_proforma</code></td>
-                                <td>cliente, mese, anno</td>
-                                <td>{success:true, docUrl:"...", n_proforma:"..."}</td>
+                                <td>cliente, timesheet_ids (CSV), causale, applica_quota, canoni_ids? (CSV)</td>
+                                <td>{success:true, proforma_number, pdf_file_id, totale}</td>
+                            </tr>
+                            <tr>
+                                <td><code>aggiorna_proforma</code></td>
+                                <td>n_proforma, timesheet_ids (CSV), send_email?</td>
+                                <td>{success:true, nuovoTotale, vociAggiunte}</td>
+                            </tr>
+                            <tr>
+                                <td><code>generate_proforma_pacchetto</code></td>
+                                <td>id_pacchetto, applica_quota?</td>
+                                <td>{success:true, n_proforma, totale, pdf_file_id}</td>
                             </tr>
                             <tr>
                                 <td><code>update_numero_fattura</code></td>
-                                <td>n_proforma, numero_fattura, pagato</td>
-                                <td>{success:true}</td>
+                                <td>n_proforma, numero_fattura, data_fattura?, pagato?</td>
+                                <td>{success:true} — salva in Fatture con calcolo fiscale corretto</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                
+
+                <!-- FATTURE -->
+                <div class="subsection">
+                    <h3 class="subsection-title">🧾 Fatture</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Parametri</th>
+                                <th>Response</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>get_fatture_list</code></td>
+                                <td>cliente?, anno?, pagato?</td>
+                                <td>{success:true, data:[], totali:{count, imponibile, totale, daPagare}}</td>
+                            </tr>
+                            <tr>
+                                <td><code>insert_fattura_diretta</code></td>
+                                <td>n_fattura, data_fattura, cliente, imponibile, descrizione, note?, applica_ritenuta?, timesheet_ids? (CSV), canoni_ids? (CSV)</td>
+                                <td>{success:true, timesheetMarcati:N, canoniMarcati:N}</td>
+                            </tr>
+                            <tr>
+                                <td><code>update_pagamento_fattura</code></td>
+                                <td>n_fattura, pagato (SI/NO), data_pagamento?, note?</td>
+                                <td>{success:true, proformaAggiornata?}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="info-box" style="margin-top:12px;">
+                        <strong>Multi-proforma:</strong> Se la stessa <code>n_fattura</code> viene associata a più proforma via <code>update_numero_fattura</code>, il campo <code>N_Proforma</code> diventa una lista CSV ("1/2026, 2/2026") e gli importi vengono sommati automaticamente. Il pagamento si propaga a tutte le proforma collegate.
+                    </div>
+                </div>
+
                 <!-- VENDITE -->
                 <div class="subsection">
                     <h3 class="subsection-title">💼 Vendite (Canoni/Firme/Pacchetti)</h3>
@@ -544,6 +594,30 @@ function validateClient(nomeCliente) {
 </code></pre>
                 </div>
                 
+                <!-- FISCALE -->
+                <div class="subsection">
+                    <h3 class="subsection-title">crm_utils.js — calcolaFiscale (funzione fiscale centrale)</h3>
+
+                    <div class="warning-box">
+                        <strong>Regola:</strong> Tutti i flussi che calcolano importi fiscali <strong>devono</strong> usare <code>calcolaFiscale</code>. Non calcolare IVA/ritenuta manualmente.
+                    </div>
+
+                    <pre><code>// Formula regime ordinario
+// S → quota=S×4% → imp=S+quota → rit=imp×20% → IVA=imp×22% → lordo=imp+IVA → netto=lordo-rit
+function calcolaFiscale(subtotale, applicaQuota) {
+  const s = Math.round(subtotale * 100) / 100;
+  const quota = applicaQuota ? Math.round(s * 0.04 * 100) / 100 : 0;
+  const imponibile = Math.round((s + quota) * 100) / 100;
+  const ritenuta = Math.round(imponibile * 0.20 * 100) / 100;
+  const iva = Math.round(imponibile * 0.22 * 100) / 100;
+  const lordo = Math.round((imponibile + iva) * 100) / 100;
+  const netto = Math.round((lordo - ritenuta) * 100) / 100;
+  return { subtotale: s, quota, imponibile, ritenuta, iva, lordo, netto };
+}</code></pre>
+
+                    <p style="margin-top: 12px; color: #555;">Nota: <code>Importo_Totale</code> nel foglio Fatture corrisponde a <code>netto</code>.</p>
+                </div>
+
                 <!-- CACHE -->
                 <div class="subsection">
                     <h3 class="subsection-title">Cache.gs - CacheService Google</h3>
@@ -714,6 +788,35 @@ function sendScadenzaEmail(destinatario, tipo, datiProdotto) {
                     </table>
                 </div>
                 
+                <div class="subsection">
+                    <h3 class="subsection-title">Foglio: Fatture (13 colonne)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Col</th>
+                                <th>Nome Campo</th>
+                                <th>Tipo</th>
+                                <th>Descrizione</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>A</td><td>N_Fattura</td><td>String</td><td>Es. 1/A o 2026/001 (formato libero)</td></tr>
+                            <tr><td>B</td><td>Data_Fattura</td><td>Date</td><td>Data emissione</td></tr>
+                            <tr><td>C</td><td>ID_Cliente</td><td>String</td><td>FK → Clienti</td></tr>
+                            <tr><td>D</td><td>Nome_Cliente</td><td>String</td><td>Denormalized</td></tr>
+                            <tr><td>E</td><td>Imponibile</td><td>Number</td><td>Subtotale + Quota 4% (se presente)</td></tr>
+                            <tr><td>F</td><td>IVA_22</td><td>Number</td><td>IVA 22% sull'imponibile</td></tr>
+                            <tr><td>G</td><td>Importo_Totale</td><td>Number</td><td>Netto (lordo − ritenuta)</td></tr>
+                            <tr><td>H</td><td>Descrizione</td><td>String</td><td>Oggetto fattura</td></tr>
+                            <tr><td>I</td><td>N_Proforma</td><td>String</td><td>Numero proforma o lista CSV ("1/2026, 2/2026") per multi-proforma</td></tr>
+                            <tr><td>J</td><td>Pagato</td><td>String</td><td>SI / NO</td></tr>
+                            <tr><td>K</td><td>Data_Pagamento</td><td>Date</td><td>Data incasso</td></tr>
+                            <tr><td>L</td><td>Note</td><td>String</td><td>Note libere</td></tr>
+                            <tr><td>M</td><td>Ritenuta</td><td>Number</td><td>Ritenuta 20% sull'imponibile</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="subsection">
                     <h3 class="subsection-title">Foglio: Firme</h3>
                     <table>
