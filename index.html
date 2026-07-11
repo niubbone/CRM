@@ -1796,16 +1796,32 @@ function toggleOptionalFields() {
   </div>
 </div>
 
-<!-- Modal Aggiungi Voci Proforma -->
+<!-- Modal Modifica Proforma (include aggiunta voci) -->
 <div id="aggiungiVociModal" class="modal" style="display:none;">
   <div class="modal-content" style="max-width:700px;width:95%;">
     <div class="modal-header">
-      <h3>➕ Aggiungi voci a proforma <span id="aggiorna-proforma-numero"></span></h3>
+      <h3>✏️ Modifica proforma <span id="aggiorna-proforma-numero"></span></h3>
       <button class="modal-close" onclick="closeAggiungiVociModal()">&times;</button>
     </div>
     <div class="modal-body">
       <div id="aggiorna-proforma-info" style="background:#f8f9fa;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#495057;"></div>
-      <div id="aggiorna-voci-list" style="max-height:320px;overflow-y:auto;">
+
+      <!-- Sezione: Impostazioni fiscali e causale -->
+      <div style="border:1px solid #dee2e6;border-radius:6px;padding:14px;margin-bottom:16px;">
+        <div style="font-weight:600;font-size:13px;color:#495057;margin-bottom:12px;">Impostazioni fiscali</div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:13px;color:#495057;display:block;margin-bottom:4px;">Causale</label>
+          <input type="text" id="aggiorna-causale" style="width:100%;padding:8px 10px;border:1px solid #ced4da;border-radius:4px;font-size:13px;box-sizing:border-box;" placeholder="Causale proforma">
+        </div>
+        <label style="font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="aggiorna-forfettario">
+          <span><strong>Regime forfettario</strong> — nessuna IVA, nessuna ritenuta d'acconto (art. 1 c. 54-89 L. 190/2014)</span>
+        </label>
+      </div>
+
+      <!-- Sezione: Aggiungi voci (opzionale) -->
+      <div style="font-weight:600;font-size:13px;color:#495057;margin-bottom:8px;">Aggiungi voci timesheet (opzionale)</div>
+      <div id="aggiorna-voci-list" style="max-height:280px;overflow-y:auto;border:1px solid #dee2e6;border-radius:6px;padding:4px;">
         <p style="color:#6c757d;text-align:center;padding:20px;">⏳ Caricamento voci disponibili...</p>
       </div>
       <div id="aggiorna-proforma-info-box" style="display:none;margin-top:12px;padding:10px 14px;background:#e8f5e9;border-radius:6px;font-size:13px;"></div>
@@ -1817,8 +1833,8 @@ function toggleOptionalFields() {
     </div>
     <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:16px;border-top:1px solid #e9ecef;">
       <button class="btn btn-secondary" onclick="closeAggiungiVociModal()">Annulla</button>
-      <button class="btn btn-primary" id="aggiorna-proforma-btn" onclick="confermAAggiungiVoci()" disabled>
-        ✅ Aggiorna proforma
+      <button class="btn btn-primary" id="aggiorna-proforma-btn" onclick="confermAAggiungiVoci()">
+        ✅ Salva modifiche
       </button>
     </div>
   </div>

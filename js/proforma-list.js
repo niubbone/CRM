@@ -264,8 +264,8 @@ function renderProformaList(proformeList) {
                       📄 PDF
                     </a>
                   ` : ''}
-                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}')" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
-                    ➕ Aggiungi voci
+                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}','${(proforma.causale||'').replace(/'/g,"\\'")}')" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
+                    ✏️ Modifica
                   </button>
                   <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex: 2;">
                     📝 Emetti Fattura
@@ -701,14 +701,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let _aggiungiVociState = { nProforma: null, cliente: null, importoCorrente: 0 };
 
-window.openAggiungiVociModal = async function(nProforma, cliente, importoCorrente) {
-  _aggiungiVociState = { nProforma, cliente, importoCorrente: parseFloat(importoCorrente) || 0 };
+window.openAggiungiVociModal = async function(nProforma, cliente, causale, importoCorrente) {
+  _aggiungiVociState = { nProforma, cliente, causale: causale || '', importoCorrente: parseFloat(importoCorrente) || 0 };
 
   document.getElementById('aggiorna-proforma-numero').textContent = nProforma;
   document.getElementById('aggiorna-proforma-info').innerHTML =
-    `Cliente: <strong>${cliente}</strong> &nbsp;|&nbsp; Totale attuale: <strong>€ ${(parseFloat(importoCorrente)||0).toFixed(2)}</strong>`;
+    `Cliente: <strong>${cliente}</strong>`;
+  document.getElementById('aggiorna-causale').value = causale || '';
+  document.getElementById('aggiorna-forfettario').checked = false;
   document.getElementById('aggiorna-proforma-info-box').style.display = 'none';
-  document.getElementById('aggiorna-proforma-btn').disabled = true;
+  document.getElementById('aggiorna-proforma-btn').disabled = false;
   document.getElementById('aggiorna-send-email').checked = false;
 
   const listDiv = document.getElementById('aggiorna-voci-list');
@@ -756,43 +758,49 @@ window.openAggiungiVociModal = async function(nProforma, cliente, importoCorrent
 
 window.aggiornaVociSelezione = function() {
   const checked = document.querySelectorAll('.aggiorna-voce-cb:checked');
-  const btn = document.getElementById('aggiorna-proforma-btn');
   const infoBox = document.getElementById('aggiorna-proforma-info-box');
-  btn.disabled = checked.length === 0;
 
   if (checked.length > 0) {
     const addedCost = Array.from(checked).reduce((sum, cb) => sum + parseFloat(cb.dataset.costo||0), 0);
-    const nuovoTotale = _aggiungiVociState.importoCorrente + addedCost;
     infoBox.style.display = 'block';
-    infoBox.innerHTML = `Voci selezionate: <strong>${checked.length}</strong> &nbsp;|&nbsp; Aggiunta: <strong>+ € ${addedCost.toFixed(2)}</strong> &nbsp;|&nbsp; Nuovo totale stimato: <strong>€ ${nuovoTotale.toFixed(2)}</strong>`;
+    infoBox.innerHTML = `Voci selezionate: <strong>${checked.length}</strong> &nbsp;|&nbsp; Importo aggiunto: <strong>+ € ${addedCost.toFixed(2)}</strong>`;
   } else {
     infoBox.style.display = 'none';
   }
 };
 
 window.confermAAggiungiVoci = async function() {
-  const checked = Array.from(document.querySelectorAll('.aggiorna-voce-cb:checked'));
-  if (!checked.length) return;
-
+  const checked    = Array.from(document.querySelectorAll('.aggiorna-voce-cb:checked'));
   const rowIndexes = checked.map(cb => cb.dataset.rowindex).join(',');
   const sendEmail  = document.getElementById('aggiorna-send-email').checked;
+  const forfettario = document.getElementById('aggiorna-forfettario').checked;
+  const causale    = document.getElementById('aggiorna-causale').value.trim();
+
   const btn = document.getElementById('aggiorna-proforma-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ Aggiornamento...';
+  btn.textContent = '⏳ Salvataggio...';
 
   try {
-    const url = `${CONFIG.APPS_SCRIPT_URL}?action=aggiorna_proforma&n_proforma=${encodeURIComponent(_aggiungiVociState.nProforma)}&timesheet_ids=${rowIndexes}&send_email=${sendEmail}`;
+    let url = `${CONFIG.APPS_SCRIPT_URL}?action=modifica_proforma`
+      + `&n_proforma=${encodeURIComponent(_aggiungiVociState.nProforma)}`
+      + `&forfettario=${forfettario}`
+      + `&causale=${encodeURIComponent(causale)}`
+      + `&send_email=${sendEmail}`;
+    if (rowIndexes) url += `&timesheet_ids=${rowIndexes}`;
+
     const res  = await fetch(url);
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
 
     closeAggiungiVociModal();
-    alert(`✅ Proforma ${data.nProforma} aggiornata!\nVoci aggiunte: ${data.vociAggiunte}\nNuovo totale: € ${data.nuovoTotale}`);
-    // Ricarica lista
+    let msg = `✅ Proforma ${data.nProforma} aggiornata!\nNuovo totale: € ${data.nuovoTotale}`;
+    if (data.forfettario) msg += '\nRegime forfettario applicato (no IVA, no ritenuta)';
+    if (data.vociAggiunte > 0) msg += `\nVoci aggiunte: ${data.vociAggiunte}`;
+    alert(msg);
     if (window.allProformeData !== undefined) loadProformaList();
   } catch(err) {
     btn.disabled = false;
-    btn.textContent = '✅ Aggiorna proforma';
+    btn.textContent = '✅ Salva modifiche';
     alert('❌ Errore: ' + err.message);
   }
 };
