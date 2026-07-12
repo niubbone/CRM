@@ -1825,6 +1825,21 @@ function toggleOptionalFields() {
         <p style="color:#6c757d;text-align:center;padding:20px;">⏳ Caricamento voci disponibili...</p>
       </div>
       <div id="aggiorna-proforma-info-box" style="display:none;margin-top:12px;padding:10px 14px;background:#e8f5e9;border-radius:6px;font-size:13px;"></div>
+
+      <!-- Sezione: Cliente non trovato (appare solo se necessario) -->
+      <div id="aggiorna-cliente-fallback" style="display:none;margin-top:14px;padding:14px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;">
+        <div style="font-weight:600;font-size:13px;color:#856404;margin-bottom:8px;">⚠️ Cliente non trovato nel CRM</div>
+        <div id="aggiorna-cliente-fallback-msg" style="font-size:12px;color:#856404;margin-bottom:10px;"></div>
+        <label style="font-size:13px;color:#495057;display:block;margin-bottom:4px;">Seleziona il cliente corrispondente:</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="aggiorna-cliente-override" list="aggiorna-cliente-override-list"
+            style="flex:1;padding:8px 10px;border:1px solid #ced4da;border-radius:4px;font-size:13px;"
+            placeholder="Cerca cliente...">
+          <datalist id="aggiorna-cliente-override-list"></datalist>
+        </div>
+        <div style="font-size:11px;color:#6c757d;margin-top:6px;">Il nome verrà aggiornato anche nel foglio Proforma per le operazioni future.</div>
+      </div>
+
       <div style="display:flex;align-items:center;gap:10px;margin-top:16px;">
         <label style="font-size:13px;display:flex;align-items:center;gap:6px;">
           <input type="checkbox" id="aggiorna-send-email"> Reinvia email al cliente con PDF aggiornato

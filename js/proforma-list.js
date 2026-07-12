@@ -710,8 +710,19 @@ window.openAggiungiVociModal = async function(nProforma, cliente, causale, impor
   document.getElementById('aggiorna-causale').value = causale || '';
   document.getElementById('aggiorna-forfettario').checked = false;
   document.getElementById('aggiorna-proforma-info-box').style.display = 'none';
+  document.getElementById('aggiorna-cliente-fallback').style.display = 'none';
+  document.getElementById('aggiorna-cliente-override').value = '';
   document.getElementById('aggiorna-proforma-btn').disabled = false;
   document.getElementById('aggiorna-send-email').checked = false;
+
+  // Popola datalist clienti per eventuale selezione override
+  const dl = document.getElementById('aggiorna-cliente-override-list');
+  dl.innerHTML = '';
+  (window.clients || []).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = typeof c === 'string' ? c : (c.name || c.Nome_Cliente || c.nome || '');
+    dl.appendChild(opt);
+  });
 
   const listDiv = document.getElementById('aggiorna-voci-list');
   listDiv.innerHTML = '<p style="color:#6c757d;text-align:center;padding:20px;">⏳ Caricamento voci disponibili...</p>';
@@ -770,11 +781,12 @@ window.aggiornaVociSelezione = function() {
 };
 
 window.confermAAggiungiVoci = async function() {
-  const checked    = Array.from(document.querySelectorAll('.aggiorna-voce-cb:checked'));
-  const rowIndexes = checked.map(cb => cb.dataset.rowindex).join(',');
-  const sendEmail  = document.getElementById('aggiorna-send-email').checked;
-  const forfettario = document.getElementById('aggiorna-forfettario').checked;
-  const causale    = document.getElementById('aggiorna-causale').value.trim();
+  const checked      = Array.from(document.querySelectorAll('.aggiorna-voce-cb:checked'));
+  const rowIndexes   = checked.map(cb => cb.dataset.rowindex).join(',');
+  const sendEmail    = document.getElementById('aggiorna-send-email').checked;
+  const forfettario  = document.getElementById('aggiorna-forfettario').checked;
+  const causale      = document.getElementById('aggiorna-causale').value.trim();
+  const clienteOverride = document.getElementById('aggiorna-cliente-override').value.trim();
 
   const btn = document.getElementById('aggiorna-proforma-btn');
   btn.disabled = true;
@@ -786,15 +798,27 @@ window.confermAAggiungiVoci = async function() {
       + `&forfettario=${forfettario}`
       + `&causale=${encodeURIComponent(causale)}`
       + `&send_email=${sendEmail}`;
-    if (rowIndexes) url += `&timesheet_ids=${rowIndexes}`;
+    if (rowIndexes)      url += `&timesheet_ids=${rowIndexes}`;
+    if (clienteOverride) url += `&cliente_override=${encodeURIComponent(clienteOverride)}`;
 
     const res  = await fetch(url);
     const data = await res.json();
+
+    // Cliente non trovato: mostra sezione selezione nel modal
+    if (!data.success && data.errorCode === 'CLIENT_NOT_FOUND') {
+      document.getElementById('aggiorna-cliente-fallback').style.display = 'block';
+      document.getElementById('aggiorna-cliente-fallback-msg').textContent =
+        `Il cliente "${data.clientName}" non è stato trovato nel CRM (probabilmente rinominato). Seleziona il cliente corrispondente e clicca di nuovo "Salva modifiche".`;
+      btn.disabled = false;
+      btn.textContent = '✅ Salva modifiche';
+      return;
+    }
+
     if (!data.success) throw new Error(data.error);
 
     closeAggiungiVociModal();
     let msg = `✅ Proforma ${data.nProforma} aggiornata!\nNuovo totale: € ${data.nuovoTotale}`;
-    if (data.forfettario) msg += '\nRegime forfettario applicato (no IVA, no ritenuta)';
+    if (data.forfettario) msg += '\nCliente forfettario: ritenuta = 0';
     if (data.vociAggiunte > 0) msg += `\nVoci aggiunte: ${data.vociAggiunte}`;
     alert(msg);
     if (window.allProformeData !== undefined) loadProformaList();
