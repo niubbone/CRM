@@ -275,6 +275,9 @@ function renderProformaList(proformeList) {
                   <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex: 2;">
                     📝 Emetti Fattura
                   </button>
+                  <button onclick="eliminaProformaCard('${proforma.nProforma}')" style="flex:0 0 auto;background:#dc3545;color:#fff;border:none;padding:10px 14px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;" title="Elimina proforma">
+                    🗑️
+                  </button>
                 </div>
               </div>
             ` : proforma.pdfFileId ? `
@@ -836,6 +839,22 @@ window.confermAAggiungiVoci = async function() {
 
 window.closeAggiungiVociModal = function() {
   document.getElementById('aggiungiVociModal').style.display = 'none';
+};
+
+window.eliminaProformaCard = async function(nProforma) {
+  if (!confirm(`Eliminare definitivamente la proforma ${nProforma}?\n\nIl PDF verrà spostato nel cestino Drive e le voci timesheet torneranno disponibili.\nQuesta operazione non può essere annullata.`)) return;
+
+  const API_URL = window.CONFIG?.APPS_SCRIPT_URL || '';
+  if (!API_URL) { alert('❌ API URL non configurato'); return; }
+
+  try {
+    const res  = await fetch(`${API_URL}?action=elimina_proforma&n_proforma=${encodeURIComponent(nProforma)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Errore eliminazione');
+    loadProformaList();
+  } catch(err) {
+    alert('❌ ' + err.message);
+  }
 };
 
 window.reinviaEmailProforma = async function(nProforma) {
