@@ -264,9 +264,14 @@ function renderProformaList(proformeList) {
                       📄 PDF
                     </a>
                   ` : ''}
-                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}','${(proforma.causale||'').replace(/'/g,"\\'")}')" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
+                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}','${(proforma.causale||'').replace(/'/g,"\\'")}',${!!proforma.forfettario})" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
                     ✏️ Modifica
                   </button>
+                  ${proforma.pdfFileId ? `
+                    <button onclick="reinviaEmailProforma('${proforma.nProforma}')" style="flex:1;min-width:120px;background:#6f42c1;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
+                      📧 Invia email
+                    </button>
+                  ` : ''}
                   <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex: 2;">
                     📝 Emetti Fattura
                   </button>
@@ -701,14 +706,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let _aggiungiVociState = { nProforma: null, cliente: null, importoCorrente: 0 };
 
-window.openAggiungiVociModal = async function(nProforma, cliente, causale, importoCorrente) {
+window.openAggiungiVociModal = async function(nProforma, cliente, causale, forfettario, importoCorrente) {
   _aggiungiVociState = { nProforma, cliente, causale: causale || '', importoCorrente: parseFloat(importoCorrente) || 0 };
 
   document.getElementById('aggiorna-proforma-numero').textContent = nProforma;
   document.getElementById('aggiorna-proforma-info').innerHTML =
     `Cliente: <strong>${cliente}</strong>`;
   document.getElementById('aggiorna-causale').value = causale || '';
-  document.getElementById('aggiorna-forfettario').checked = false;
+  document.getElementById('aggiorna-forfettario').checked = !!forfettario;
   document.getElementById('aggiorna-proforma-info-box').style.display = 'none';
   document.getElementById('aggiorna-cliente-fallback').style.display = 'none';
   document.getElementById('aggiorna-cliente-override').value = '';
@@ -831,4 +836,20 @@ window.confermAAggiungiVoci = async function() {
 
 window.closeAggiungiVociModal = function() {
   document.getElementById('aggiungiVociModal').style.display = 'none';
+};
+
+window.reinviaEmailProforma = async function(nProforma) {
+  if (!confirm(`Inviare nuovamente la proforma ${nProforma} via email al cliente?`)) return;
+
+  const API_URL = window.CONFIG?.APPS_SCRIPT_URL || '';
+  if (!API_URL) { alert('❌ API URL non configurato'); return; }
+
+  try {
+    const res  = await fetch(`${API_URL}?action=reinvia_email_proforma&n_proforma=${encodeURIComponent(nProforma)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Errore invio email');
+    alert(`✅ Email inviata per proforma ${nProforma}`);
+  } catch(err) {
+    alert('❌ ' + err.message);
+  }
 };
