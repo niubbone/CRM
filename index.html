@@ -1798,7 +1798,7 @@ function toggleOptionalFields() {
 
 <!-- Modal Modifica Proforma (include aggiunta voci) -->
 <div id="aggiungiVociModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width:700px;width:95%;">
+  <div class="modal-content" style="max-width:700px;width:95%;padding:0 !important;">
     <div class="modal-header">
       <h3>✏️ Modifica proforma <span id="aggiorna-proforma-numero"></span></h3>
       <button class="modal-close" onclick="closeAggiungiVociModal()">&times;</button>
@@ -1846,7 +1846,7 @@ function toggleOptionalFields() {
         </label>
       </div>
     </div>
-    <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:16px;border-top:1px solid #e9ecef;">
+    <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeAggiungiVociModal()">Annulla</button>
       <button class="btn btn-primary" id="aggiorna-proforma-btn" onclick="confermAAggiungiVoci()">
         ✅ Salva modifiche
