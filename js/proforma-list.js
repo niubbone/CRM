@@ -264,12 +264,12 @@ function renderProformaList(proformeList) {
                       📄 PDF
                     </a>
                   ` : ''}
-                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}','${(proforma.causale||'').replace(/'/g,"\\'")}',${!!proforma.forfettario})" style="flex:1;min-width:120px;background:#fd7e14;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
+                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}','${(proforma.causale||'').replace(/'/g,"\\'")}',${!!proforma.forfettario})" style="flex:1;min-width:120px;background:#007bff;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
                     ✏️ Modifica
                   </button>
                   ${proforma.pdfFileId ? `
-                    <button onclick="reinviaEmailProforma('${proforma.nProforma}')" style="flex:1;min-width:120px;background:#6f42c1;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
-                      📧 Invia email
+                    <button onclick="reinviaEmailProforma('${proforma.nProforma}')" style="flex:1;min-width:120px;background:#28a745;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
+                      🛩️ Invia email
                     </button>
                   ` : ''}
                   <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex: 2;">
