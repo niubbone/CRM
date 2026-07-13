@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.9.0';
+export const VERSION = '4.10.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,17 +29,22 @@ export const VERSION = '4.9.0';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'Fiscal Fix Edition',
-  date: '01 Luglio 2026',
-  codename: 'FiscalFix',
+  name: 'Proforma Manager Edition',
+  date: '13 Luglio 2026',
+  codename: 'ProformaManager',
 
   // Changelog corrente versione
   changelog: [
-    'calcolaFiscale() condivisa in crm_utils.js: subtotale→imponibile, ritenuta 20%, IVA 22%, netto',
-    'Fix fattura da proforma: imponibile e ritenuta ora corretti (era double IVA, ritenuta=0)',
-    'Fix aggiornaProforma: N_Proforma letto come Date da Sheets — somma voci ora corretta',
-    'Feat: generateProformaDaPacchetto — proforma da acquisto pacchetto ore (action: generate_proforma_pacchetto)',
-    'Tab Fatture: nuova colonna Ritenuta (migrazione automatica al primo accesso)',
+    'Feat: modal unificato Modifica Proforma (causale + forfettario + voci timesheet aggiuntive)',
+    'Feat: regime forfettario cliente — ritenuta=0, IVA 22% invariata (art. 1 c. 69 L. 190/2014)',
+    'Feat: eliminaProforma — cancellazione fisica con ripristino timesheet e decremento contatore',
+    'Feat: reinviaEmailProforma — reinvio email con PDF già esistente su Drive (senza ricalcolo)',
+    'Fix: corpo email ora rispetta flag forfettario (ritenuta=0 nel riepilogo importi)',
+    'Fix: checkbox forfettario pre-compilata alla riapertura del modal di modifica',
+    'Fix: CLIENT_NOT_FOUND — selector cliente inline nel modal invece di errore bloccante',
+    'UI: Font Awesome 6.5.1 — icone card proforma (pdf, pen, paper-plane, file-invoice, trash)',
+    'UI: bordi card uniformi 2px su tutte le sezioni (proforma, clienti, storico, utility)',
+    'UI: bottoni card proforma standardizzati a verde/blu/rosso',
   ],
   
   // Features principali
@@ -63,6 +68,24 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.10.0",
+    date: "13/07/2026",
+    type: "feature",
+    changes: [
+      "Modal unificato Modifica Proforma: causale, flag forfettario e aggiunta voci timesheet in un'unica interfaccia",
+      "Regime forfettario cliente (art. 1 c. 69 L. 190/2014): ritenuta d'acconto = 0, IVA 22% invariata — flag persistito nel foglio Proforma",
+      "Checkbox forfettario pre-compilata alla riapertura del modal (getProformaList ora espone il campo)",
+      "Gestione cliente rinominato: CLIENT_NOT_FOUND mostra selector inline nel modal + aggiorna record nel foglio",
+      "Elimina proforma: cancellazione fisica riga + PDF nel cestino Drive + ripristino voci timesheet a 'Da fatturare' + decremento contatore L2 se ultima dell'anno",
+      "Reinvia email proforma: invia il PDF già su Drive al cliente senza rigenerare o ricalcolare",
+      "Fix: corpo email rispetta flag forfettario — sendProformaEmail usa calcolaFiscaleForfettario se necessario",
+      "UI: Font Awesome 6.5.1 via CDN — icone card proforma (fa-file-pdf, fa-pen, fa-paper-plane, fa-file-invoice, fa-trash)",
+      "UI: bordi card uniformi a 2px #b0b8c1 in tutte le sezioni (proforma, clienti, storico pacchetti, utility)",
+      "UI: bottoni card proforma standardizzati a tre colori (verde=visualizza/invia, blu=azione, rosso=distruttivo)",
+      "Backend @247 — Proforma.js + crm_email.js + Codice.js"
+    ]
+  },
   {
     version: "4.9.0",
     date: "01/07/2026",
