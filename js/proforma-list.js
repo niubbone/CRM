@@ -260,23 +260,23 @@ function renderProformaList(proformeList) {
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                   ${proforma.pdfFileId ? `
                     <a href="https://drive.google.com/file/d/${proforma.pdfFileId}/view" target="_blank"
-                       style="flex:0 0 auto;background:#28a745;color:white;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
-                      📄 PDF
+                       style="flex:0 0 auto;background:#28a745;color:white;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+                      <i class="fas fa-file-pdf"></i> PDF
                     </a>
                   ` : ''}
-                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}','${(proforma.causale||'').replace(/'/g,"\\'")}',${!!proforma.forfettario})" style="flex:1;min-width:120px;background:#007bff;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
-                    ✏️ Modifica
+                  <button onclick="openAggiungiVociModal('${proforma.nProforma}','${clienteEscaped}','${(proforma.causale||'').replace(/'/g,"\\'")}',${!!proforma.forfettario})" style="flex:1;min-width:120px;background:#007bff;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+                    <i class="fas fa-pen"></i> Modifica
                   </button>
                   ${proforma.pdfFileId ? `
-                    <button onclick="reinviaEmailProforma('${proforma.nProforma}')" style="flex:1;min-width:120px;background:#28a745;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;">
-                      🛩️ Invia email
+                    <button onclick="reinviaEmailProforma('${proforma.nProforma}')" style="flex:1;min-width:120px;background:#28a745;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+                      <i class="fas fa-paper-plane"></i> Invia email
                     </button>
                   ` : ''}
-                  <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex: 2;">
-                    📝 Emetti Fattura
+                  <button class="btn-primary btn-small" onclick="openFatturaModal('${proforma.nProforma}')" style="flex:2;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+                    <i class="fas fa-file-invoice"></i> Emetti Fattura
                   </button>
                   <button onclick="eliminaProformaCard('${proforma.nProforma}')" style="flex:0 0 auto;background:#dc3545;color:#fff;border:none;padding:10px 14px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;" title="Elimina proforma">
-                    🗑️
+                    <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </div>
