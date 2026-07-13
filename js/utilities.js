@@ -542,7 +542,7 @@ function displayIntegrityResults(data) {
                                 </table>
                             </div>
                             <button class="btn btn-warning btn-sm" style="margin-top:8px;" onclick="caricaSuggerimentiOrfane()">
-                                🔍 Carica suggerimenti automatici
+                                <i class="fas fa-magnifying-glass"></i> Carica suggerimenti automatici
                             </button>
                             <span id="orfane-suggerimenti-status" style="margin-left:10px;font-size:13px;"></span>
                         </div>
@@ -868,11 +868,11 @@ function displayLogs(logs) {
     logs.forEach(log => {
         const levelClass = log.level.toLowerCase();
         const levelEmoji = {
-            'INFO': 'ℹ️',
-            'SUCCESS': '✅',
-            'WARNING': '⚠️',
-            'ERROR': '❌'
-        }[log.level] || '📝';
+            'INFO': '<i class="fas fa-circle-info"></i>',
+            'SUCCESS': '<i class="fas fa-circle-check"></i>',
+            'WARNING': '<i class="fas fa-triangle-exclamation"></i>',
+            'ERROR': '<i class="fas fa-circle-xmark"></i>'
+        }[log.level] || '<i class="fas fa-note-sticky"></i>';
         
         html += `
             <div class="log-entry" data-level="${log.level}">
@@ -882,8 +882,8 @@ function displayLogs(logs) {
                 </div>
                 <div class="log-body">
                     <strong>${log.action}</strong>: ${log.message}
-                    ${log.user ? `<br><small>👤 ${log.user}</small>` : ''}
-                    ${log.data ? `<br><small>📊 ${log.data}</small>` : ''}
+                    ${log.user ? `<br><small><i class="fas fa-user"></i> ${log.user}</small>` : ''}
+                    ${log.data ? `<br><small><i class="fas fa-chart-bar"></i> ${log.data}</small>` : ''}
                 </div>
             </div>
         `;

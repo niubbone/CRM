@@ -180,10 +180,10 @@ function renderTimesheetTable(timesheetList) {
             <td>
                 <div class="timesheet-actions">
                     <button class="timesheet-action-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.idIntervento}')" title="Modifica">
-                        ✏️
+                        <i class="fas fa-pen"></i>
                     </button>
                     <button class="timesheet-action-btn" onclick="deleteTimesheetFromList('${ts.idIntervento}', ${ts.rowIndex})" title="Elimina" style="color: #dc3545;">
-                        🗑️
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </td>

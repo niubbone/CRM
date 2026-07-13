@@ -195,7 +195,7 @@ function renderScadenze(data) {
         sezioneCanoni.style.marginBottom = '30px';
         
         const titleCanoni = document.createElement('h3');
-        titleCanoni.textContent = '🔴 Canoni da Rinnovare';
+        titleCanoni.innerHTML = '<i class="fas fa-circle" style="color:#dc3545;font-size:0.65em;vertical-align:middle;margin-right:6px;"></i>Canoni da Rinnovare';
         titleCanoni.style.color = '#dc3545';
         titleCanoni.style.marginBottom = '15px';
         sezioneCanoni.appendChild(titleCanoni);
@@ -284,13 +284,13 @@ function createScadenzaCard(prodotto, isCanoneScaduto = false) {
         if (prodotto.fatturazione === CANONE_FATTURAZIONE.DA_FATTURARE) {
             actionButtons = `
                 <button class="btn-small btn-proforma" onclick="openProformaCanoneModal('${id}')">
-                    📄 Proforma
+                    <i class="fas fa-file"></i> Proforma
                 </button>
             `;
         } else if (prodotto.fatturazione === CANONE_FATTURAZIONE.PROFORMATO) {
             actionButtons = `
                 <button class="btn-small btn-fattura" onclick="openFatturaCanoneModal('${id}')">
-                    🧾 Fattura
+                    <i class="fas fa-receipt"></i> Fattura
                 </button>
             `;
         }
@@ -480,7 +480,7 @@ function openProformaCanoneModal(canoneId) {
         <div id="proformaCanoneModal" class="modal-vendite active">
             <div class="modal-content-vendite" style="max-width: 500px;">
                 <div class="modal-header-vendite">
-                    <span>📄 Emetti Proforma Canone</span>
+                    <span><i class="fas fa-file"></i> Emetti Proforma Canone</span>
                     <button class="modal-close-vendite" onclick="closeProformaCanoneModal()">✕</button>
                 </div>
                 <div class="modal-body">
@@ -498,7 +498,7 @@ function openProformaCanoneModal(canoneId) {
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                         <button class="btn-secondary" onclick="closeProformaCanoneModal()">Annulla</button>
-                        <button class="btn-primary" id="proforma-canone-submit" onclick="submitProformaCanone()">📄 Genera Proforma</button>
+                        <button class="btn-primary" id="proforma-canone-submit" onclick="submitProformaCanone()"><i class="fas fa-file"></i> Genera Proforma</button>
                     </div>
                 </div>
             </div>
@@ -521,8 +521,8 @@ async function submitProformaCanone() {
     const submitBtn = document.getElementById('proforma-canone-submit');
     
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Elaborazione...';
-    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Elaborazione...';
+
     try {
         const url = `${getAPIUrl()}?action=update_fatturazione_canone&canone_id=${encodeURIComponent(canoneId)}&fatturazione=${encodeURIComponent(CANONE_FATTURAZIONE.PROFORMATO)}`;
         
@@ -542,7 +542,7 @@ async function submitProformaCanone() {
         alert('❌ Errore: ' + error.message);
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = '📄 Genera Proforma';
+        submitBtn.innerHTML = '<i class="fas fa-file"></i> Genera Proforma';
     }
 }
 
@@ -564,7 +564,7 @@ function openFatturaCanoneModal(canoneId) {
         <div id="fatturaCanoneModal" class="modal-vendite active">
             <div class="modal-content-vendite" style="max-width: 450px;">
                 <div class="modal-header-vendite">
-                    <span>🧾 Registra Fattura Canone</span>
+                    <span><i class="fas fa-receipt"></i> Registra Fattura Canone</span>
                     <button class="modal-close-vendite" onclick="closeFatturaCanoneModal()">✕</button>
                 </div>
                 <div class="modal-body">
@@ -589,7 +589,7 @@ function openFatturaCanoneModal(canoneId) {
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                         <button class="btn-secondary" onclick="closeFatturaCanoneModal()">Annulla</button>
-                        <button class="btn-primary" id="fattura-canone-submit" onclick="submitFatturaCanone()">🧾 Salva Fattura</button>
+                        <button class="btn-primary" id="fattura-canone-submit" onclick="submitFatturaCanone()"><i class="fas fa-receipt"></i> Salva Fattura</button>
                     </div>
                 </div>
             </div>
@@ -619,7 +619,7 @@ async function submitFatturaCanone() {
     
     const submitBtn = document.getElementById('fattura-canone-submit');
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Salvataggio...';
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvataggio...';
     
     try {
         // Formatta: "N.23/A del 15/01/2026"
@@ -644,7 +644,7 @@ async function submitFatturaCanone() {
         alert('❌ Errore: ' + error.message);
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = '🧾 Salva Fattura';
+        submitBtn.innerHTML = '<i class="fas fa-receipt"></i> Salva Fattura';
     }
 }
 
@@ -776,7 +776,7 @@ function showProformaFromPacchettoModal(pacchettoData) {
         <div id="proformaFromPacchettoModal" class="modal active">
             <div class="modal-content" style="max-width: 500px;">
                 <div class="modal-header">
-                    <h2>📄 Genera Proforma</h2>
+                    <h2><i class="fas fa-file"></i> Genera Proforma</h2>
                     <button class="close-btn" onclick="closeProformaFromPacchettoModal()">✕</button>
                 </div>
                 <div class="modal-body">
@@ -800,7 +800,7 @@ function showProformaFromPacchettoModal(pacchettoData) {
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
                         <button class="btn-secondary" onclick="closeProformaFromPacchettoModal()">Salta</button>
-                        <button class="btn-primary" onclick="generateProformaFromPacchetto('${pacchettoData.id_pacchetto}')">📄 Genera Proforma</button>
+                        <button class="btn-primary" onclick="generateProformaFromPacchetto('${pacchettoData.id_pacchetto}')"><i class="fas fa-file"></i> Genera Proforma</button>
                     </div>
                 </div>
             </div>
@@ -917,7 +917,7 @@ function renderCanoni(canoni) {
     let html = '';
     Object.keys(gruppi).sort().forEach(cliente => {
         html += `<div class="storico-gruppo">
-            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+            <div class="storico-gruppo-header"><i class="fas fa-user"></i> ${cliente}</div>`;
 
         gruppi[cliente].forEach(c => {
             const isAttivo   = (c.stato || '').toUpperCase() === 'ATTIVO';
@@ -963,7 +963,7 @@ function renderCanoni(canoni) {
                 <div class="storico-actions">
                     <button class="btn-small btn-storico-detail"
                         onclick="openRinnovoModal('${c.idCanone}', 'CANONE')">
-                        🔄 Rinnova
+                        <i class="fas fa-arrows-rotate"></i> Rinnova
                     </button>
                 </div>` : ''}
             </div>`;
@@ -1089,13 +1089,13 @@ function renderFirme(firme) {
             ${f.note ? `<div class="storico-date">${f.note}</div>` : ''}
             ${f.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${f.idPrecedente}</div>` : ''}
             ${f.nFattura
-                ? `<div class="storico-date">🧾 Fattura: <strong>${f.nFattura}</strong>${f.dataFattura ? ' — ' + f.dataFattura : ''}</div>`
-                : (isAttivo ? `<div class="storico-actions"><button class="btn-small" style="background:#e8f4fd;color:#0c63e4;" onclick="openFirmaFatturaModal('${f.idFirma}', '${f.nomeCliente}', '${f.tipo}')">📋 Registra fattura</button></div>` : '')}
+                ? `<div class="storico-date"><i class="fas fa-receipt"></i> Fattura: <strong>${f.nFattura}</strong>${f.dataFattura ? ' — ' + f.dataFattura : ''}</div>`
+                : (isAttivo ? `<div class="storico-actions"><button class="btn-small" style="background:#e8f4fd;color:#0c63e4;" onclick="openFirmaFatturaModal('${f.idFirma}', '${f.nomeCliente}', '${f.tipo}')"><i class="fas fa-clipboard"></i> Registra fattura</button></div>` : '')}
             ${isAttivo ? `
             <div class="storico-actions">
                 <button class="btn-small btn-storico-detail"
                     onclick="openRinnovoModal('${f.idFirma}', 'FIRMA')">
-                    🔄 Rinnova
+                    <i class="fas fa-arrows-rotate"></i> Rinnova
                 </button>
             </div>` : ''}
         </div>`;
@@ -1185,7 +1185,7 @@ function renderStorico(pacchetti) {
     let html = '';
     Object.keys(gruppi).sort().forEach(cliente => {
         html += `<div class="storico-gruppo">
-            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+            <div class="storico-gruppo-header"><i class="fas fa-user"></i> ${cliente}</div>`;
         gruppi[cliente].forEach(p => {
             const statoClass = p.stato.toUpperCase() === 'ATTIVO'    ? 'attivo'
                              : p.stato.toUpperCase() === 'TERMINATO' ? 'terminato'
@@ -1230,7 +1230,7 @@ function renderStorico(pacchetti) {
                 <div class="storico-actions">
                     <button class="btn-small btn-storico-detail"
                         onclick="openPacchettoDettaglio('${p.idPacchetto}', '${(p.descrizione || p.idPacchetto).replace(/'/g,"\\'")}', {nomeCliente:'${p.nomeCliente.replace(/'/g,"\\'")}',oreAcquistate:${p.oreAcquistate},dataAcquisto:'${p.dataAcquisto}',dataScadenza:'${p.dataScadenza}'})">
-                        📋 Dettaglio interventi
+                        <i class="fas fa-list"></i> Dettaglio interventi
                     </button>
                 </div>
             </div>`;
@@ -1648,7 +1648,7 @@ function renderQodnet(lista) {
     let html = '';
     Object.keys(gruppi).sort().forEach(cliente => {
         html += `<div class="storico-gruppo">
-            <div class="storico-gruppo-header">👤 ${cliente}</div>`;
+            <div class="storico-gruppo-header"><i class="fas fa-user"></i> ${cliente}</div>`;
 
         gruppi[cliente].forEach(q => {
             const stato = (q.stato || '').toLowerCase();
@@ -1660,7 +1660,7 @@ function renderQodnet(lista) {
                 if (q.giorniAllaScadenza < 0) {
                     scadenzaInfo = `<span style="color:#dc3545;">Scaduto da ${Math.abs(q.giorniAllaScadenza)} giorni</span>`;
                 } else if (q.giorniAllaScadenza <= 30) {
-                    scadenzaInfo = `<span style="color:#dc3545;">⚠️ Scade tra ${q.giorniAllaScadenza} giorni</span>`;
+                    scadenzaInfo = `<span style="color:#dc3545;"><i class="fas fa-triangle-exclamation"></i> Scade tra ${q.giorniAllaScadenza} giorni</span>`;
                 } else if (q.giorniAllaScadenza <= 60) {
                     scadenzaInfo = `<span style="color:#fd7e14;">Scade tra ${q.giorniAllaScadenza} giorni</span>`;
                 } else {
@@ -1675,11 +1675,11 @@ function renderQodnet(lista) {
             const actionsHtml = isAttivo ? `
             <div class="storico-actions">
                 <button class="btn-small btn-storico-detail" onclick="openQodnetRinnovoModal('${q.id}')">
-                    🔄 Rinnova
+                    <i class="fas fa-arrows-rotate"></i> Rinnova
                 </button>
                 <button class="btn-small" style="background:#f0f0f0;color:#555;"
                     onclick="updateStatoQodnet('${q.id}','Incorporato')">
-                    📥 Incorporato
+                    <i class="fas fa-inbox"></i> Incorporato
                 </button>
             </div>` : '';
 

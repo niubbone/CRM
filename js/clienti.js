@@ -84,7 +84,7 @@ function displaySearchResults(clienti) {
     clienti.forEach(cliente => {
         const isAttivo = cliente.attivo === 'SI';
         const statusClass = isAttivo ? 'attivo' : 'non-attivo';
-        const statusText = isAttivo ? '✅ Attivo' : '❌ Non Attivo';
+        const statusText = isAttivo ? '<i class="fas fa-circle-check"></i> Attivo' : '<i class="fas fa-circle-xmark"></i> Non Attivo';
         
         html += `
             <div class="cliente-card">
@@ -93,21 +93,21 @@ function displaySearchResults(clienti) {
                     <span class="cliente-card-status ${statusClass}">${statusText}</span>
                 </div>
                 <div class="cliente-card-body">
-                    ${cliente.id ? `<div class="cliente-card-info">🆔 ${cliente.id}</div>` : ''}
-                    ${cliente.email ? `<div class="cliente-card-info">📧 ${cliente.email}</div>` : ''}
-                    ${cliente.piva ? `<div class="cliente-card-info">🏢 P.IVA: ${cliente.piva}</div>` : ''}
-                    ${cliente.cf ? `<div class="cliente-card-info">📄 CF: ${cliente.cf}</div>` : ''}
-                    ${cliente.citta ? `<div class="cliente-card-info">📍 ${cliente.citta}</div>` : ''}
+                    ${cliente.id ? `<div class="cliente-card-info"><i class="fas fa-fingerprint"></i> ${cliente.id}</div>` : ''}
+                    ${cliente.email ? `<div class="cliente-card-info"><i class="fas fa-envelope"></i> ${cliente.email}</div>` : ''}
+                    ${cliente.piva ? `<div class="cliente-card-info"><i class="fas fa-building"></i> P.IVA: ${cliente.piva}</div>` : ''}
+                    ${cliente.cf ? `<div class="cliente-card-info"><i class="fas fa-id-card"></i> CF: ${cliente.cf}</div>` : ''}
+                    ${cliente.citta ? `<div class="cliente-card-info"><i class="fas fa-location-dot"></i> ${cliente.citta}</div>` : ''}
                 </div>
                 <div class="cliente-card-actions" style="display: flex; gap: 8px; padding: 10px 15px; border-top: 1px solid #eee; justify-content: flex-end;">
                     <button class="btn-small btn-primary" onclick="event.stopPropagation(); loadClienteDetail('${cliente.id}')" title="Apri riepilogo cliente" style="font-size:12px;padding:4px 10px;">
-                        🔍 Dettaglio
+                        <i class="fas fa-magnifying-glass"></i> Dettaglio
                     </button>
                     <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickViewCliente('${cliente.id}')" title="Visualizza dati anagrafici" style="font-size:12px;padding:4px 10px;">
-                        👁️ Anagrafica
+                        <i class="fas fa-eye"></i> Anagrafica
                     </button>
                     <button class="btn-small btn-secondary" onclick="event.stopPropagation(); quickEditCliente('${cliente.id}')" title="Modifica cliente" style="font-size:12px;padding:4px 10px;">
-                        ✏️ Modifica
+                        <i class="fas fa-pen"></i> Modifica
                     </button>
                 </div>
             </div>
@@ -274,7 +274,7 @@ async function saveClienteChanges(event) {
     }
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Salvataggio...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvataggio...';
     }
     
     const isNew = currentCliente && currentCliente.isNew;
@@ -362,7 +362,7 @@ async function saveClienteChanges(event) {
         const submitBtn = document.querySelector('#cliente-form button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = '💾 Salva Modifiche';
+            submitBtn.innerHTML = '<i class="fas fa-floppy-disk"></i> Salva Modifiche';
         }
     }
 }
@@ -524,12 +524,12 @@ function _renderProdottoItem(prodotto) {
             ${prodotto.tipo === 'Pacchetto' ? `
             <div class="prodotto-actions">
                 <button class="btn btn-sm btn-secondary" onclick="openPacchettoDettaglio('${prodotto.id}', '${(prodotto.descrizione||'Pacchetto').replace(/'/g,"\\'")}', {nomeCliente:'${(prodotto.nomeCliente||'').replace(/'/g,"\\'")}',oreAcquistate:${prodotto.oreAcquistate||0},dataAcquisto:'${prodotto.dataInizio||''}',dataScadenza:'${prodotto.dataScadenza||''}'})">
-                    📋 Dettaglio interventi
+                    <i class="fas fa-list"></i> Dettaglio interventi
                 </button>
             </div>` : prodotto.canRenew ? `
             <div class="prodotto-actions">
                 <button class="btn btn-sm btn-primary" onclick="renewProduct('${prodotto.id}', '${prodotto.tipo}')">
-                    🔄 Rinnova
+                    <i class="fas fa-arrows-rotate"></i> Rinnova
                 </button>
             </div>` : ''}
         </div>
@@ -560,7 +560,7 @@ function displayClienteProdotti(prodotti) {
     if (canoniEFirme.length > 0) {
         html += `<div style="margin-bottom:8px;">
             <div style="font-size:13px;font-weight:700;color:#198754;margin-bottom:8px;padding:6px 10px;background:#e8f5ee;border-radius:6px;border-left:3px solid #28a745;">
-                💰 Canoni & Firme Attivi (${canoniEFirme.length})
+                <i class="fas fa-coins"></i> Canoni & Firme Attivi (${canoniEFirme.length})
             </div>`;
         canoniEFirme.forEach(p => { html += _renderProdottoItem(p); });
         html += `</div>`;
@@ -571,7 +571,7 @@ function displayClienteProdotti(prodotti) {
         if (canoniEFirme.length > 0) html += `<hr style="margin:12px 0;border:none;border-top:1px solid #e9ecef;">`;
         html += `<div style="margin-bottom:8px;">
             <div style="font-size:13px;font-weight:700;color:#6f42c1;margin-bottom:8px;padding:6px 10px;background:#f0ebff;border-radius:6px;border-left:3px solid #6f42c1;">
-                📦 Pacchetti Ore (${pacchetti.length})
+                <i class="fas fa-box"></i> Pacchetti Ore (${pacchetti.length})
             </div>`;
         pacchetti.forEach(p => { html += _renderProdottoItem(p); });
         html += `</div>`;
@@ -588,11 +588,11 @@ function displayClienteProdotti(prodotti) {
  */
 function getEmojiForType(tipo) {
     const emojis = {
-        'Pacchetto': '📦',
-        'Canone': '💰',
-        'Firma': '✍️'
+        'Pacchetto': '<i class="fas fa-box"></i>',
+        'Canone': '<i class="fas fa-coins"></i>',
+        'Firma': '<i class="fas fa-signature"></i>'
     };
-    return emojis[tipo] || '📄';
+    return emojis[tipo] || '<i class="fas fa-file"></i>';
 }
 
 // =======================================================================
@@ -689,20 +689,20 @@ function displayClienteTimesheet(timesheet) {
                 <td>${ts.tipoIntervento}</td>
                 <td style="text-align:right;">${parseFloat(ts.costo).toFixed(2)}</td>
                 <td class="actions-column" style="white-space:nowrap;">
-                    <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')">✏️</button>
+                    <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')"><i class="fas fa-pen"></i></button>
                     ${(isErrore || hasExtra) ? `
                       <button class="timesheet-edit-btn" style="background:#28a745;color:#fff;margin-left:4px;"
                         onclick="${isErrore ? `convertiDaFatturare(${ts.rowIndex})` : `convertiExtraDaFatturare(${ts.rowIndex},${ts.oreExtra})`}"
-                        title="Converti in Da fatturare">💶</button>
+                        title="Converti in Da fatturare"><i class="fas fa-euro-sign"></i></button>
                       <button class="timesheet-edit-btn" style="background:#1976D2;color:#fff;margin-left:4px;"
                         onclick="apriScalaInPacchetto(${ts.rowIndex},${oreActionabili})"
-                        title="Scala in un pacchetto esistente">📦</button>
+                        title="Scala in un pacchetto esistente"><i class="fas fa-box"></i></button>
                       ${hasExtra ? `<button class="timesheet-edit-btn" style="background:#6f42c1;color:#fff;margin-left:4px;"
                         onclick="abbuonaOreExtra(${ts.rowIndex},${ts.oreExtra},'${ts.idPacchetto || ''}')"
-                        title="Ore extra in omaggio">🎁</button>` : ''}` : `
+                        title="Ore extra in omaggio"><i class="fas fa-gift"></i></button>` : ''}` : `
                       <button class="timesheet-edit-btn" style="background:#fd7e14;color:#fff;margin-left:4px;"
                         onclick="segnaPagatoContanti(${ts.rowIndex})"
-                        title="Segna come pagato in contanti">💵</button>`}
+                        title="Segna come pagato in contanti"><i class="fas fa-money-bill-wave"></i></button>`}
                 </td>
             </tr>
         `;
@@ -1095,10 +1095,10 @@ async function editTimesheet(rowIndex, idIntervento) {
         }
 
         // Titolo modale
-        document.querySelector('#edit-timesheet-modal h2').textContent =
-            mode === 'extra'  ? '💶 Gestisci ore extra' :
-            mode === 'errore' ? '⚠️ Converti in Da fatturare' :
-            '✏️ Modifica Timesheet';
+        document.querySelector('#edit-timesheet-modal h2').innerHTML =
+            mode === 'extra'  ? '<i class="fas fa-euro-sign"></i> Gestisci ore extra' :
+            mode === 'errore' ? '<i class="fas fa-triangle-exclamation"></i> Converti in Da fatturare' :
+            '<i class="fas fa-pen"></i> Modifica Timesheet';
 
         // Mostra il modal
         document.getElementById('edit-timesheet-modal').style.display = 'flex';
@@ -1116,7 +1116,7 @@ function closeEditTimesheetModal() {
     document.getElementById('edit-timesheet-modal').style.display = 'none';
     document.getElementById('ts-extra-mode').value = '';
     document.getElementById('ts-extra-banner').style.display = 'none';
-    document.querySelector('#edit-timesheet-modal h2').textContent = '✏️ Modifica Timesheet';
+    document.querySelector('#edit-timesheet-modal h2').innerHTML = '<i class="fas fa-pen"></i> Modifica Timesheet';
     currentTimesheetData = null;
 }
 
@@ -1130,7 +1130,7 @@ async function saveTimesheetChanges(event) {
     if (submitBtn && submitBtn.disabled) return;
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Salvataggio...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvataggio...';
     }
     
     try {
@@ -1208,7 +1208,7 @@ async function saveTimesheetChanges(event) {
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = '💾 Salva Modifiche';
+            submitBtn.innerHTML = '<i class="fas fa-floppy-disk"></i> Salva Modifiche';
         }
     }
 }
@@ -1345,7 +1345,7 @@ async function openPacchettoDettaglio(idPacchetto, descrizione, meta) {
     const content = document.getElementById('pacchetto-dettaglio-content');
     if (!modal) return;
 
-    title.textContent = '📋 ' + (descrizione || idPacchetto);
+    title.innerHTML = '<i class="fas fa-list"></i> ' + (descrizione || idPacchetto);
     content.innerHTML = '<p style="padding:20px;text-align:center;">⏳ Caricamento interventi...</p>';
     modal.style.display = 'flex';
 
@@ -1507,7 +1507,7 @@ async function eseguiScalaExtra() {
     if (!idPacchetto) { alert('Seleziona un pacchetto'); return; }
 
     const btn = document.getElementById('scala-extra-confirm');
-    btn.disabled = true; btn.textContent = '⏳ ...';
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
         const url = `${CONFIG.APPS_SCRIPT_URL}?action=scala_extra_in_pacchetto&row_index=${rowIndex}&id_pacchetto=${encodeURIComponent(idPacchetto)}&ore_extra=${oreActionabili}`;
         const response = await fetch(url);
@@ -1522,7 +1522,7 @@ async function eseguiScalaExtra() {
     } catch(err) {
         alert('❌ Errore: ' + err.message);
     } finally {
-        btn.disabled = false; btn.textContent = '📦 Scala';
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-box"></i> Scala';
     }
 }
 
@@ -1731,9 +1731,9 @@ async function loadClienteMovimenti(clienteId, nomeCliente) {
     const contentDiv = document.getElementById('cliente-movimenti-content');
     const titleEl = document.getElementById('cliente-movimenti-title');
     if (titleEl) {
-        titleEl.textContent = clienteId && nomeCliente
-            ? `📋 Ultimi Movimenti — ${nomeCliente}`
-            : '📋 Ultimi Movimenti';
+        titleEl.innerHTML = clienteId && nomeCliente
+            ? `<i class="fas fa-list"></i> Ultimi Movimenti — ${nomeCliente}`
+            : '<i class="fas fa-list"></i> Ultimi Movimenti';
     }
     contentDiv.innerHTML = '<p style="padding:10px;color:#6c757d;">⏳ Caricamento...</p>';
     try {

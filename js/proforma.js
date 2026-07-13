@@ -459,7 +459,7 @@ async function loadProformaList() {
     if (proformaList.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">📄</div>
+          <div class="empty-state-icon"><i class="fas fa-file" style="font-size:3em;color:#dee2e6;"></i></div>
           <p><strong>Nessuna proforma trovata</strong></p>
           <p>Non ci sono proforma${filtroCliente ? ' per questo cliente' : ' nel sistema'}</p>
         </div>
@@ -473,13 +473,13 @@ async function loadProformaList() {
       let statoClass = '';
       
       if (proforma.stato === 'Pagata') {
-        statoBadge = '✅ Pagata';
+        statoBadge = '<i class="fas fa-circle-check"></i> Pagata';
         statoClass = 'badge-success';
       } else if (proforma.stato === 'Fatturata') {
-        statoBadge = '📋 Fatturata';
+        statoBadge = '<i class="fas fa-file-invoice"></i> Fatturata';
         statoClass = 'badge-warning';
       } else {
-        statoBadge = '📄 Proforma';
+        statoBadge = '<i class="fas fa-file"></i> Proforma';
         statoClass = 'badge-info';
       }
       
@@ -529,8 +529,8 @@ async function loadProformaList() {
             ` : ''}
           </div>
           <div class="proforma-footer">
-            <a href="${proforma.pdfUrl}" target="_blank" class="btn-secondary">
-              📄 Visualizza PDF
+            <a href="${proforma.pdfUrl}" target="_blank" class="btn-secondary" style="display:inline-flex;align-items:center;gap:6px;">
+              <i class="fas fa-file-pdf"></i> Visualizza PDF
             </a>
             ${actionBtn}
           </div>
@@ -723,7 +723,7 @@ async function submitProformaDiretta(event) {
     infoEl.innerHTML = `<div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:6px;padding:12px;color:#721c24;">❌ ${err.message}</div>`;
   } finally {
     btn.disabled = false;
-    btn.textContent = '📋 Genera Proforma';
+    btn.innerHTML = '<i class="fas fa-file"></i> Genera Proforma';
   }
 }
 

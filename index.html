@@ -260,12 +260,12 @@
 </script>
 
 <div class="tabs">
-    <button class="tab-button active" onclick="switchTab('timesheet')">⏱️ <span class="tab-label">Timesheet</span></button>
-    <button class="tab-button" onclick="switchTab('proforma')">📄 <span class="tab-label">Proforma</span></button>
-    <button class="tab-button" onclick="switchTab('fatture')">🧾 <span class="tab-label">Fatture</span></button>
-    <button class="tab-button" onclick="switchTab('vendite')">🛒 <span class="tab-label">Vendite</span></button>
-    <button class="tab-button" onclick="switchTab('clienti')">👥 <span class="tab-label">Clienti</span><span id="clienti-extra-badge" style="display:none;background:#dc3545;color:#fff;border-radius:50%;font-size:11px;font-weight:bold;padding:1px 6px;margin-left:5px;vertical-align:middle;"></span></button>
-    <button class="tab-button" onclick="switchTab('utilities')">⚙️ <span class="tab-label">Utilities</span></button>
+    <button class="tab-button active" onclick="switchTab('timesheet')"><i class="fas fa-stopwatch"></i> <span class="tab-label">Timesheet</span></button>
+    <button class="tab-button" onclick="switchTab('proforma')"><i class="fas fa-file"></i> <span class="tab-label">Proforma</span></button>
+    <button class="tab-button" onclick="switchTab('fatture')"><i class="fas fa-receipt"></i> <span class="tab-label">Fatture</span></button>
+    <button class="tab-button" onclick="switchTab('vendite')"><i class="fas fa-cart-shopping"></i> <span class="tab-label">Vendite</span></button>
+    <button class="tab-button" onclick="switchTab('clienti')"><i class="fas fa-users"></i> <span class="tab-label">Clienti</span><span id="clienti-extra-badge" style="display:none;background:#dc3545;color:#fff;border-radius:50%;font-size:11px;font-weight:bold;padding:1px 6px;margin-left:5px;vertical-align:middle;"></span></button>
+    <button class="tab-button" onclick="switchTab('utilities')"><i class="fas fa-gear"></i> <span class="tab-label">Utilities</span></button>
 </div>
 
 <!-- TAB TIMESHEET -->
@@ -350,7 +350,7 @@
             
             <input type="submit" id="submit-btn" value="Salva Timesheet">
             <button type="button" class="btn-secondary" id="view-timesheet-list-btn" onclick="openTimesheetListModal()" style="margin-top: 15px; width: 100%;">
-                📋 Visualizza Elenco Timesheet
+                <i class="fas fa-list"></i> Visualizza Elenco Timesheet
             </button>
 
             
@@ -364,7 +364,7 @@
         <h1>Genera Proforma</h1>
         
         <div id="proforma-info-box" class="info-box">
-            <p>📄 Seleziona un cliente per iniziare</p>
+            <p><i class="fas fa-file"></i> Seleziona un cliente per iniziare</p>
         </div>
         
         <div class="proforma-steps">
@@ -482,21 +482,21 @@
                 
                 <div class="btn-row">
                     <button onclick="showProformaStep(2)" class="btn-secondary">← Indietro</button>
-                    <button id="generate-proforma-final-btn" onclick="generateProformaFinal()" class="btn-primary">📄 Genera e Invia Proforma</button>
+                    <button id="generate-proforma-final-btn" onclick="generateProformaFinal()" class="btn-primary"><i class="fas fa-file"></i> Genera e Invia Proforma</button>
                 </div>
             </div>
             
         </div>
 <div id="gestione-proforma-section" class="proforma-management-section">
-  <h3>📋 Gestione Proforma e Fatture</h3>
+  <h3><i class="fas fa-list"></i> Gestione Proforma e Fatture</h3>
   
   <!-- Nav tabs interna -->
   <div class="proforma-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e9ecef;">
     <button class="proforma-tab-btn active" onclick="switchProformaView('lista')">
-      📄 Proforma Emesse
+      <i class="fas fa-file"></i> Proforma Emesse
     </button>
     <button class="proforma-tab-btn" onclick="switchProformaView('proforma-diretta')">
-      📋 Proforma Diretta
+      <i class="fas fa-pen-to-square"></i> Proforma Diretta
     </button>
   </div>
   
@@ -510,9 +510,9 @@
       </select>
       <select id="filter-stato-proforma" onchange="filterProformaLocal()" style="min-width: 140px;">
         <option value="">Tutti gli stati</option>
-        <option value="Proforma">📋 Non fatturata</option>
-        <option value="Fatturata">✅ Fatturata</option>
-        <option value="Pagata">💰 Pagata</option>
+        <option value="Proforma">Non fatturata</option>
+        <option value="Fatturata">Fatturata</option>
+        <option value="Pagata">Pagata</option>
       </select>
       <button onclick="resetProformaFilters()" style="padding:10px 14px;background:#e74c3c;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;" title="Reimposta tutti i filtri">✕ Reset</button>
     </div>
@@ -525,7 +525,7 @@
   <!-- Vista Proforma Diretta -->
   <div id="proforma-diretta-view" class="proforma-view" style="display: none;">
     <div class="info-banner" style="margin-bottom: 20px;">
-      <strong>📋 Proforma Diretta:</strong> Genera proforma ad importo libero senza selezionare interventi.
+      <strong><i class="fas fa-pen-to-square"></i> Proforma Diretta:</strong> Genera proforma ad importo libero senza selezionare interventi.
       Se è per un pacchetto ore, spunta l'apposita opzione: il pacchetto verrà creato automaticamente alla conferma del pagamento.
     </div>
 
@@ -579,7 +579,7 @@
       </div>
 
       <div style="display:flex;gap:10px;margin-top:8px;">
-        <button type="submit" class="btn btn-primary" style="flex:1;" id="pd-submit-btn">📋 Genera Proforma</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;" id="pd-submit-btn"><i class="fas fa-file"></i> Genera Proforma</button>
         <button type="button" class="btn btn-secondary" onclick="resetProformaDiretta()">Reset</button>
       </div>
 
@@ -600,7 +600,7 @@
 <!-- TAB FATTURE -->
 <div id="fatture-tab" class="tab-content">
   <div class="form-container">
-    <h1>🧾 Fatture Emesse</h1>
+    <h1><i class="fas fa-receipt"></i> Fatture Emesse</h1>
     <div class="info-box"><p>Fatture emesse con filtri per cliente, anno e stato.</p></div>
   </div>
   <div id="fatture-totali" style="margin-bottom:16px;"></div>
@@ -637,7 +637,7 @@
   <div id="nuova-fattura-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:12px;padding:24px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="margin:0;">➕ Nuova Fattura Diretta</h3>
+        <h3 style="margin:0;"><i class="fas fa-plus"></i> Nuova Fattura Diretta</h3>
         <button onclick="closeNuovaFatturaModal()" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
       </div>
       <div style="margin-bottom:14px;">
@@ -660,7 +660,7 @@
       <div style="margin-bottom:14px;" id="nf-voci-section">
         <button type="button" onclick="caricaVociFatturaDiretta()" id="nf-carica-btn"
           style="width:100%;padding:8px 12px;background:#f8f9fa;border:1px dashed #adb5bd;border-radius:6px;font-size:13px;color:#495057;cursor:pointer;text-align:left;">
-          ➕ Collega timesheet / canoni (opzionale)
+          <i class="fas fa-plus"></i> Collega timesheet / canoni (opzionale)
         </button>
         <div id="nf-voci-container" style="display:none;margin-top:8px;">
           <div id="nf-voci-list" style="border:1px solid #e9ecef;border-radius:6px;max-height:200px;overflow-y:auto;font-size:13px;"></div>
@@ -697,7 +697,7 @@
       </div>
       <div style="display:flex;gap:10px;">
         <button onclick="closeNuovaFatturaModal()" style="flex:1;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;">Annulla</button>
-        <button id="nf-submit-btn" onclick="saveNuovaFattura(event)" style="flex:2;padding:10px;background:#1976D2;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;">💾 Salva Fattura</button>
+        <button id="nf-submit-btn" onclick="saveNuovaFattura(event)" style="flex:2;padding:10px;background:#1976D2;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;"><i class="fas fa-floppy-disk"></i> Salva Fattura</button>
       </div>
     </div>
   </div>
@@ -706,7 +706,7 @@
   <div id="pagamento-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:12px;padding:24px;width:90%;max-width:380px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="margin:0;">💳 Registra Pagamento</h3>
+        <h3 style="margin:0;"><i class="fas fa-credit-card"></i> Registra Pagamento</h3>
         <button onclick="closePagamentoModal()" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
       </div>
       <p style="margin-bottom:16px;color:#495057;">Fattura: <strong id="pag-n-fattura"></strong></p>
@@ -721,7 +721,7 @@
       </div>
       <div style="display:flex;gap:10px;">
         <button onclick="closePagamentoModal()" style="flex:1;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;">Annulla</button>
-        <button id="pag-submit-btn" onclick="savePagamento(event)" style="flex:2;padding:10px;background:#28a745;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;">💳 Conferma Pagamento</button>
+        <button id="pag-submit-btn" onclick="savePagamento(event)" style="flex:2;padding:10px;background:#28a745;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;"><i class="fas fa-credit-card"></i> Conferma Pagamento</button>
       </div>
     </div>
   </div>
@@ -730,29 +730,29 @@
 <!-- TAB VENDITE -->
 <div id="vendite-tab" class="tab-content">
     <div class="form-container">
-        <h1>🛒 Vendite</h1>
+        <h1><i class="fas fa-cart-shopping"></i> Vendite</h1>
         <div class="info-box"><p>Pacchetti ore, canoni e firme digitali. Seleziona una categoria per inserire o consultare.</p></div>
 
         <!-- Navigazione principale -->
         <div class="vendite-nav">
             <div class="vendite-nav-card active" id="vnav-scadenze" onclick="switchVenditeSection('scadenze')">
-                <span class="vendite-nav-icon">🔔</span>
+                <span class="vendite-nav-icon"><i class="fas fa-bell"></i></span>
                 <span class="vendite-nav-label">Scadenze</span>
             </div>
             <div class="vendite-nav-card" id="vnav-pacchetti" onclick="switchVenditeSection('pacchetti')">
-                <span class="vendite-nav-icon">📦</span>
+                <span class="vendite-nav-icon"><i class="fas fa-box"></i></span>
                 <span class="vendite-nav-label">Pacchetti Ore</span>
             </div>
             <div class="vendite-nav-card" id="vnav-canoni" onclick="switchVenditeSection('canoni')">
-                <span class="vendite-nav-icon">📅</span>
+                <span class="vendite-nav-icon"><i class="fas fa-calendar"></i></span>
                 <span class="vendite-nav-label">Canoni</span>
             </div>
             <div class="vendite-nav-card" id="vnav-firme" onclick="switchVenditeSection('firme')">
-                <span class="vendite-nav-icon">✍️</span>
+                <span class="vendite-nav-icon"><i class="fas fa-signature"></i></span>
                 <span class="vendite-nav-label">Firme Digitali</span>
             </div>
             <div class="vendite-nav-card" id="vnav-qodnet" onclick="switchVenditeSection('qodnet')">
-                <span class="vendite-nav-icon">🌐</span>
+                <span class="vendite-nav-icon"><i class="fas fa-globe"></i></span>
                 <span class="vendite-nav-label">QODNET</span>
             </div>
         </div>
@@ -761,15 +761,15 @@
         <div id="vendite-section-pacchetti" class="vendite-section">
             <div class="vendite-subtab-bar">
                 <button class="vendite-subtab active" id="vsub-pacchetti-nuovo" onclick="switchVenditeSubtab('pacchetti','nuovo')">
-                    ➕ Nuovo pacchetto
+                    <i class="fas fa-plus"></i> Nuovo pacchetto
                 </button>
                 <button class="vendite-subtab" id="vsub-pacchetti-riepilogo" onclick="switchVenditeSubtab('pacchetti','riepilogo')">
-                    📋 Riepilogo
+                    <i class="fas fa-list"></i> Riepilogo
                 </button>
             </div>
             <div id="vsub-pacchetti-nuovo-content" class="vendite-subtab-content">
                 <div class="vendite-action-card" onclick="openVenditaModal('pacchetto')">
-                    <span class="vendite-action-icon">📦</span>
+                    <span class="vendite-action-icon"><i class="fas fa-box"></i></span>
                     <div>
                         <div class="vendite-action-title">Nuovo Pacchetto Ore</div>
                         <div class="vendite-action-desc">Registra l'acquisto di un nuovo pacchetto</div>
@@ -794,7 +794,7 @@
                     </div>
                 </div>
                 <div id="storicoContainer">
-                    <div class="empty-state"><div class="empty-state-icon">📦</div><div>Caricamento...</div></div>
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-box"></i></div><div>Caricamento...</div></div>
                 </div>
             </div>
         </div>
@@ -803,15 +803,15 @@
         <div id="vendite-section-canoni" class="vendite-section" style="display:none;">
             <div class="vendite-subtab-bar">
                 <button class="vendite-subtab active" id="vsub-canoni-nuovo" onclick="switchVenditeSubtab('canoni','nuovo')">
-                    ➕ Nuovo canone
+                    <i class="fas fa-plus"></i> Nuovo canone
                 </button>
                 <button class="vendite-subtab" id="vsub-canoni-riepilogo" onclick="switchVenditeSubtab('canoni','riepilogo')">
-                    📋 Riepilogo
+                    <i class="fas fa-list"></i> Riepilogo
                 </button>
             </div>
             <div id="vsub-canoni-nuovo-content" class="vendite-subtab-content">
                 <div class="vendite-action-card" onclick="openVenditaModal('canone')">
-                    <span class="vendite-action-icon">📅</span>
+                    <span class="vendite-action-icon"><i class="fas fa-calendar"></i></span>
                     <div>
                         <div class="vendite-action-title">Nuovo Canone</div>
                         <div class="vendite-action-desc">Registra un nuovo canone annuale</div>
@@ -834,7 +834,7 @@
                     </div>
                 </div>
                 <div id="canoniContainer">
-                    <div class="empty-state"><div class="empty-state-icon">📅</div><div>Caricamento...</div></div>
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-calendar"></i></div><div>Caricamento...</div></div>
                 </div>
             </div>
         </div>
@@ -843,15 +843,15 @@
         <div id="vendite-section-firme" class="vendite-section" style="display:none;">
             <div class="vendite-subtab-bar">
                 <button class="vendite-subtab active" id="vsub-firme-nuovo" onclick="switchVenditeSubtab('firme','nuovo')">
-                    ➕ Nuova firma
+                    <i class="fas fa-plus"></i> Nuova firma
                 </button>
                 <button class="vendite-subtab" id="vsub-firme-riepilogo" onclick="switchVenditeSubtab('firme','riepilogo')">
-                    📋 Riepilogo
+                    <i class="fas fa-list"></i> Riepilogo
                 </button>
             </div>
             <div id="vsub-firme-nuovo-content" class="vendite-subtab-content">
                 <div class="vendite-action-card" onclick="openVenditaModal('firma')">
-                    <span class="vendite-action-icon">✍️</span>
+                    <span class="vendite-action-icon"><i class="fas fa-signature"></i></span>
                     <div>
                         <div class="vendite-action-title">Nuova Firma Digitale</div>
                         <div class="vendite-action-desc">Registra una nuova firma Token o Remota</div>
@@ -874,7 +874,7 @@
                     </div>
                 </div>
                 <div id="firmeContainer">
-                    <div class="empty-state"><div class="empty-state-icon">✍️</div><div>Caricamento...</div></div>
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-signature"></i></div><div>Caricamento...</div></div>
                 </div>
             </div>
         </div>
@@ -883,17 +883,17 @@
         <div id="vendite-section-qodnet" class="vendite-section" style="display:none;">
             <div class="vendite-subtab-bar">
                 <button class="vendite-subtab active" id="vsub-qodnet-nuovo" onclick="switchVenditeSubtab('qodnet','nuovo')">
-                    ➕ Nuovo abbonamento
+                    <i class="fas fa-plus"></i> Nuovo abbonamento
                 </button>
                 <button class="vendite-subtab" id="vsub-qodnet-riepilogo" onclick="switchVenditeSubtab('qodnet','riepilogo')">
-                    📋 Riepilogo
+                    <i class="fas fa-list"></i> Riepilogo
                 </button>
             </div>
 
             <!-- NUOVO -->
             <div id="vsub-qodnet-nuovo-content" class="vendite-subtab-content">
                 <div class="vendite-action-card" onclick="openQodnetForm()">
-                    <span class="vendite-action-icon">🌐</span>
+                    <span class="vendite-action-icon"><i class="fas fa-globe"></i></span>
                     <div>
                         <div class="vendite-action-title">Nuovo Abbonamento QODNET</div>
                         <div class="vendite-action-desc">Software o ore sistemistiche — provvigione 20% calcolata automaticamente</div>
@@ -919,7 +919,7 @@
                     </div>
                 </div>
                 <div id="qodnetContainer">
-                    <div class="empty-state"><div class="empty-state-icon">🌐</div><div>Caricamento...</div></div>
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-globe"></i></div><div>Caricamento...</div></div>
                 </div>
             </div>
         </div>
@@ -1175,7 +1175,7 @@
 <!-- TAB UTILITIES -->
 <div id="utilities-tab" class="tab-content">
     <div class="form-container">
-        <h1>⚙️ Utilities & Manutenzione</h1>
+        <h1><i class="fas fa-gear"></i> Utilities & Manutenzione</h1>
         
         <!-- INFO BOX GLOBALE -->
         <div id="info-box" class="info-box">
@@ -1184,14 +1184,14 @@
         
         <!-- SEZIONE CLIENTI UTILITIES -->
         <div class="utility-section">
-            <h3>👥 Clienti</h3>
+            <h3><i class="fas fa-users"></i> Clienti</h3>
             <div class="utility-card">
                 <div class="utility-info">
                     <h4>Assegna ID mancanti</h4>
                     <p>Assegna automaticamente ID_Cliente ai clienti che non ne hanno uno</p>
                 </div>
                 <button class="btn btn-primary" onclick="assignMissingClientIDs()">
-                    🔢 Assegna ID
+                    <i class="fas fa-hashtag"></i> Assegna ID
                 </button>
             </div>
             <div id="assign-id-result" class="info-box" style="display:none;margin-top:10px;"></div>
@@ -1199,7 +1199,7 @@
 
         <!-- SEZIONE BACKUP -->
         <div class="utility-section">
-            <h3>💾 Backup Frontend</h3>
+            <h3><i class="fas fa-floppy-disk"></i> Backup Frontend</h3>
             
             <div class="utility-card">
                 <div class="utility-info">
@@ -1222,7 +1222,7 @@
 
         <!-- SEZIONE LOG -->
         <div class="utility-section">
-            <h3>📋 Log Sistema</h3>
+            <h3><i class="fas fa-list"></i> Log Sistema</h3>
             
             <div id="log-info" class="info-box" style="margin-bottom: 15px;">
                 <p>Visualizza e gestisci i log di sistema</p>
@@ -1249,17 +1249,17 @@
             <div id="log-controls" class="log-controls" style="display: none;">
                 <div class="log-filters">
                     <button class="filter-btn active" onclick="filterLogs('ALL')">Tutti</button>
-                    <button class="filter-btn" onclick="filterLogs('INFO')">ℹ️ Info</button>
-                    <button class="filter-btn" onclick="filterLogs('SUCCESS')">✅ Success</button>
-                    <button class="filter-btn" onclick="filterLogs('WARNING')">⚠️ Warning</button>
-                    <button class="filter-btn" onclick="filterLogs('ERROR')">❌ Error</button>
+                    <button class="filter-btn" onclick="filterLogs('INFO')"><i class="fas fa-circle-info"></i> Info</button>
+                    <button class="filter-btn" onclick="filterLogs('SUCCESS')"><i class="fas fa-circle-check"></i> Success</button>
+                    <button class="filter-btn" onclick="filterLogs('WARNING')"><i class="fas fa-triangle-exclamation"></i> Warning</button>
+                    <button class="filter-btn" onclick="filterLogs('ERROR')"><i class="fas fa-circle-xmark"></i> Error</button>
                 </div>
                 <div class="log-actions">
                     <button class="btn btn-secondary btn-sm" onclick="exportLogsCSV()">
-                        📥 Esporta CSV
+                        <i class="fas fa-file-arrow-down"></i> Esporta CSV
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="showCleanLogsMenu()">
-                        🗑️ Cancella Log
+                        <i class="fas fa-trash"></i> Cancella Log
                     </button>
                 </div>
             </div>
@@ -1274,7 +1274,7 @@
 
         <!-- SEZIONE DIAGNOSTICA -->
         <div class="utility-section">
-            <h3>🔍 Diagnostica</h3>
+            <h3><i class="fas fa-magnifying-glass"></i> Diagnostica</h3>
             
             <div id="diagnostic-info" class="info-box" style="margin-bottom: 15px;">
                 <p>Strumenti di test e verifica sistema</p>
@@ -1310,14 +1310,14 @@
             <div id="integrity-controls" class="log-controls" style="display: none;">
                 <div class="log-filters">
                     <button class="filter-btn active" onclick="filterIntegrity('ALL')">Tutti</button>
-                    <button class="filter-btn" onclick="filterIntegrity('STATS')">📊 Statistiche</button>
-                    <button class="filter-btn" onclick="filterIntegrity('ERRORS')">❌ Errori</button>
-                    <button class="filter-btn" onclick="filterIntegrity('WARNINGS')">⚠️ Avvisi</button>
-                    <button class="filter-btn" onclick="filterIntegrity('SUCCESS')">✅ Integro</button>
+                    <button class="filter-btn" onclick="filterIntegrity('STATS')"><i class="fas fa-chart-bar"></i> Statistiche</button>
+                    <button class="filter-btn" onclick="filterIntegrity('ERRORS')"><i class="fas fa-circle-xmark"></i> Errori</button>
+                    <button class="filter-btn" onclick="filterIntegrity('WARNINGS')"><i class="fas fa-triangle-exclamation"></i> Avvisi</button>
+                    <button class="filter-btn" onclick="filterIntegrity('SUCCESS')"><i class="fas fa-circle-check"></i> Integro</button>
                 </div>
                 <div class="log-actions">
                     <button class="btn btn-secondary btn-sm" onclick="exportIntegrityReport()">
-                        📥 Esporta Report
+                        <i class="fas fa-file-arrow-down"></i> Esporta Report
                     </button>
                 </div>
             </div>
@@ -1336,7 +1336,7 @@
 <!-- TAB CLIENTI -->
 <div id="clienti-tab" class="tab-content">
     <div class="form-container">
-        <h1>👥 Gestione Clienti</h1>
+        <h1><i class="fas fa-users"></i> Gestione Clienti</h1>
         
         <div id="clienti-info" class="info-box">
             <p>Cerca, visualizza e modifica i dati dei tuoi clienti</p>
@@ -1346,7 +1346,7 @@
              SEZIONE RICERCA
         ========================= -->
         <div class="clienti-section">
-            <h3>🔍 Ricerca Cliente</h3>
+            <h3><i class="fas fa-magnifying-glass"></i> Ricerca Cliente</h3>
             
             <div class="search-controls">
                 <input
@@ -1359,10 +1359,10 @@
                 >
                 <datalist id="cliente-search-list"></datalist>
                 <button class="btn btn-primary" onclick="searchCliente()">
-                    🔍 Cerca
+                    <i class="fas fa-magnifying-glass"></i> Cerca
                 </button>
                 <button class="btn btn-secondary" onclick="openNewClienteForm()">
-                    ➕ Nuovo Cliente
+                    <i class="fas fa-plus"></i> Nuovo Cliente
                 </button>
             </div>
             
@@ -1378,7 +1378,7 @@
         ========================= -->
         <div id="cliente-detail-section" class="clienti-section" style="display: none;">
             <div class="section-header">
-                <h3>📝 Dati Cliente</h3>
+                <h3><i class="fas fa-pen-to-square"></i> Dati Cliente</h3>
                 <button class="btn btn-secondary" onclick="closeClienteEditForm()">✖ Chiudi</button>
             </div>
             
@@ -1522,7 +1522,7 @@
                 <!-- Pulsanti azione -->
                 <div class="btn-row">
                     <button type="submit" class="btn btn-primary">
-                        💾 Salva Modifiche
+                        <i class="fas fa-floppy-disk"></i> Salva Modifiche
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="closeClienteEditForm()">
                         Annulla
@@ -1535,7 +1535,7 @@
              SEZIONE PRODOTTI CLIENTE
         ========================= -->
         <div id="cliente-prodotti-section" class="clienti-section" style="display: none;">
-            <h3>📦 Prodotti Attivi</h3>
+            <h3><i class="fas fa-box"></i> Prodotti Attivi</h3>
             <div id="cliente-prodotti-content">
                 <p class="empty-state">Seleziona un cliente per visualizzare i suoi prodotti</p>
             </div>
@@ -1683,7 +1683,7 @@ function toggleOptionalFields() {
                 
                 <div class="btn-row">
                     <button type="submit" class="btn btn-primary">
-                        💾 Salva Modifiche
+                        <i class="fas fa-floppy-disk"></i> Salva Modifiche
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="closeEditTimesheetModal()">
                         Annulla

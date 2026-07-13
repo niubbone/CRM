@@ -59,7 +59,7 @@ function renderFattureList(fatture) {
   const container = document.getElementById('fatture-list-container');
   if (!container) return;
   if (!fatture || fatture.length === 0) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;"><div style="font-size:48px;margin-bottom:12px;">🧾</div><p style="font-weight:bold;">Nessuna fattura trovata</p><p style="font-size:14px;">Prova a modificare i filtri o aggiungi una nuova fattura</p></div>';
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;"><div style="font-size:48px;margin-bottom:12px;"><i class="fas fa-receipt" style="color:#dee2e6;"></i></div><p style="font-weight:bold;">Nessuna fattura trovata</p><p style="font-size:14px;">Prova a modificare i filtri o aggiungi una nuova fattura</p></div>';
     return;
   }
   container.innerHTML = fatture.map(f => buildFatturaCard(f)).join('');
@@ -68,7 +68,7 @@ function renderFattureList(fatture) {
 function buildFatturaCard(f) {
   const isPagata  = f.pagato === 'SI';
   const isDiretta = !f.nProforma;
-  const tipoText  = isDiretta ? '📋 Diretta' : '📄 Da proforma ' + f.nProforma;
+  const tipoText  = isDiretta ? '<i class="fas fa-clipboard"></i> Diretta' : '<i class="fas fa-file"></i> Da proforma ' + f.nProforma;
   const tipoColor = isDiretta ? '#6c757d' : '#1976D2';
   const isNC      = parseFloat(f.totale) < 0;
 
@@ -87,7 +87,7 @@ function buildFatturaCard(f) {
           <span style="font-weight:700;font-size:16px;">${f.nFattura}</span>
           <button onclick="${badgeAction}" style="${badgeStyle}">${badgeText}</button>
           <span style="color:${tipoColor};font-size:12px;">${tipoText}</span>
-          ${isNC ? `<span style="color:#dc3545;font-size:12px;font-weight:600;">📝 Nota di credito</span>` : ''}
+          ${isNC ? `<span style="color:#dc3545;font-size:12px;font-weight:600;"><i class="fas fa-file-pen"></i> Nota di credito</span>` : ''}
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:12px;color:#6c757d;">${f.dataFattura || '—'}</div>
@@ -95,7 +95,7 @@ function buildFatturaCard(f) {
         </div>
       </div>
       <div style="padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-        <div><span style="font-size:13px;color:#6c757d;">👤 </span><span style="font-weight:500;">${f.nomeCliente || '—'}</span></div>
+        <div><i class="fas fa-user" style="font-size:13px;color:#6c757d;margin-right:4px;"></i><span style="font-weight:500;">${f.nomeCliente || '—'}</span></div>
         ${isPagata && f.dataPagamento ? `<div style="font-size:12px;color:#28a745;margin-left:8px;">Pagata il ${f.dataPagamento}</div>` : ''}
       </div>
     </div>`;
@@ -120,7 +120,7 @@ function renderFattureTotali(totali) {
           <div style="font-size:12px;color:#6c757d;">Da incassare</div>
         </div>
       </div>
-      <button onclick="openNuovaFatturaModal()" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">➕ Nuova Fattura Diretta</button>
+      <button onclick="openNuovaFatturaModal()" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Nuova Fattura Diretta</button>
     </div>`;
 }
 
@@ -183,7 +183,7 @@ function openNuovaFatturaModal() {
   // Reset sezione voci
   _nfVociData = { timesheet: [], canoni: [] };
   const caricaBtn = document.getElementById('nf-carica-btn');
-  if (caricaBtn) { caricaBtn.style.display = 'block'; caricaBtn.disabled = false; caricaBtn.textContent = '➕ Collega timesheet / canoni (opzionale)'; }
+  if (caricaBtn) { caricaBtn.style.display = 'block'; caricaBtn.disabled = false; caricaBtn.innerHTML = '<i class="fas fa-plus"></i> Collega timesheet / canoni (opzionale)'; }
   const vociContainer = document.getElementById('nf-voci-container');
   if (vociContainer) vociContainer.style.display = 'none';
   const vociFooter = document.getElementById('nf-voci-footer');
@@ -290,7 +290,7 @@ async function saveNuovaFattura(event) {
   } catch(error) {
     alert('❌ Errore: ' + error.message);
   } finally {
-    btn.disabled = false; btn.textContent = '💾 Salva Fattura';
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Salva Fattura';
   }
 }
 
@@ -336,7 +336,7 @@ async function savePagamento(event) {
   } catch(error) {
     alert('❌ Errore: ' + error.message);
   } finally {
-    btn.disabled = false; btn.textContent = '💳 Conferma Pagamento';
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-credit-card"></i> Conferma Pagamento';
   }
 }
 
@@ -364,7 +364,7 @@ function formatFattureNum(val) {
 }
 
 function buildFattureErrorHTML(title, msg, retryFn) {
-  return `<div style="padding:30px;text-align:center;"><div style="font-size:40px;margin-bottom:8px;">⚠️</div><div style="font-weight:bold;margin-bottom:6px;">${title}</div><div style="font-size:13px;color:#6c757d;margin-bottom:12px;">${msg}</div><button onclick="${retryFn}" style="background:#1976D2;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;">🔄 Riprova</button></div>`;
+  return `<div style="padding:30px;text-align:center;"><div style="font-size:40px;margin-bottom:8px;"><i class="fas fa-triangle-exclamation" style="color:#fd7e14;"></i></div><div style="font-weight:bold;margin-bottom:6px;">${title}</div><div style="font-size:13px;color:#6c757d;margin-bottom:12px;">${msg}</div><button onclick="${retryFn}" style="background:#1976D2;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-arrows-rotate"></i> Riprova</button></div>`;
 }
 
 function initFattureTab() {
@@ -431,7 +431,7 @@ async function caricaVociFatturaDiretta() {
         const dataStr  = isCanone ? (item.dataScadenza || item.data) : (item.dataItaliana || item.data || '—');
         const desc     = isCanone ? (item.descrizione || 'Canone') : (item.descrizione || item.modalita || '');
         const costo    = parseFloat(isCanone ? (item.importo || item.costo) : item.costo) || 0;
-        const icon     = isCanone ? '📅' : '🕐';
+        const icon     = isCanone ? '<i class="fas fa-calendar"></i>' : '<i class="fas fa-clock"></i>';
         return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
           <input type="checkbox" class="nf-voce-cb" data-index="${i}" data-costo="${costo}" onchange="aggiornaSelezioneVoci()">
           <span style="flex:1;font-size:12px;">${icon} <strong>${dataStr}</strong> — ${desc}</span>
