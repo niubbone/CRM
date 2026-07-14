@@ -92,6 +92,7 @@ function buildFatturaCard(f) {
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:12px;color:#6c757d;">${f.dataFattura || '—'}</div>
           <div style="font-weight:700;font-size:18px;color:${isNC ? '#dc3545' : '#212529'};">€ ${formatFattureNum(f.totale)}</div>
+          ${f.ritenuta ? `<div style="font-size:11px;color:#6c757d;">di cui rit. acconto -€ ${formatFattureNum(f.ritenuta)}</div>` : ''}
         </div>
       </div>
       <div style="padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
@@ -119,6 +120,11 @@ function renderFattureTotali(totali) {
           <div style="font-size:16px;font-weight:700;color:#fd7e14;">€ ${formatFattureNum(totali.daPagare || 0)}</div>
           <div style="font-size:12px;color:#6c757d;">Da incassare</div>
         </div>
+        ${totali.ritenuta ? `
+        <div style="background:#ede7f6;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px;">
+          <div style="font-size:16px;font-weight:700;color:#6f42c1;">€ ${formatFattureNum(totali.ritenuta)}</div>
+          <div style="font-size:12px;color:#6c757d;">Ritenute d'acconto</div>
+        </div>` : ''}
       </div>
       <button onclick="openNuovaFatturaModal()" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Nuova Fattura Diretta</button>
     </div>`;
