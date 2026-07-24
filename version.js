@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.10.0';
+export const VERSION = '4.11.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,11 +30,12 @@ export const VERSION = '4.10.0';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Proforma Manager Edition',
-  date: '13 Luglio 2026',
+  date: '24 Luglio 2026',
   codename: 'ProformaManager',
 
   // Changelog corrente versione
   changelog: [
+    'Feat: scheda cliente — campi modificabili Data di nascita, Cellulare e Telefono',
     'Feat: modal unificato Modifica Proforma (causale + forfettario + voci timesheet aggiuntive)',
     'Feat: regime forfettario cliente — ritenuta=0, IVA 22% invariata (art. 1 c. 69 L. 190/2014)',
     'Feat: eliminaProforma — cancellazione fisica con ripristino timesheet e decremento contatore',

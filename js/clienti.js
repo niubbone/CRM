@@ -5,7 +5,7 @@
 
 // ✅ Import moduli ES6
 import { CONFIG } from './config.js';
-import { showNotification } from './utils.js';
+import { showNotification, formatDate } from './utils.js';
 
 let currentCliente = null;
 let allClienti = [];
@@ -194,6 +194,9 @@ function showClienteDetail(cliente) {
     document.getElementById('edit-sdi').value = cliente.sdi || '';
     document.getElementById('edit-email').value = cliente.email || '';
     document.getElementById('edit-referente').value = cliente.referente || '';
+    document.getElementById('edit-cellulare').value = cliente.cellulare || '';
+    document.getElementById('edit-telefono').value = cliente.telefono || '';
+    document.getElementById('edit-data-nascita').value = cliente.dataNascita || '';
     document.getElementById('edit-attivo').value = cliente.attivo || 'SI';
     
     // Mostra le sezioni
@@ -291,6 +294,9 @@ async function saveClienteChanges(event) {
         sdi: document.getElementById('edit-sdi').value,
         email: document.getElementById('edit-email').value,
         referente: document.getElementById('edit-referente').value,
+        cellulare: document.getElementById('edit-cellulare').value,
+        telefono: document.getElementById('edit-telefono').value,
+        dataNascita: document.getElementById('edit-data-nascita').value,
         attivo: document.getElementById('edit-attivo').value
     };
     
@@ -833,7 +839,8 @@ function formatClientData(cliente) {
     if (cliente.cellulare) data.push(`📱 ${cliente.cellulare}`);
     if (cliente.telefono) data.push(`📞 ${cliente.telefono}`);
     if (cliente.pec) data.push(`PEC: ${cliente.pec}`);
-    
+    if (cliente.dataNascita) data.push(`🎂 Nato/a il: ${formatDate(cliente.dataNascita)}`);
+
     return data.join('\n');
 }
 
