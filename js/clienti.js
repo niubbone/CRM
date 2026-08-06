@@ -527,6 +527,13 @@ function _renderProdottoItem(prodotto) {
                     <span class="prodotto-info-value">€ ${prodotto.importo}</span>
                 </div>` : ''}
             </div>
+            ${prodotto.tipo === 'Canone' && prodotto.tipoCanone === 'CONTROLLI' ? `
+            <div class="prodotto-controlli" style="margin-top:8px;">
+                <button class="btn btn-sm btn-secondary" onclick="toggleControlliCanone('${prodotto.id}')">
+                    <i class="fas fa-clipboard-check"></i> Controlli periodici (${prodotto.nControlli || ''})
+                </button>
+                <div id="controlli-${prodotto.id}" class="controlli-container" style="display:none; margin-top:8px;"></div>
+            </div>` : ''}
             ${prodotto.tipo === 'Pacchetto' ? `
             <div class="prodotto-actions">
                 <button class="btn btn-sm btn-secondary" onclick="openPacchettoDettaglio('${prodotto.id}', '${(prodotto.descrizione||'Pacchetto').replace(/'/g,"\\'")}', {nomeCliente:'${(prodotto.nomeCliente||'').replace(/'/g,"\\'")}',oreAcquistate:${prodotto.oreAcquistate||0},dataAcquisto:'${prodotto.dataInizio||''}',dataScadenza:'${prodotto.dataScadenza||''}'})">
@@ -599,6 +606,145 @@ function getEmojiForType(tipo) {
         'Firma': '<i class="fas fa-signature"></i>'
     };
     return emojis[tipo] || '<i class="fas fa-file"></i>';
+}
+
+// =======================================================================
+// === CONTROLLI PERIODICI (canoni tipo CONTROLLI) ===
+// =======================================================================
+
+function _escapeControllo(str) {
+    return (str == null ? '' : String(str))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function _isoFromItalian(ddmmyyyy) {
+    if (!ddmmyyyy) return '';
+    const p = ddmmyyyy.split('/');
+    if (p.length !== 3) return '';
+    return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+}
+
+/**
+ * Apre/chiude la lista controlli di un canone; al primo apertura la carica.
+ */
+async function toggleControlliCanone(canoneId) {
+    const container = document.getElementById(`controlli-${canoneId}`);
+    if (!container) return;
+
+    if (container.style.display === 'none' || container.style.display === '') {
+        container.style.display = 'block';
+        await loadControlliCanone(canoneId);
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+async function loadControlliCanone(canoneId) {
+    const container = document.getElementById(`controlli-${canoneId}`);
+    if (!container) return;
+
+    container.innerHTML = '<p class="text-muted" style="font-size:13px;">⏳ Caricamento controlli...</p>';
+
+    try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_controlli&canone_id=${encodeURIComponent(canoneId)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.error || 'Errore caricamento controlli');
+
+        container.innerHTML = renderControlliList(canoneId, data.controlli || []);
+    } catch (err) {
+        console.error('Errore loadControlliCanone:', err);
+        container.innerHTML = `<p class="empty-state" style="font-size:13px;">Errore: ${_escapeControllo(err.message)}</p>`;
+    }
+}
+
+function renderControlliList(canoneId, controlli) {
+    if (!controlli || controlli.length === 0) {
+        return '<p class="text-muted" style="font-size:13px;">Nessun controllo generato per questo ciclo.</p>';
+    }
+
+    return controlli.map(c => {
+        const eseguito = c.stato === 'Eseguito';
+        const badge = eseguito
+            ? `<span style="color:#28a745;font-weight:600;">✓ Eseguito${c.dataEseguita ? ' il ' + c.dataEseguita : ''}</span>`
+            : `<span style="color:#fd7e14;font-weight:600;">◷ Da fare</span>`;
+        const reportHtml = c.report
+            ? `<div style="font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap;">${_escapeControllo(c.report)}</div>`
+            : '';
+        const etichetta = c.etichetta || ('Controllo ' + c.nControllo);
+
+        return `
+        <div class="controllo-slot" style="border:1px solid #e9ecef;border-radius:6px;padding:8px;margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div>
+                    <strong style="font-size:13px;">${_escapeControllo(etichetta)}</strong>
+                    <div style="font-size:12px;">${badge}</div>
+                    ${reportHtml}
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="openControlloForm('${c.idControllo}')">
+                    ${eseguito ? '<i class="fas fa-pen"></i> Modifica' : '<i class="fas fa-check"></i> Registra'}
+                </button>
+            </div>
+            <div id="controllo-form-${c.idControllo}" style="display:none;margin-top:8px;">
+                <input type="date" id="controllo-data-${c.idControllo}" value="${eseguito && c.dataEseguita ? _isoFromItalian(c.dataEseguita) : ''}" style="width:100%;margin-bottom:6px;">
+                <textarea id="controllo-report-${c.idControllo}" rows="3" placeholder="Report / note del controllo..." style="width:100%;margin-bottom:6px;">${_escapeControllo(c.report || '')}</textarea>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-success" onclick="submitControllo('${canoneId}','${c.idControllo}')"><i class="fas fa-save"></i> Salva</button>
+                    <button class="btn btn-sm btn-secondary" onclick="document.getElementById('controllo-form-${c.idControllo}').style.display='none'">Annulla</button>
+                    ${eseguito ? `<button class="btn btn-sm btn-danger" onclick="resetControllo('${canoneId}','${c.idControllo}')">Azzera</button>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openControlloForm(idControllo) {
+    const form = document.getElementById(`controllo-form-${idControllo}`);
+    if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitControllo(canoneId, idControllo) {
+    const data = document.getElementById(`controllo-data-${idControllo}`)?.value || '';
+    const report = document.getElementById(`controllo-report-${idControllo}`)?.value || '';
+
+    try {
+        const params = new URLSearchParams({
+            action: 'registra_controllo',
+            id_controllo: idControllo,
+            data_eseguita: data,
+            report: report
+        });
+        const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore registrazione');
+
+        await loadControlliCanone(canoneId);
+    } catch (err) {
+        console.error('Errore submitControllo:', err);
+        alert('❌ Errore: ' + err.message);
+    }
+}
+
+async function resetControllo(canoneId, idControllo) {
+    if (!confirm('Azzerare questo controllo (rimuove data e report, torna "Da fare")?')) return;
+
+    try {
+        const params = new URLSearchParams({
+            action: 'update_controllo',
+            id_controllo: idControllo,
+            stato: 'Da fare'
+        });
+        const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore azzeramento');
+
+        await loadControlliCanone(canoneId);
+    } catch (err) {
+        console.error('Errore resetControllo:', err);
+        alert('❌ Errore: ' + err.message);
+    }
 }
 
 // =======================================================================
@@ -1608,6 +1754,10 @@ window.saveTimesheetChanges = saveTimesheetChanges;
 window.assignMissingClientIDs      = assignMissingClientIDs;
 window.openPacchettoDettaglio      = openPacchettoDettaglio;
 window.closePacchettoDettaglioModal = closePacchettoDettaglioModal;
+window.toggleControlliCanone = toggleControlliCanone;
+window.openControlloForm = openControlloForm;
+window.submitControllo = submitControllo;
+window.resetControllo = resetControllo;
 window.exportPacchettoDettaglio    = exportPacchettoDettaglio;
 window.stampaPacchettoDettaglio    = stampaPacchettoDettaglio;
 window.convertiDaFatturare       = convertiDaFatturare;

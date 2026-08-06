@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.11.0';
+export const VERSION = '4.12.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,23 +29,17 @@ export const VERSION = '4.11.0';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'Proforma Manager Edition',
-  date: '24 Luglio 2026',
-  codename: 'ProformaManager',
+  name: 'Controlli Periodici Edition',
+  date: '06 Agosto 2026',
+  codename: 'ControlliPeriodici',
 
   // Changelog corrente versione
   changelog: [
-    'Feat: scheda cliente — campi modificabili Data di nascita, Cellulare e Telefono',
-    'Feat: modal unificato Modifica Proforma (causale + forfettario + voci timesheet aggiuntive)',
-    'Feat: regime forfettario cliente — ritenuta=0, IVA 22% invariata (art. 1 c. 69 L. 190/2014)',
-    'Feat: eliminaProforma — cancellazione fisica con ripristino timesheet e decremento contatore',
-    'Feat: reinviaEmailProforma — reinvio email con PDF già esistente su Drive (senza ricalcolo)',
-    'Fix: corpo email ora rispetta flag forfettario (ritenuta=0 nel riepilogo importi)',
-    'Fix: checkbox forfettario pre-compilata alla riapertura del modal di modifica',
-    'Fix: CLIENT_NOT_FOUND — selector cliente inline nel modal invece di errore bloccante',
-    'UI: Font Awesome 6.5.1 — icone card proforma (pdf, pen, paper-plane, file-invoice, trash)',
-    'UI: bordi card uniformi 2px su tutte le sezioni (proforma, clienti, storico, utility)',
-    'UI: bottoni card proforma standardizzati a verde/blu/rosso',
+    'Feat: Canoni tipo CONTROLLI — abbonamento a N controlli/visite per ciclo annuale',
+    'Feat: form Nuovo Canone con checkbox "Controlli periodici" (N controlli + etichette)',
+    'Feat: pannello cliente — slot controllo con registrazione data + report per ogni visita',
+    'Feat: rinnovo canone-controlli — rigenera gli slot del nuovo ciclo ereditando le etichette',
+    'Backend: nuovo modulo Controlli.gs + foglio Controlli, colonne Tipo/N_Controlli sul foglio Canoni',
   ],
   
   // Features principali
@@ -69,6 +63,21 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.12.0",
+    date: "06/08/2026",
+    type: "feature",
+    changes: [
+      "Canoni tipo CONTROLLI: ibrido canone/pacchetto per controlli periodici — abbonamento a N visite/controlli per ciclo annuale, fatturato una volta l'anno come canone normale",
+      "Foglio Canoni: nuove colonne Tipo (STANDARD|CONTROLLI) e N_Controlli con migrazione header automatica",
+      "Nuovo foglio Controlli + modulo Controlli.gs: ogni visita tracciata con data eseguita, report testuale e stato (Da fare|Eseguito)",
+      "Form Nuovo Canone: checkbox 'Controlli periodici' con numero controlli e etichette libere per slot (es. Luglio, Dicembre)",
+      "Pannello cliente: sotto il canone-controlli, elenco slot con mini-form per registrare data + report (Registra/Modifica/Azzera)",
+      "Rinnovo canone-controlli: rigenera automaticamente gli slot del nuovo ciclo ereditando le etichette del ciclo precedente (restano modificabili)",
+      "Router backend: 4 nuove action (get_controlli, get_controlli_cliente, registra_controllo, update_controllo)",
+      "Backend @248 — Controlli.gs (nuovo) + Canoni.gs + Rinnovi.gs + Clienti.gs + Codice.gs"
+    ]
+  },
   {
     version: "4.10.0",
     date: "13/07/2026",

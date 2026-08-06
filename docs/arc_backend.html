@@ -227,7 +227,8 @@ Backend (Google Apps Script)
 │   └── Fatture.js                   → Tab Fatture, fattura diretta, multi-proforma, pagamenti
 │
 ├── 💼 VENDITE & PRODOTTI
-│   ├── Canoni.js                    → Gestione canoni periodici, fatturazione
+│   ├── Canoni.js                    → Gestione canoni (STANDARD/CONTROLLI), fatturazione
+│   ├── Controlli.js                 → Controlli periodici: slot visita, data+report, stato
 │   ├── Firme.js                     → Gestione firme digitali (Token/Remota, 3 anni)
 │   └── Rinnovi.js                   → Sistema rinnovi automatici, chain storico
 │
@@ -238,12 +239,15 @@ Backend (Google Apps Script)
     ├── QODNET.js                    → Integrazione QODNET
     └── Trigger.js                   → Trigger temporali, automazioni
 
-TOTALE: 16 file .js
+TOTALE: 17 file .js
 </pre>
                 </div>
-                
+
                 <div class="info-box">
-                    <strong>💡 v4.9.0:</strong> Aggiunto modulo Fatture.js (tab Fatture con ritenuta, multi-proforma, fattura diretta con link timesheet/canoni). Aggiunta <code>calcolaFiscale()</code> come funzione fiscale centralizzata. LockService per numerazione proforma atomica.
+                    <strong>💡 v4.12.0:</strong> Aggiunto modulo <code>Controlli.js</code> + foglio <code>Controlli</code> per i <strong>canoni tipo CONTROLLI</strong> (ibrido canone/pacchetto): N controlli/visite per ciclo annuale, ognuno tracciato con data eseguita e report. Il foglio Canoni ha nuove colonne <code>Tipo</code> e <code>N_Controlli</code>. Il rinnovo rigenera gli slot ereditando le etichette. Fatturazione invariata (una fattura annua per il canone).
+                </div>
+                <div class="info-box">
+                    <strong>v4.9.0:</strong> Modulo Fatture.js (tab Fatture con ritenuta, multi-proforma, fattura diretta con link timesheet/canoni). <code>calcolaFiscale()</code> centralizzata. LockService per numerazione proforma atomica.
                 </div>
             </div>
             
@@ -527,8 +531,8 @@ TOTALE: 16 file .js
                         <tbody>
                             <tr>
                                 <td><code>insert_canone</code></td>
-                                <td>cliente_nome, descrizione, importo, data_inizio, durata_anni</td>
-                                <td>{success:true, canoneId:"..."}</td>
+                                <td>cliente_nome, descrizione, importo, data_inizio, durata_anni, <em>tipo</em> (STANDARD|CONTROLLI), <em>n_controlli</em>, <em>etichette</em> (CSV)</td>
+                                <td>{success:true, canoneId:"...", controlliGenerati:N}</td>
                             </tr>
                             <tr>
                                 <td><code>insert_firma</code></td>
@@ -554,6 +558,26 @@ TOTALE: 16 file .js
                                 <td><code>get_storico_rinnovi</code></td>
                                 <td>prodotto_id, tipo</td>
                                 <td>{success:true, data:[...]}</td>
+                            </tr>
+                            <tr>
+                                <td><code>get_controlli</code></td>
+                                <td>canone_id</td>
+                                <td>{success:true, controlli:[...]}</td>
+                            </tr>
+                            <tr>
+                                <td><code>get_controlli_cliente</code></td>
+                                <td>cliente_nome | id_cliente</td>
+                                <td>{success:true, controlli:[...]}</td>
+                            </tr>
+                            <tr>
+                                <td><code>registra_controllo</code></td>
+                                <td>id_controllo, data_eseguita (YYYY-MM-DD), report</td>
+                                <td>{success:true, stato:"Eseguito"}</td>
+                            </tr>
+                            <tr>
+                                <td><code>update_controllo</code></td>
+                                <td>id_controllo, <em>etichetta</em>, <em>data_eseguita</em>, <em>report</em>, <em>stato</em></td>
+                                <td>{success:true}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -783,11 +807,40 @@ function sendScadenzaEmail(destinatario, tipo, datiProdotto) {
                             <tr><td>G</td><td>Data_Scadenza</td><td>Date</td></tr>
                             <tr><td>H</td><td>Importo</td><td>Number</td></tr>
                             <tr><td>I</td><td>STATO</td><td>ATTIVO/SCADUTO/RINNOVATO</td></tr>
+                            <tr><td>J</td><td>Fatturazione</td><td>Da fatturare/Proformato/Fatturato</td></tr>
+                            <tr><td>K</td><td>N_Fattura</td><td>String</td></tr>
                             <tr><td>L</td><td>Event_ID</td><td>Calendar event ID</td></tr>
+                            <tr><td>M</td><td>Tipo</td><td>STANDARD / CONTROLLI</td></tr>
+                            <tr><td>N</td><td>N_Controlli</td><td>Number (solo CONTROLLI)</td></tr>
                         </tbody>
                     </table>
                 </div>
-                
+
+                <div class="subsection">
+                    <h3 class="subsection-title">Foglio: Controlli</h3>
+                    <p style="color:#555;margin-bottom:8px;">Slot dei controlli/visite per i canoni di tipo CONTROLLI. Generati automaticamente alla creazione/rinnovo del canone.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Col</th>
+                                <th>Nome Campo</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>A</td><td>ID_Controllo</td><td>CT_YYYY_###</td></tr>
+                            <tr><td>B</td><td>ID_Canone</td><td>FK → Canoni</td></tr>
+                            <tr><td>C</td><td>ID_Cliente</td><td>FK → Clienti</td></tr>
+                            <tr><td>D</td><td>Nome_Cliente</td><td>String</td></tr>
+                            <tr><td>E</td><td>N_Controllo</td><td>Number (1..N nel ciclo)</td></tr>
+                            <tr><td>F</td><td>Etichetta</td><td>String (es. "Luglio")</td></tr>
+                            <tr><td>G</td><td>Data_Eseguita</td><td>Date</td></tr>
+                            <tr><td>H</td><td>Report</td><td>String (note visita)</td></tr>
+                            <tr><td>I</td><td>STATO</td><td>Da fare / Eseguito</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="subsection">
                     <h3 class="subsection-title">Foglio: Fatture (13 colonne)</h3>
                     <table>

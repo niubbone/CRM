@@ -988,6 +988,23 @@
                 <input type="number" id="venditaDurataAnni" min="1" value="1">
             </div>
 
+            <div class="form-group" id="venditaControlliGroup" style="display:none;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="venditaControlliCheck" style="width:auto;"
+                        onchange="document.getElementById('venditaControlliDettagli').style.display = this.checked ? 'block' : 'none';">
+                    <span>🔍 Controlli periodici (traccia le visite)</span>
+                </label>
+                <div id="venditaControlliDettagli" style="display:none; margin-top:10px; padding-left:4px;">
+                    <label>Numero controlli per ciclo</label>
+                    <input type="number" id="venditaNControlli" min="1" max="12" value="2">
+                    <label style="margin-top:8px;">Etichette controlli (separate da virgola)</label>
+                    <input type="text" id="venditaEtichetteControlli" placeholder="es. Luglio, Dicembre">
+                    <small style="color:#666; display:block; margin-top:4px;">
+                        L'importo inserito sopra è il costo annuale del canone (copre tutti i controlli del ciclo).
+                    </small>
+                </div>
+            </div>
+
             <div class="form-group" id="venditaNoteGroup" style="display:none;">
                 <label>Note</label>
                 <textarea id="venditaNote" rows="2" placeholder="Note aggiuntive..."></textarea>

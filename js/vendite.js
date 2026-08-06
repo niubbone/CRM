@@ -345,7 +345,15 @@ function openVenditaModal(tipo) {
     const descrizioneGroup = document.getElementById('venditaDescrizioneGroup');
     const descrizioneLabel = document.getElementById('venditaDescrizioneLabel');
     const noteGroup = document.getElementById('venditaNoteGroup');
-    
+    const controlliGroup = document.getElementById('venditaControlliGroup');
+    const controlliCheck = document.getElementById('venditaControlliCheck');
+    const controlliDettagli = document.getElementById('venditaControlliDettagli');
+
+    // Reset stato controlli periodici a ogni apertura
+    if (controlliCheck) controlliCheck.checked = false;
+    if (controlliDettagli) controlliDettagli.style.display = 'none';
+    if (controlliGroup) controlliGroup.style.display = 'none';
+
     if (tipo === 'pacchetto') {
         if (modalTitle) modalTitle.textContent = '📦 Nuovo Pacchetto Ore';
         if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'none';
@@ -366,6 +374,7 @@ function openVenditaModal(tipo) {
         if (descrizioneGroup) descrizioneGroup.style.display = 'block';
         if (descrizioneLabel) descrizioneLabel.textContent = 'Descrizione';
         if (noteGroup) noteGroup.style.display = 'none';
+        if (controlliGroup) controlliGroup.style.display = 'block';
     } else if (tipo === 'firma') {
         if (modalTitle) modalTitle.textContent = '✍️ Nuova Firma Digitale';
         if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'block';
@@ -428,6 +437,17 @@ async function submitVendita(e) {
         } else if (tipo === 'canone') {
             action = 'insert_canone';
             params += `&descrizione=${encodeURIComponent(descrizione)}&durata_anni=${durataAnni}`;
+
+            // Controlli periodici: canone di tipo CONTROLLI con N slot da tracciare
+            const controlliCheck = document.getElementById('venditaControlliCheck');
+            if (controlliCheck && controlliCheck.checked) {
+                const nControlli = document.getElementById('venditaNControlli')?.value || 2;
+                const etichette = document.getElementById('venditaEtichetteControlli')?.value || '';
+                params += `&tipo=CONTROLLI&n_controlli=${encodeURIComponent(nControlli)}`;
+                if (etichette.trim() !== '') {
+                    params += `&etichette=${encodeURIComponent(etichette)}`;
+                }
+            }
         } else if (tipo === 'firma') {
             action = 'insert_firma';
             const tipoFirma = document.getElementById('venditaTipoFirma').value;

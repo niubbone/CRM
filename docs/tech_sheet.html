@@ -334,9 +334,15 @@ const f2 = calcolaFiscale(1000, true);
                     <tr><td><code>update_pagamento_fattura</code></td><td>n_fattura, pagato (SI/NO), data_pagamento?, note?</td><td>{success, proformaAggiornata} — propaga a tutte le proforma CSV</td></tr>
 
                     <tr class="group-row"><td colspan="3">Canoni</td></tr>
-                    <tr><td><code>insert_canone</code></td><td>cliente_nome, descrizione, importo, data_inizio, durata_anni?</td><td>{success, canoneId}</td></tr>
+                    <tr><td><code>insert_canone</code></td><td>cliente_nome, descrizione, importo, data_inizio, durata_anni?, tipo? (STANDARD|CONTROLLI), n_controlli?, etichette?</td><td>{success, canoneId, controlliGenerati}</td></tr>
                     <tr><td><code>get_canoni</code></td><td>cliente?, stato?</td><td>{success, data:[]}</td></tr>
-                    <tr><td><code>rinnova_canone</code></td><td>canone_id, descrizione, importo, durata_anni</td><td>{success, nuovoCanoneId}</td></tr>
+                    <tr><td><code>rinnova_canone</code></td><td>canone_id, descrizione, importo, durata_anni</td><td>{success, nuovoCanoneId} — canoni CONTROLLI rigenerano gli slot (etichette ereditate)</td></tr>
+
+                    <tr class="group-row"><td colspan="3">Controlli periodici (canoni CONTROLLI)</td></tr>
+                    <tr><td><code>get_controlli</code></td><td>canone_id</td><td>{success, controlli:[]}</td></tr>
+                    <tr><td><code>get_controlli_cliente</code></td><td>cliente_nome | id_cliente</td><td>{success, controlli:[]}</td></tr>
+                    <tr><td><code>registra_controllo</code></td><td>id_controllo, data_eseguita, report</td><td>{success, stato:"Eseguito"}</td></tr>
+                    <tr><td><code>update_controllo</code></td><td>id_controllo, etichetta?, data_eseguita?, report?, stato?</td><td>{success}</td></tr>
 
                     <tr class="group-row"><td colspan="3">Firme Digitali</td></tr>
                     <tr><td><code>insert_firma</code></td><td>cliente_nome, tipo (Token/Remota), importo, data_inizio</td><td>{success, firmaId} — durata fissa 3 anni</td></tr>
@@ -428,10 +434,14 @@ F=IVA_22 | G=Importo_Totale (=netto = lordo−ritenuta) | H=Descrizione | I=N_Pr
 J=Pagato | K=Data_Pagamento | L=Note | M=Ritenuta
 ℹ️ I=N_Proforma può essere una lista CSV ("1/2026, 2/2026") per fatture multi-proforma
 
-<strong>Canoni</strong> (A–L, 12 col):
+<strong>Canoni</strong> (A–N, 14 col):
 A=ID_Canone | B=ID_Precedente | C=ID_Cliente | D=Nome_Cliente | E=Descrizione
-F=Data_Inizio | G=Data_Scadenza | H=Importo | I=STATO | J=Data_Fattura | K=N_Fattura | L=Event_ID
-(+ colonna Fatturazione per stato ciclo proforma)
+F=Data_Inizio | G=Data_Scadenza | H=Importo | I=STATO | J=Fatturazione | K=N_Fattura | L=Event_ID
+M=Tipo (STANDARD|CONTROLLI) | N=N_Controlli
+
+<strong>Controlli</strong> (A–I, 9 col) — slot visite dei canoni CONTROLLI:
+A=ID_Controllo | B=ID_Canone | C=ID_Cliente | D=Nome_Cliente | E=N_Controllo
+F=Etichetta | G=Data_Eseguita | H=Report | I=STATO (Da fare|Eseguito)
 
 <strong>Firme</strong> (A–M, 13 col):
 A=ID_Firma | B=ID_Precedente | C=ID_Cliente | D=Nome_Cliente | E=Tipo | F=Data_Inizio
