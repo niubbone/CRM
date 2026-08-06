@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.12.0';
+export const VERSION = '4.13.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -39,6 +39,7 @@ export const VERSION_INFO = {
     'Feat: form Nuovo Canone con checkbox "Controlli periodici" (N controlli + etichette)',
     'Feat: pannello cliente — slot controllo con registrazione data + report per ogni visita',
     'Feat: rinnovo canone-controlli — rigenera gli slot del nuovo ciclo ereditando le etichette',
+    'Feat: vista "Controlli da fare" — dashboard di tutti i controlli pendenti con registrazione inline',
     'Backend: nuovo modulo Controlli.gs + foglio Controlli, colonne Tipo/N_Controlli sul foglio Canoni',
   ],
   
@@ -63,6 +64,17 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.13.0",
+    date: "06/08/2026",
+    type: "feature",
+    changes: [
+      "Vista d'insieme 'Controlli da fare': terzo subtab sotto Vendite → Canoni con tutti i controlli pendenti dei canoni ATTIVI, raggruppati per cliente e ordinati per scadenza canone",
+      "Registrazione controllo inline dalla dashboard (data + report) senza passare dal pannello cliente",
+      "Backend: nuova action get_controlli_da_fare + getControlliDaFare() (cross-check canoni ATTIVI)",
+      "Backend @254 — Controlli.gs + Codice.gs"
+    ]
+  },
   {
     version: "4.12.0",
     date: "06/08/2026",

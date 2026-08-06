@@ -341,6 +341,7 @@ const f2 = calcolaFiscale(1000, true);
                     <tr class="group-row"><td colspan="3">Controlli periodici (canoni CONTROLLI)</td></tr>
                     <tr><td><code>get_controlli</code></td><td>canone_id</td><td>{success, controlli:[]}</td></tr>
                     <tr><td><code>get_controlli_cliente</code></td><td>cliente_nome | id_cliente</td><td>{success, controlli:[]}</td></tr>
+                    <tr><td><code>get_controlli_da_fare</code></td><td>—</td><td>{success, controlli:[]} — pendenti di canoni ATTIVI</td></tr>
                     <tr><td><code>registra_controllo</code></td><td>id_controllo, data_eseguita, report</td><td>{success, stato:"Eseguito"}</td></tr>
                     <tr><td><code>update_controllo</code></td><td>id_controllo, etichetta?, data_eseguita?, report?, stato?</td><td>{success}</td></tr>
 

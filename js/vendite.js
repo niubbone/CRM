@@ -66,15 +66,13 @@ function switchVenditeSection(section) {
 }
 
 function switchVenditeSubtab(section, subtab) {
-    const nuovoContent    = document.getElementById(`vsub-${section}-nuovo-content`);
-    const riepilogoContent = document.getElementById(`vsub-${section}-riepilogo-content`);
-    const btnNuovo        = document.getElementById(`vsub-${section}-nuovo`);
-    const btnRiepilogo    = document.getElementById(`vsub-${section}-riepilogo`);
-
-    if (nuovoContent)    nuovoContent.style.display    = subtab === 'nuovo'    ? '' : 'none';
-    if (riepilogoContent) riepilogoContent.style.display = subtab === 'riepilogo' ? '' : 'none';
-    if (btnNuovo)    btnNuovo.classList.toggle('active',    subtab === 'nuovo');
-    if (btnRiepilogo) btnRiepilogo.classList.toggle('active', subtab === 'riepilogo');
+    const subtabs = ['nuovo', 'riepilogo', 'controlli'];
+    subtabs.forEach(st => {
+        const content = document.getElementById(`vsub-${section}-${st}-content`);
+        const btn     = document.getElementById(`vsub-${section}-${st}`);
+        if (content) content.style.display = st === subtab ? '' : 'none';
+        if (btn)     btn.classList.toggle('active', st === subtab);
+    });
 
     // Carica dati la prima volta che si apre il riepilogo
     if (subtab === 'riepilogo' && !riepilogoLoaded[section]) {
@@ -83,6 +81,11 @@ function switchVenditeSubtab(section, subtab) {
         if (section === 'canoni')    loadCanoniRiepilogo();
         if (section === 'firme')     loadFirmeRiepilogo();
         if (section === 'qodnet')    loadQodnetRiepilogo();
+    }
+
+    // La vista controlli si ricarica sempre (lo stato cambia man mano che registri)
+    if (subtab === 'controlli' && section === 'canoni') {
+        loadControlliDaFare();
     }
 }
 
@@ -863,6 +866,121 @@ async function generateProformaFromPacchetto(idPacchetto) {
 
 let canoniData = [];
 let canoniFilterTimer = null;
+
+// =======================================================================
+// === VISTA CONTROLLI DA FARE ===
+// =======================================================================
+
+function _escControllo(str) {
+    return (str == null ? '' : String(str))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function loadControlliDaFare() {
+    const container = document.getElementById('controlliDaFareContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="loading-scadenze">Caricamento controlli...</div>';
+
+    try {
+        const response = await fetch(`${getAPIUrl()}?action=get_controlli_da_fare`);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+
+        renderControlliDaFare(result.controlli || []);
+    } catch (error) {
+        console.error('Errore caricamento controlli da fare:', error);
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${_escControllo(error.message)}</div></div>`;
+    }
+}
+
+function renderControlliDaFare(controlli) {
+    const container = document.getElementById('controlliDaFareContainer');
+    if (!container) return;
+
+    if (!controlli.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">✅</div><div>Nessun controllo da fare</div></div>`;
+        return;
+    }
+
+    const oggiISO = new Date().toISOString().split('T')[0];
+
+    // Raggruppa per cliente
+    const gruppi = {};
+    controlli.forEach(c => {
+        const k = c.nomeCliente || '—';
+        if (!gruppi[k]) gruppi[k] = [];
+        gruppi[k].push(c);
+    });
+
+    let html = `<div style="font-size:13px;color:#666;margin-bottom:10px;">${controlli.length} controllo/i da eseguire</div>`;
+
+    Object.keys(gruppi).sort().forEach(cliente => {
+        html += `<div style="margin-bottom:14px;">
+            <div style="font-size:13px;font-weight:700;color:#0d6efd;margin-bottom:6px;padding:6px 10px;background:#e7f1ff;border-radius:6px;border-left:3px solid #0d6efd;">
+                <i class="fas fa-user"></i> ${_escControllo(cliente)}
+            </div>`;
+
+        gruppi[cliente].forEach(c => {
+            const etichetta = c.etichetta || ('Controllo ' + c.nControllo);
+            const scad = c.canoneScadenza ? `Canone in scadenza: ${c.canoneScadenza}` : '';
+            html += `
+            <div class="controllo-slot" style="border:1px solid #e9ecef;border-radius:6px;padding:10px;margin-bottom:6px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                    <div>
+                        <strong style="font-size:13px;">${_escControllo(etichetta)}</strong>
+                        <div style="font-size:12px;color:#fd7e14;font-weight:600;">◷ Da fare</div>
+                        ${scad ? `<div style="font-size:12px;color:#777;">${scad}</div>` : ''}
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="toggleControlloDaFareForm('${c.idControllo}')">
+                        <i class="fas fa-check"></i> Registra
+                    </button>
+                </div>
+                <div id="cdf-form-${c.idControllo}" style="display:none;margin-top:8px;">
+                    <input type="date" id="cdf-data-${c.idControllo}" value="${oggiISO}" style="width:100%;margin-bottom:6px;">
+                    <textarea id="cdf-report-${c.idControllo}" rows="3" placeholder="Report / note del controllo..." style="width:100%;margin-bottom:6px;"></textarea>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn btn-sm btn-success" onclick="submitControlloDaFare('${c.idControllo}')"><i class="fas fa-save"></i> Salva</button>
+                        <button class="btn btn-sm btn-secondary" onclick="document.getElementById('cdf-form-${c.idControllo}').style.display='none'">Annulla</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        html += `</div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function toggleControlloDaFareForm(idControllo) {
+    const form = document.getElementById(`cdf-form-${idControllo}`);
+    if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitControlloDaFare(idControllo) {
+    const data = document.getElementById(`cdf-data-${idControllo}`)?.value || '';
+    const report = document.getElementById(`cdf-report-${idControllo}`)?.value || '';
+
+    try {
+        const params = new URLSearchParams({
+            action: 'registra_controllo',
+            id_controllo: idControllo,
+            data_eseguita: data,
+            report: report
+        });
+        const res = await fetch(`${getAPIUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore registrazione');
+
+        window.markTabDirty && window.markTabDirty('vendite');
+        await loadControlliDaFare();
+    } catch (error) {
+        console.error('Errore submitControlloDaFare:', error);
+        alert('❌ Errore: ' + error.message);
+    }
+}
 
 async function loadCanoniRiepilogo() {
     const container = document.getElementById('canoniContainer');
@@ -1885,6 +2003,9 @@ if (typeof window !== 'undefined') {
     window.filterCanoniDebounced = filterCanoniDebounced;
     window.switchVenditeSection = switchVenditeSection;
     window.switchVenditeSubtab = switchVenditeSubtab;
+    window.loadControlliDaFare = loadControlliDaFare;
+    window.toggleControlloDaFareForm = toggleControlloDaFareForm;
+    window.submitControlloDaFare = submitControlloDaFare;
     window.openQodnetForm = openQodnetForm;
     window.closeQodnetModal = closeQodnetModal;
     window.calcQodnetProvvigione = calcQodnetProvvigione;

@@ -808,6 +808,9 @@
                 <button class="vendite-subtab" id="vsub-canoni-riepilogo" onclick="switchVenditeSubtab('canoni','riepilogo')">
                     <i class="fas fa-list"></i> Riepilogo
                 </button>
+                <button class="vendite-subtab" id="vsub-canoni-controlli" onclick="switchVenditeSubtab('canoni','controlli')">
+                    <i class="fas fa-clipboard-check"></i> Controlli da fare
+                </button>
             </div>
             <div id="vsub-canoni-nuovo-content" class="vendite-subtab-content">
                 <div class="vendite-action-card" onclick="openVenditaModal('canone')">
@@ -835,6 +838,11 @@
                 </div>
                 <div id="canoniContainer">
                     <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-calendar"></i></div><div>Caricamento...</div></div>
+                </div>
+            </div>
+            <div id="vsub-canoni-controlli-content" class="vendite-subtab-content" style="display:none;">
+                <div id="controlliDaFareContainer">
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-clipboard-check"></i></div><div>Caricamento...</div></div>
                 </div>
             </div>
         </div>
