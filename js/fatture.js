@@ -14,14 +14,14 @@ async function loadFattureList(retryCount = 0) {
     if (container.innerHTML.includes('Caricamento')) {
       container.innerHTML = buildFattureErrorHTML('Timeout', 'Server non risponde.', 'loadFattureList()');
     }
-  }, 20000);
+  }, 35000);
   try {
     const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
     if (!API_URL) throw new Error('CONFIG non disponibile');
     const filtri = getFiltriAttivi();
     const params = new URLSearchParams({ action: 'get_fatture_list', ...filtri });
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     const response = await fetch(`${API_URL}?${params.toString()}`, { signal: controller.signal, cache: 'no-cache' });
     clearTimeout(timeoutId);
     clearTimeout(safetyId);

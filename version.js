@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.15.0';
+export const VERSION = '4.16.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.16.0",
+    date: "06/08/2026",
+    type: "fix",
+    changes: [
+      "Timeout caricamento proforma e fatture alzati da 15s a 30s (safety 20s→35s): GAS ha picchi di latenza ~18-25s che facevano scattare il timeout durante il caricamento delle liste",
+      "Solo frontend (nessuna modifica backend, resta @256)"
+    ]
+  },
   {
     version: "4.15.0",
     date: "06/08/2026",

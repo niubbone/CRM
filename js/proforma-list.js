@@ -30,9 +30,9 @@ async function loadProformaList(clientName = null, retryCount = 0) {
   
   container.innerHTML = '<div class="loading">⏳ Caricamento proforma...</div>';
   
-  // PROTEZIONE 6: Safety timeout assoluto - dopo 20s mostra sempre qualcosa
+  // PROTEZIONE 6: Safety timeout assoluto - dopo 35s mostra sempre qualcosa
   const safetyTimeoutId = setTimeout(() => {
-    console.error('🚨 SAFETY TIMEOUT: loadProformaList non completata dopo 20 secondi');
+    console.error('🚨 SAFETY TIMEOUT: loadProformaList non completata dopo 35 secondi');
     if (container.innerHTML.includes('loading')) {
       container.innerHTML = `
         <div class="error-state" style="padding: 20px; text-align: center;">
@@ -48,8 +48,8 @@ async function loadProformaList(clientName = null, retryCount = 0) {
         </div>
       `;
     }
-  }, 20000);
-  
+  }, 35000);
+
   try {
     // PROTEZIONE 2: Verifica CONFIG con fallback multipli
     let API_URL = null;
@@ -83,12 +83,12 @@ async function loadProformaList(clientName = null, retryCount = 0) {
     console.log('📡 Chiamata API:', url.substring(0, 100) + '...');
     console.log('🔗 Parametri:', { action: 'get_proforma_list', cliente: clientName || 'tutti' });
     
-    // PROTEZIONE 3: Timeout di 15 secondi (aumentato da 10)
+    // PROTEZIONE 3: Timeout di 30 secondi (GAS ha picchi di latenza ~18-25s)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
-      console.warn('⏱️ Timeout raggiunto dopo 15 secondi');
+      console.warn('⏱️ Timeout raggiunto dopo 30 secondi');
       controller.abort();
-    }, 15000);
+    }, 30000);
     
     const fetchStartTime = Date.now();
     const response = await fetch(url, { 
@@ -150,7 +150,7 @@ async function loadProformaList(clientName = null, retryCount = 0) {
     let suggestion = 'Verifica la connessione internet e riprova.';
     
     if (error.name === 'AbortError') {
-      errorMessage = 'Timeout - il server non risponde entro 15 secondi';
+      errorMessage = 'Timeout - il server non risponde entro 30 secondi';
       suggestion = 'Il backend potrebbe essere lento o non disponibile. Riprova tra qualche minuto.';
     } else if (error.message.includes('CONFIG')) {
       errorMessage = 'Configurazione mancante';
