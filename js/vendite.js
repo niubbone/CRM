@@ -153,18 +153,17 @@ async function loadScadenze() {
     container.innerHTML = '<div class="loading-scadenze">Caricamento scadenze...</div>';
     
     try {
-        const response = await fetch(`${getAPIUrl()}?action=get_scadenze&giorni=90`);
-        const result = await response.json();
-        
+        // Le due chiamate sono lente (GAS): partono in parallelo per dimezzare l'attesa.
+        const [result] = await Promise.all([
+            fetch(`${getAPIUrl()}?action=get_scadenze&giorni=90`).then(r => r.json()),
+            fetchControlliDaFare().catch(() => { controlliDaFareData = []; })
+        ]);
+
         if (!result.success) {
             throw new Error(result.error || 'Errore sconosciuto');
         }
-        
+
         scadenzeData = result.data;
-
-        // Carica anche i controlli periodici da fare (non bloccante)
-        try { await fetchControlliDaFare(); } catch (e) { controlliDaFareData = []; }
-
         renderScadenze(scadenzeData);
 
     } catch (error) {
@@ -1028,7 +1027,7 @@ async function loadCanoniRiepilogo() {
 
         canoniData = result.canoni || [];
         populateCanoniClientFilter(canoniData);
-        renderCanoni(canoniData);
+        filterCanoni();   // applica il filtro di default (nasconde i rinnovati/storico)
 
     } catch (error) {
         console.error('Errore caricamento canoni:', error);
@@ -1049,13 +1048,18 @@ function filterCanoniDebounced() {
 }
 
 function filterCanoni() {
-    if (!canoniData.length) return;
     const filtroCliente = (document.getElementById('canoni-filter-cliente')?.value || '').trim().toLowerCase();
     const filtroStato   = (document.getElementById('canoni-filter-stato')?.value || '').toUpperCase();
 
-    const filtered = canoniData.filter(c => {
+    const filtered = (canoniData || []).filter(c => {
         const matchCliente = !filtroCliente || c.nomeCliente.toLowerCase().includes(filtroCliente);
-        const matchStato   = !filtroStato   || (c.stato || '').toUpperCase() === filtroStato;
+        const stU = (c.stato || '').toUpperCase();
+
+        let matchStato;
+        if (filtroStato === '')          matchStato = stU !== 'RINNOVATO';  // default: nascondi lo storico
+        else if (filtroStato === 'TUTTI') matchStato = true;
+        else                              matchStato = stU === filtroStato;
+
         return matchCliente && matchStato;
     });
     renderCanoni(filtered);
@@ -1083,11 +1087,15 @@ function renderCanoni(canoni) {
             <div class="storico-gruppo-header"><i class="fas fa-user"></i> ${cliente}</div>`;
 
         gruppi[cliente].forEach(c => {
-            const isAttivo   = (c.stato || '').toUpperCase() === 'ATTIVO';
+            const statoUp    = (c.stato || '').toUpperCase();
+            const isAttivo   = statoUp === 'ATTIVO';
+            const isRinnovato = statoUp === 'RINNOVATO' || c.rinnovato === true;
             const statoClass = isAttivo ? 'attivo' : 'scaduto';
 
             let scadenzaInfo = '';
-            if (c.giorniAllaScadenza !== null) {
+            if (isRinnovato) {
+                scadenzaInfo = `<span style="color:#6c757d;">Rinnovato — sostituito dal canone successivo</span>`;
+            } else if (c.giorniAllaScadenza !== null) {
                 if (c.giorniAllaScadenza < 0) {
                     scadenzaInfo = `<span style="color:#dc3545;">Scaduto da ${Math.abs(c.giorniAllaScadenza)} giorni</span>`;
                 } else if (c.giorniAllaScadenza <= 60) {
@@ -1098,12 +1106,15 @@ function renderCanoni(canoni) {
             }
 
             const fattBadge = c.fatturazione ? `<span class="storico-badge" style="background:#e8f4fd;color:#0c63e4;margin-left:6px;">${c.fatturazione}</span>` : '';
+            const statoBadge = isRinnovato
+                ? `<span class="storico-badge" style="background:#e2e3f3;color:#4b3fae;">Rinnovato</span>`
+                : `<span class="storico-badge ${statoClass}">${c.stato}</span>`;
 
             html += `
             <div class="storico-card">
                 <div class="storico-card-header">
                     <span class="storico-id">${c.idCanone}${fattBadge}</span>
-                    <span class="storico-badge ${statoClass}">${c.stato}</span>
+                    ${statoBadge}
                 </div>
                 ${c.descrizione ? `<div class="storico-descrizione">${c.descrizione}</div>` : ''}
                 <div class="firma-card-body">
@@ -1122,19 +1133,70 @@ function renderCanoni(canoni) {
                 </div>
                 ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
                 ${c.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${c.idPrecedente}</div>` : ''}
-                ${isAttivo ? `
+                ${(isAttivo || c.idPrecedente) ? `
                 <div class="storico-actions">
-                    <button class="btn-small btn-storico-detail"
+                    ${isAttivo ? `<button class="btn-small btn-storico-detail"
                         onclick="openRinnovoModal('${c.idCanone}', 'CANONE')">
                         <i class="fas fa-arrows-rotate"></i> Rinnova
-                    </button>
-                </div>` : ''}
+                    </button>` : ''}
+                    ${c.idPrecedente ? `<button class="btn-small"
+                        onclick="toggleStoricoCanone('${c.idCanone}')">
+                        <i class="fas fa-clock-rotate-left"></i> Storico
+                    </button>` : ''}
+                </div>
+                <div id="storico-canone-${c.idCanone}" style="display:none;margin-top:8px;"></div>` : ''}
             </div>`;
         });
         html += `</div>`;
     });
 
     container.innerHTML = html;
+}
+
+// --- Storico rinnovi di un canone (catena ID_Precedente) ---
+async function toggleStoricoCanone(idCanone) {
+    const box = document.getElementById(`storico-canone-${idCanone}`);
+    if (!box) return;
+    if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+        await loadStoricoCanone(idCanone);
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+async function loadStoricoCanone(idCanone) {
+    const box = document.getElementById(`storico-canone-${idCanone}`);
+    if (!box) return;
+    box.innerHTML = '<div style="font-size:12px;color:#888;">⏳ Caricamento storico...</div>';
+    try {
+        const res = await fetch(`${getAPIUrl()}?action=get_storico_rinnovi&prodotto_id=${encodeURIComponent(idCanone)}&tipo=CANONE`);
+        const result = await res.json();
+        const catena = Array.isArray(result) ? result : (result.data || []);
+        box.innerHTML = renderStoricoCanone(catena);
+    } catch (e) {
+        console.error('Errore storico canone:', e);
+        box.innerHTML = `<div style="font-size:12px;color:#dc3545;">Errore caricamento storico</div>`;
+    }
+}
+
+function renderStoricoCanone(catena) {
+    if (!catena || !catena.length) return '<div style="font-size:12px;color:#888;">Nessuno storico disponibile.</div>';
+
+    const fmt = d => { if (!d) return '—'; const dt = new Date(d); return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('it-IT'); };
+
+    // La catena arriva dal più vecchio al più recente: mostro il più recente in cima.
+    const rows = catena.slice().reverse().map(c => {
+        const isAttuale = (c.stato || '').toUpperCase() === 'ATTIVO';
+        const color = isAttuale ? '#28a745' : '#6c757d';
+        return `
+        <div style="border-left:3px solid ${color};padding:4px 8px;margin-bottom:4px;background:#f8f9fa;border-radius:4px;">
+            <div style="font-size:12px;font-weight:600;">${c.idCanone || ''} ${isAttuale ? '<span style="color:#28a745;">(attuale)</span>' : ''}</div>
+            <div style="font-size:12px;color:#555;">${fmt(c.dataInizio)} → ${fmt(c.dataScadenza)} · € ${parseFloat(c.importo || 0).toFixed(2)} · ${c.stato || ''}</div>
+        </div>`;
+    }).join('');
+
+    return `<div style="font-size:12px;color:#888;margin-bottom:4px;">Storico rinnovi (${catena.length})</div>${rows}`;
 }
 
 // =======================================================================
@@ -2026,6 +2088,7 @@ if (typeof window !== 'undefined') {
     window.loadCanoniRiepilogo = loadCanoniRiepilogo;
     window.filterCanoni = filterCanoni;
     window.filterCanoniDebounced = filterCanoniDebounced;
+    window.toggleStoricoCanone = toggleStoricoCanone;
     window.switchVenditeSection = switchVenditeSection;
     window.switchVenditeSubtab = switchVenditeSubtab;
     window.loadControlliDaFare = loadControlliDaFare;

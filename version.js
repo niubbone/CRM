@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.14.0';
+export const VERSION = '4.15.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,19 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.15.0",
+    date: "06/08/2026",
+    type: "feature",
+    changes: [
+      "Canoni rinnovati: mostrati come RINNOVATO invece di SCADUTO. Rilevamento via catena ID_Precedente, copre anche i rinnovi passati (memorizzati come SCADUTO nel foglio). rinnovaCanone ora salva RINNOVATO",
+      "Riepilogo Canoni: default mostra solo attivi + scaduti non rinnovati; i rinnovati sono nascosti (accessibili come 'Rinnovati (storico)' o 'Tutti')",
+      "Canone: pulsante 'Storico' che mostra inline la catena dei rinnovi (periodo, importo, stato di ogni ciclo)",
+      "Scadenze: get_scadenze e get_controlli_da_fare ora in parallelo (attesa ~dimezzata)",
+      "SW: guard anti-loop sul reload (hotfix 4.14.x)",
+      "Backend @256 — Canoni.gs + Rinnovi.gs"
+    ]
+  },
   {
     version: "4.14.0",
     date: "06/08/2026",
