@@ -17,6 +17,10 @@
    */
   async function registerServiceWorker() {
     try {
+      // Se c'era già un SW controllante, un controllerchange = aggiornamento
+      // (serve reload). Se non c'era (primo install), NON ricaricare.
+      const hadController = !!navigator.serviceWorker.controller;
+
       // Auto-detect base path for GitHub Pages
       const basePath = window.location.pathname.split('/')[1] ? `/${window.location.pathname.split('/')[1]}/` : '/';
       const swPath = basePath === '/' ? '/service-worker.js' : `${basePath}service-worker.js`;
@@ -46,10 +50,13 @@
         });
       });
 
-      // Listen for controller change (new SW activated)
+      // Listen for controller change (new SW activated).
+      // Guard anti-loop: ricarica UNA sola volta, e mai al primo install.
+      let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('🔄 New Service Worker activated');
-        // Reload page to use new version
+        if (refreshing || !hadController) return;
+        refreshing = true;
+        console.log('🔄 New Service Worker activated — reload (una volta)');
         window.location.reload();
       });
 
