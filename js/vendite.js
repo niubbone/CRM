@@ -161,8 +161,12 @@ async function loadScadenze() {
         }
         
         scadenzeData = result.data;
+
+        // Carica anche i controlli periodici da fare (non bloccante)
+        try { await fetchControlliDaFare(); } catch (e) { controlliDaFareData = []; }
+
         renderScadenze(scadenzeData);
-        
+
     } catch (error) {
         console.error('Errore caricamento scadenze:', error);
         container.innerHTML = `
@@ -191,7 +195,25 @@ function renderScadenze(data) {
     
     container.innerHTML = '';
     container.className = 'scadenze-list';
-    
+
+    // Sezione Controlli periodici da fare (in cima: azionabili subito)
+    if (controlliDaFareData && controlliDaFareData.length > 0) {
+        const sezControlli = document.createElement('div');
+        sezControlli.style.marginBottom = '30px';
+
+        const titleControlli = document.createElement('h3');
+        titleControlli.innerHTML = '<i class="fas fa-clipboard-check" style="color:#fd7e14;margin-right:6px;"></i>Controlli da fare';
+        titleControlli.style.color = '#fd7e14';
+        titleControlli.style.marginBottom = '15px';
+        sezControlli.appendChild(titleControlli);
+
+        const bodyControlli = document.createElement('div');
+        bodyControlli.innerHTML = controlliDaFareGroupedHtml(controlliDaFareData, 'sccdf', 'scadenze');
+        sezControlli.appendChild(bodyControlli);
+
+        container.appendChild(sezControlli);
+    }
+
     // Sezione Canoni da Rinnovare (scaduti)
     if (canoniScaduti.length > 0) {
         const sezioneCanoni = document.createElement('div');
@@ -229,7 +251,8 @@ function renderScadenze(data) {
         container.appendChild(sezioneScadenze);
     }
     
-    if (canoniScaduti.length === 0 && altreScadenze.length === 0) {
+    const nessunControllo = !controlliDaFareData || controlliDaFareData.length === 0;
+    if (canoniScaduti.length === 0 && altreScadenze.length === 0 && nessunControllo) {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">✅</div>
@@ -868,8 +891,10 @@ let canoniData = [];
 let canoniFilterTimer = null;
 
 // =======================================================================
-// === VISTA CONTROLLI DA FARE ===
+// === VISTA CONTROLLI DA FARE (subtab Canoni + dashboard Scadenze) ===
 // =======================================================================
+
+let controlliDaFareData = [];
 
 function _escControllo(str) {
     return (str == null ? '' : String(str))
@@ -877,6 +902,15 @@ function _escControllo(str) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+async function fetchControlliDaFare() {
+    const response = await fetch(`${getAPIUrl()}?action=get_controlli_da_fare`);
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+    controlliDaFareData = result.controlli || [];
+    return controlliDaFareData;
+}
+
+// Loader per il subtab dedicato (Vendite → Canoni → Controlli da fare)
 async function loadControlliDaFare() {
     const container = document.getElementById('controlliDaFareContainer');
     if (!container) return;
@@ -884,29 +918,20 @@ async function loadControlliDaFare() {
     container.innerHTML = '<div class="loading-scadenze">Caricamento controlli...</div>';
 
     try {
-        const response = await fetch(`${getAPIUrl()}?action=get_controlli_da_fare`);
-        const result = await response.json();
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
-
-        renderControlliDaFare(result.controlli || []);
+        const controlli = await fetchControlliDaFare();
+        container.innerHTML = controlli.length
+            ? `<div style="font-size:13px;color:#666;margin-bottom:10px;">${controlli.length} controllo/i da eseguire</div>`
+              + controlliDaFareGroupedHtml(controlli, 'cdf', 'canoni')
+            : `<div class="empty-state"><div class="empty-state-icon">✅</div><div>Nessun controllo da fare</div></div>`;
     } catch (error) {
         console.error('Errore caricamento controlli da fare:', error);
         container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${_escControllo(error.message)}</div></div>`;
     }
 }
 
-function renderControlliDaFare(controlli) {
-    const container = document.getElementById('controlliDaFareContainer');
-    if (!container) return;
-
-    if (!controlli.length) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">✅</div><div>Nessun controllo da fare</div></div>`;
-        return;
-    }
-
-    const oggiISO = new Date().toISOString().split('T')[0];
-
-    // Raggruppa per cliente
+// Raggruppa per cliente e restituisce l'HTML. prefix = namespace ID (evita
+// collisioni fra subtab e dashboard); reloadKey = quale vista ricaricare dopo il salvataggio.
+function controlliDaFareGroupedHtml(controlli, prefix, reloadKey) {
     const gruppi = {};
     controlli.forEach(c => {
         const k = c.nomeCliente || '—';
@@ -914,59 +939,58 @@ function renderControlliDaFare(controlli) {
         gruppi[k].push(c);
     });
 
-    let html = `<div style="font-size:13px;color:#666;margin-bottom:10px;">${controlli.length} controllo/i da eseguire</div>`;
-
+    let html = '';
     Object.keys(gruppi).sort().forEach(cliente => {
         html += `<div style="margin-bottom:14px;">
             <div style="font-size:13px;font-weight:700;color:#0d6efd;margin-bottom:6px;padding:6px 10px;background:#e7f1ff;border-radius:6px;border-left:3px solid #0d6efd;">
                 <i class="fas fa-user"></i> ${_escControllo(cliente)}
             </div>`;
-
-        gruppi[cliente].forEach(c => {
-            const etichetta = c.etichetta || ('Controllo ' + c.nControllo);
-            const scad = c.canoneScadenza ? `Canone in scadenza: ${c.canoneScadenza}` : '';
-            html += `
-            <div class="controllo-slot" style="border:1px solid #e9ecef;border-radius:6px;padding:10px;margin-bottom:6px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-                    <div>
-                        <strong style="font-size:13px;">${_escControllo(etichetta)}</strong>
-                        <div style="font-size:12px;color:#fd7e14;font-weight:600;">◷ Da fare</div>
-                        ${scad ? `<div style="font-size:12px;color:#777;">${scad}</div>` : ''}
-                    </div>
-                    <button class="btn btn-sm btn-primary" onclick="toggleControlloDaFareForm('${c.idControllo}')">
-                        <i class="fas fa-check"></i> Registra
-                    </button>
-                </div>
-                <div id="cdf-form-${c.idControllo}" style="display:none;margin-top:8px;">
-                    <input type="date" id="cdf-data-${c.idControllo}" value="${oggiISO}" style="width:100%;margin-bottom:6px;">
-                    <textarea id="cdf-report-${c.idControllo}" rows="3" placeholder="Report / note del controllo..." style="width:100%;margin-bottom:6px;"></textarea>
-                    <div style="display:flex;gap:6px;">
-                        <button class="btn btn-sm btn-success" onclick="submitControlloDaFare('${c.idControllo}')"><i class="fas fa-save"></i> Salva</button>
-                        <button class="btn btn-sm btn-secondary" onclick="document.getElementById('cdf-form-${c.idControllo}').style.display='none'">Annulla</button>
-                    </div>
-                </div>
-            </div>`;
-        });
-
+        gruppi[cliente].forEach(c => { html += controlloDaFareCardHtml(c, prefix, reloadKey); });
         html += `</div>`;
     });
-
-    container.innerHTML = html;
+    return html;
 }
 
-function toggleControlloDaFareForm(idControllo) {
-    const form = document.getElementById(`cdf-form-${idControllo}`);
+function controlloDaFareCardHtml(c, prefix, reloadKey) {
+    const oggiISO = new Date().toISOString().split('T')[0];
+    const etichetta = c.etichetta || ('Controllo ' + c.nControllo);
+    const scad = c.canoneScadenza ? `Canone in scadenza: ${c.canoneScadenza}` : '';
+    return `
+    <div class="controllo-slot" style="border:1px solid #e9ecef;border-radius:6px;padding:10px;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div>
+                <strong style="font-size:13px;">${_escControllo(etichetta)}</strong>
+                <div style="font-size:12px;color:#fd7e14;font-weight:600;">◷ Da fare</div>
+                ${scad ? `<div style="font-size:12px;color:#777;">${scad}</div>` : ''}
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="toggleCdfForm('${prefix}','${c.idControllo}')">
+                <i class="fas fa-check"></i> Registra
+            </button>
+        </div>
+        <div id="${prefix}-form-${c.idControllo}" style="display:none;margin-top:8px;">
+            <input type="date" id="${prefix}-data-${c.idControllo}" value="${oggiISO}" style="width:100%;margin-bottom:6px;">
+            <textarea id="${prefix}-report-${c.idControllo}" rows="3" placeholder="Report / note del controllo..." style="width:100%;margin-bottom:6px;"></textarea>
+            <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm btn-success" onclick="submitCdf('${prefix}','${c.idControllo}','${reloadKey}')"><i class="fas fa-save"></i> Salva</button>
+                <button class="btn btn-sm btn-secondary" onclick="document.getElementById('${prefix}-form-${c.idControllo}').style.display='none'">Annulla</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function toggleCdfForm(prefix, id) {
+    const form = document.getElementById(`${prefix}-form-${id}`);
     if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-async function submitControlloDaFare(idControllo) {
-    const data = document.getElementById(`cdf-data-${idControllo}`)?.value || '';
-    const report = document.getElementById(`cdf-report-${idControllo}`)?.value || '';
+async function submitCdf(prefix, id, reloadKey) {
+    const data = document.getElementById(`${prefix}-data-${id}`)?.value || '';
+    const report = document.getElementById(`${prefix}-report-${id}`)?.value || '';
 
     try {
         const params = new URLSearchParams({
             action: 'registra_controllo',
-            id_controllo: idControllo,
+            id_controllo: id,
             data_eseguita: data,
             report: report
         });
@@ -975,9 +999,10 @@ async function submitControlloDaFare(idControllo) {
         if (!result.success) throw new Error(result.error || 'Errore registrazione');
 
         window.markTabDirty && window.markTabDirty('vendite');
-        await loadControlliDaFare();
+        if (reloadKey === 'scadenze') loadScadenze();
+        else loadControlliDaFare();
     } catch (error) {
-        console.error('Errore submitControlloDaFare:', error);
+        console.error('Errore submitCdf:', error);
         alert('❌ Errore: ' + error.message);
     }
 }
@@ -2004,8 +2029,8 @@ if (typeof window !== 'undefined') {
     window.switchVenditeSection = switchVenditeSection;
     window.switchVenditeSubtab = switchVenditeSubtab;
     window.loadControlliDaFare = loadControlliDaFare;
-    window.toggleControlloDaFareForm = toggleControlloDaFareForm;
-    window.submitControlloDaFare = submitControlloDaFare;
+    window.toggleCdfForm = toggleCdfForm;
+    window.submitCdf = submitCdf;
     window.openQodnetForm = openQodnetForm;
     window.closeQodnetModal = closeQodnetModal;
     window.calcQodnetProvvigione = calcQodnetProvvigione;

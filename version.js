@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.13.0';
+export const VERSION = '4.14.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,17 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.14.0",
+    date: "06/08/2026",
+    type: "feature",
+    changes: [
+      "Controlli da fare anche nella dashboard Scadenze generale (Vendite → Scadenze), in cima e con registrazione inline",
+      "Fix: pacchetti con ore esaurite non generano più l'alert email di scadenza — getPacchettiScaduti salta i pacchetti con ore residue <= 0 (la scadenza per data non è rilevante se le ore sono finite)",
+      "Refactor UI controlli: funzioni namespaced (prefix) riusabili fra subtab Canoni e dashboard Scadenze senza collisioni di ID",
+      "Backend @255 — Pacchetti.gs"
+    ]
+  },
   {
     version: "4.13.0",
     date: "06/08/2026",
