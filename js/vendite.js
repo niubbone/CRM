@@ -707,18 +707,36 @@ function openRinnovoModal(id, tipo) {
     if (rinnovoTipoInput) rinnovoTipoInput.value = tipo;
     
     let prodotto = null;
-    
+
+    // 1) Prova nei prodotti in scadenza (vista Scadenze)
     if (scadenzeData && scadenzeData.tutti) {
         prodotto = scadenzeData.tutti.find(p => {
             if (tipo === 'CANONE') return p.idCanone === id;
             else return p.idFirma === id;
         });
     }
-    
+
+    // 2) Fallback nei dati del Riepilogo: il pulsante Rinnova può essere premuto
+    //    anche per canoni/firme NON in scadenza entro 90 giorni (assenti da scadenzeData)
+    if (!prodotto && tipo === 'CANONE' && Array.isArray(canoniData)) {
+        const c = canoniData.find(x => x.idCanone === id);
+        if (c) prodotto = {
+            idCanone: c.idCanone, nomeCliente: c.nomeCliente, descrizione: c.descrizione,
+            importo: c.importo, dataScadenza: c.dataScadenza, tipoProdotto: 'CANONE'
+        };
+    }
+    if (!prodotto && tipo !== 'CANONE' && Array.isArray(firmeData)) {
+        const f = firmeData.find(x => x.idFirma === id);
+        if (f) prodotto = {
+            idFirma: f.idFirma, nomeCliente: f.nomeCliente, tipo: f.tipo,
+            importo: f.importo, dataScadenza: f.dataScadenza
+        };
+    }
+
     if (!prodotto && window.currentProdottoRinnovo) {
         prodotto = window.currentProdottoRinnovo;
     }
-    
+
     if (!prodotto) {
         alert('⚠️ Prodotto non trovato');
         return;
@@ -733,8 +751,15 @@ function openRinnovoModal(id, tipo) {
     const noteGroup = document.getElementById('rinnovoNoteGroup');
     
     if (clienteNome) clienteNome.textContent = prodotto.nomeCliente;
-    
-    const dataScadenza = new Date(prodotto.dataScadenza).toLocaleDateString('it-IT');
+
+    // dataScadenza può essere già "gg/mm/aaaa" (riepilogo) o Date/ISO (scadenze)
+    let dataScadenza = '—';
+    if (typeof prodotto.dataScadenza === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(prodotto.dataScadenza)) {
+        dataScadenza = prodotto.dataScadenza;
+    } else if (prodotto.dataScadenza) {
+        const d = new Date(prodotto.dataScadenza);
+        if (!isNaN(d.getTime())) dataScadenza = d.toLocaleDateString('it-IT');
+    }
     let dettagliText = `${tipo === 'CANONE' ? 'Canone' : 'Firma'} • Scadenza: ${dataScadenza}`;
     
     if (tipo === 'CANONE') {
@@ -799,6 +824,12 @@ async function submitRinnovo(e) {
             alert('✅ Rinnovo completato con successo!');
             closeRinnovoModal();
             loadScadenze();
+            // Aggiorna anche il riepilogo attualmente rilevante (altrimenti resta vecchio)
+            if (tipo === 'CANONE') {
+                if (typeof loadCanoniRiepilogo === 'function') loadCanoniRiepilogo();
+            } else {
+                if (typeof loadFirmeRiepilogo === 'function') loadFirmeRiepilogo();
+            }
         } else {
             throw new Error(result.error || 'Errore sconosciuto');
         }

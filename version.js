@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.17.0';
+export const VERSION = '4.18.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,17 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.18.0",
+    date: "07/08/2026",
+    type: "fix",
+    changes: [
+      "Fix Rinnova dal Riepilogo Canoni/Firme: openRinnovoModal cercava il prodotto solo tra quelli in scadenza <90gg (scadenzeData) → 'Prodotto non trovato' per canoni/firme con scadenza lontana. Ora fa fallback su canoniData/firmeData",
+      "Rinnovo: dopo il completamento ricarica anche il riepilogo canoni/firme (non solo le scadenze)",
+      "Data scadenza nel modal rinnovo gestita sia come gg/mm/aaaa sia come Date",
+      "Solo frontend (backend invariato @256)"
+    ]
+  },
   {
     version: "4.17.0",
     date: "07/08/2026",
