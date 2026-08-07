@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.16.0';
+export const VERSION = '4.17.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.17.0",
+    date: "07/08/2026",
+    type: "feature",
+    changes: [
+      "Riepilogo Canoni: i canoni-controlli sono distinti graficamente (bordo sinistro arancio + chip 'Controlli')",
+      "Riepilogo Canoni: pulsante 'Controlli (N)' sulla card apre lo storico completo delle visite (fatte con data+rapportino e da fare), con Registra/Modifica/Azzera direttamente lì",
+      "Solo frontend (backend invariato @256)"
+    ]
+  },
   {
     version: "4.16.0",
     date: "06/08/2026",

@@ -1105,15 +1105,24 @@ function renderCanoni(canoni) {
                 }
             }
 
+            const isControlli = (c.tipo || '').toUpperCase() === 'CONTROLLI';
+
             const fattBadge = c.fatturazione ? `<span class="storico-badge" style="background:#e8f4fd;color:#0c63e4;margin-left:6px;">${c.fatturazione}</span>` : '';
             const statoBadge = isRinnovato
                 ? `<span class="storico-badge" style="background:#e2e3f3;color:#4b3fae;">Rinnovato</span>`
                 : `<span class="storico-badge ${statoClass}">${c.stato}</span>`;
+            // Distinzione grafica per i canoni-controlli: bordo sinistro arancio + chip
+            const cardStyle = isControlli ? ' style="border-left:4px solid #fd7e14;"' : '';
+            const controlliChip = isControlli
+                ? `<span class="storico-badge" style="background:#fff3cd;color:#856404;margin-left:6px;"><i class="fas fa-clipboard-check"></i> Controlli</span>`
+                : '';
+
+            const mostraAzioni = isAttivo || c.idPrecedente || isControlli;
 
             html += `
-            <div class="storico-card">
+            <div class="storico-card"${cardStyle}>
                 <div class="storico-card-header">
-                    <span class="storico-id">${c.idCanone}${fattBadge}</span>
+                    <span class="storico-id">${c.idCanone}${controlliChip}${fattBadge}</span>
                     ${statoBadge}
                 </div>
                 ${c.descrizione ? `<div class="storico-descrizione">${c.descrizione}</div>` : ''}
@@ -1133,17 +1142,22 @@ function renderCanoni(canoni) {
                 </div>
                 ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
                 ${c.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${c.idPrecedente}</div>` : ''}
-                ${(isAttivo || c.idPrecedente) ? `
+                ${mostraAzioni ? `
                 <div class="storico-actions">
                     ${isAttivo ? `<button class="btn-small btn-storico-detail"
                         onclick="openRinnovoModal('${c.idCanone}', 'CANONE')">
                         <i class="fas fa-arrows-rotate"></i> Rinnova
+                    </button>` : ''}
+                    ${isControlli ? `<button class="btn-small"
+                        onclick="toggleControlliCanoneCard('${c.idCanone}')">
+                        <i class="fas fa-clipboard-check"></i> Controlli (${c.nControlli || ''})
                     </button>` : ''}
                     ${c.idPrecedente ? `<button class="btn-small"
                         onclick="toggleStoricoCanone('${c.idCanone}')">
                         <i class="fas fa-clock-rotate-left"></i> Storico
                     </button>` : ''}
                 </div>
+                <div id="canone-controlli-${c.idCanone}" style="display:none;margin-top:8px;"></div>
                 <div id="storico-canone-${c.idCanone}" style="display:none;margin-top:8px;"></div>` : ''}
             </div>`;
         });
@@ -1197,6 +1211,103 @@ function renderStoricoCanone(catena) {
     }).join('');
 
     return `<div style="font-size:12px;color:#888;margin-bottom:4px;">Storico rinnovi (${catena.length})</div>${rows}`;
+}
+
+// --- Controlli periodici sulla card canone (storico completo: fatti + da fare) ---
+async function toggleControlliCanoneCard(idCanone) {
+    const box = document.getElementById(`canone-controlli-${idCanone}`);
+    if (!box) return;
+    if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+        await loadControlliCanoneCard(idCanone);
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+async function loadControlliCanoneCard(idCanone) {
+    const box = document.getElementById(`canone-controlli-${idCanone}`);
+    if (!box) return;
+    box.innerHTML = '<div style="font-size:12px;color:#888;">⏳ Caricamento controlli...</div>';
+    try {
+        const res = await fetch(`${getAPIUrl()}?action=get_controlli&canone_id=${encodeURIComponent(idCanone)}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        box.innerHTML = renderControlliCanoneCard(idCanone, result.controlli || []);
+    } catch (e) {
+        box.innerHTML = `<div style="font-size:12px;color:#dc3545;">Errore controlli: ${_escControllo(e.message)}</div>`;
+    }
+}
+
+function renderControlliCanoneCard(idCanone, controlli) {
+    if (!controlli.length) return '<div style="font-size:12px;color:#888;">Nessun controllo generato.</div>';
+    const rows = controlli.map(c => {
+        const eseguito = c.stato === 'Eseguito';
+        const badge = eseguito
+            ? `<span style="color:#28a745;font-weight:600;">✓ Eseguito${c.dataEseguita ? ' il ' + c.dataEseguita : ''}</span>`
+            : `<span style="color:#fd7e14;font-weight:600;">◷ Da fare</span>`;
+        const reportHtml = c.report ? `<div style="font-size:12px;color:#555;margin-top:2px;white-space:pre-wrap;">${_escControllo(c.report)}</div>` : '';
+        const etichetta = c.etichetta || ('Controllo ' + c.nControllo);
+        const dataVal = (eseguito && c.dataEseguita) ? c.dataEseguita.split('/').reverse().join('-') : '';
+        return `
+        <div style="border:1px solid #e9ecef;border-radius:6px;padding:8px;margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div>
+                    <strong style="font-size:13px;">${_escControllo(etichetta)}</strong>
+                    <div style="font-size:12px;">${badge}</div>
+                    ${reportHtml}
+                </div>
+                <button class="btn-small" onclick="toggleVccForm('${c.idControllo}')">
+                    ${eseguito ? '<i class="fas fa-pen"></i> Modifica' : '<i class="fas fa-check"></i> Registra'}
+                </button>
+            </div>
+            <div id="vcc-form-${c.idControllo}" style="display:none;margin-top:8px;">
+                <input type="date" id="vcc-data-${c.idControllo}" value="${dataVal}" style="width:100%;margin-bottom:6px;">
+                <textarea id="vcc-report-${c.idControllo}" rows="3" placeholder="Report / note del controllo..." style="width:100%;margin-bottom:6px;">${_escControllo(c.report || '')}</textarea>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="btn-small btn-storico-detail" onclick="submitControlloCard('${idCanone}','${c.idControllo}')"><i class="fas fa-save"></i> Salva</button>
+                    <button class="btn-small" onclick="document.getElementById('vcc-form-${c.idControllo}').style.display='none'">Annulla</button>
+                    ${eseguito ? `<button class="btn-small" style="color:#dc3545;" onclick="resetControlloCard('${idCanone}','${c.idControllo}')">Azzera</button>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    return `<div style="font-size:12px;color:#888;margin-bottom:4px;">Controlli del ciclo (${controlli.length})</div>${rows}`;
+}
+
+function toggleVccForm(idControllo) {
+    const f = document.getElementById(`vcc-form-${idControllo}`);
+    if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitControlloCard(idCanone, idControllo) {
+    const data = document.getElementById(`vcc-data-${idControllo}`)?.value || '';
+    const report = document.getElementById(`vcc-report-${idControllo}`)?.value || '';
+    try {
+        const params = new URLSearchParams({ action: 'registra_controllo', id_controllo: idControllo, data_eseguita: data, report: report });
+        const res = await fetch(`${getAPIUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore registrazione');
+        window.markTabDirty && window.markTabDirty('vendite');
+        await loadControlliCanoneCard(idCanone);
+    } catch (e) {
+        console.error('Errore submitControlloCard:', e);
+        alert('❌ Errore: ' + e.message);
+    }
+}
+
+async function resetControlloCard(idCanone, idControllo) {
+    if (!confirm('Azzerare questo controllo (rimuove data e report, torna "Da fare")?')) return;
+    try {
+        const params = new URLSearchParams({ action: 'update_controllo', id_controllo: idControllo, stato: 'Da fare' });
+        const res = await fetch(`${getAPIUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        await loadControlliCanoneCard(idCanone);
+    } catch (e) {
+        console.error('Errore resetControlloCard:', e);
+        alert('❌ Errore: ' + e.message);
+    }
 }
 
 // =======================================================================
@@ -2089,6 +2200,10 @@ if (typeof window !== 'undefined') {
     window.filterCanoni = filterCanoni;
     window.filterCanoniDebounced = filterCanoniDebounced;
     window.toggleStoricoCanone = toggleStoricoCanone;
+    window.toggleControlliCanoneCard = toggleControlliCanoneCard;
+    window.toggleVccForm = toggleVccForm;
+    window.submitControlloCard = submitControlloCard;
+    window.resetControlloCard = resetControlloCard;
     window.switchVenditeSection = switchVenditeSection;
     window.switchVenditeSubtab = switchVenditeSubtab;
     window.loadControlliDaFare = loadControlliDaFare;
