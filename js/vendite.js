@@ -1218,14 +1218,42 @@ async function loadStoricoCanone(idCanone) {
         const res = await fetch(`${getAPIUrl()}?action=get_storico_rinnovi&prodotto_id=${encodeURIComponent(idCanone)}&tipo=CANONE`);
         const result = await res.json();
         const catena = Array.isArray(result) ? result : (result.data || []);
-        box.innerHTML = renderStoricoCanone(catena);
+        box.innerHTML = renderStoricoRinnovi(catena);
     } catch (e) {
         console.error('Errore storico canone:', e);
         box.innerHTML = `<div style="font-size:12px;color:#dc3545;">Errore caricamento storico</div>`;
     }
 }
 
-function renderStoricoCanone(catena) {
+// --- Storico rinnovi di una firma (catena ID_Precedente) ---
+async function toggleStoricoFirma(idFirma) {
+    const box = document.getElementById(`storico-firma-${idFirma}`);
+    if (!box) return;
+    if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+        await loadStoricoFirma(idFirma);
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+async function loadStoricoFirma(idFirma) {
+    const box = document.getElementById(`storico-firma-${idFirma}`);
+    if (!box) return;
+    box.innerHTML = '<div style="font-size:12px;color:#888;">⏳ Caricamento storico...</div>';
+    try {
+        const res = await fetch(`${getAPIUrl()}?action=get_storico_rinnovi&prodotto_id=${encodeURIComponent(idFirma)}&tipo=FIRMA`);
+        const result = await res.json();
+        const catena = Array.isArray(result) ? result : (result.data || []);
+        box.innerHTML = renderStoricoRinnovi(catena);
+    } catch (e) {
+        console.error('Errore storico firma:', e);
+        box.innerHTML = `<div style="font-size:12px;color:#dc3545;">Errore caricamento storico</div>`;
+    }
+}
+
+// Reso generico: la catena può contenere canoni (idCanone) o firme (idFirma).
+function renderStoricoRinnovi(catena) {
     if (!catena || !catena.length) return '<div style="font-size:12px;color:#888;">Nessuno storico disponibile.</div>';
 
     const fmt = d => { if (!d) return '—'; const dt = new Date(d); return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('it-IT'); };
@@ -1234,9 +1262,10 @@ function renderStoricoCanone(catena) {
     const rows = catena.slice().reverse().map(c => {
         const isAttuale = (c.stato || '').toUpperCase() === 'ATTIVO';
         const color = isAttuale ? '#28a745' : '#6c757d';
+        const id = c.idCanone || c.idFirma || '';
         return `
         <div style="border-left:3px solid ${color};padding:4px 8px;margin-bottom:4px;background:#f8f9fa;border-radius:4px;">
-            <div style="font-size:12px;font-weight:600;">${c.idCanone || ''} ${isAttuale ? '<span style="color:#28a745;">(attuale)</span>' : ''}</div>
+            <div style="font-size:12px;font-weight:600;">${id} ${isAttuale ? '<span style="color:#28a745;">(attuale)</span>' : ''}</div>
             <div style="font-size:12px;color:#555;">${fmt(c.dataInizio)} → ${fmt(c.dataScadenza)} · € ${parseFloat(c.importo || 0).toFixed(2)} · ${c.stato || ''}</div>
         </div>`;
     }).join('');
@@ -1355,12 +1384,13 @@ async function loadFirmeRiepilogo() {
     container.innerHTML = '<div class="loading-scadenze">Caricamento firme...</div>';
 
     try {
+        // Recupera SEMPRE tutte le firme: il filtro per stato è client-side
+        // (filterFirme), così la rilevazione dei rinnovi lato server lavora
+        // sempre sulla lista completa.
         const cliente = (document.getElementById('firme-filter-cliente')?.value || '').trim();
-        const stato   = document.getElementById('firme-filter-stato')?.value || '';
 
         let url = `${getAPIUrl()}?action=get_firme_riepilogo`;
         if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
-        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
 
         const response = await fetch(url);
         const result   = await response.json();
@@ -1369,7 +1399,7 @@ async function loadFirmeRiepilogo() {
 
         firmeData = result.firme || [];
         populateFirmeClientFilter(firmeData);
-        renderFirme(firmeData);
+        filterFirme();   // applica il filtro di default (nasconde le rinnovate/storico)
 
     } catch (error) {
         console.error('Errore caricamento firme:', error);
@@ -1390,13 +1420,18 @@ function filterFirmeDebounced() {
 }
 
 function filterFirme() {
-    if (!firmeData.length) return;
     const filtroCliente = (document.getElementById('firme-filter-cliente')?.value || '').trim().toLowerCase();
     const filtroStato   = (document.getElementById('firme-filter-stato')?.value || '').toLowerCase();
 
-    const filtered = firmeData.filter(f => {
+    const filtered = (firmeData || []).filter(f => {
         const matchCliente = !filtroCliente || f.nomeCliente.toLowerCase().includes(filtroCliente);
-        const matchStato   = !filtroStato   || f.stato.toLowerCase() === filtroStato;
+        const stL = (f.stato || '').toLowerCase();
+
+        let matchStato;
+        if (filtroStato === '')           matchStato = stL !== 'rinnovato';  // default: nascondi lo storico
+        else if (filtroStato === 'tutti') matchStato = true;
+        else                              matchStato = stL === filtroStato;
+
         return matchCliente && matchStato;
     });
     renderFirme(filtered);
@@ -1417,11 +1452,15 @@ function renderFirme(firme) {
 
     let html = '';
     sorted.forEach(f => {
-        const isAttivo  = f.stato.toLowerCase() === 'attivo';
+        const stL        = (f.stato || '').toLowerCase();
+        const isAttivo   = stL === 'attivo';
+        const isRinnovata = stL === 'rinnovato' || f.rinnovata === true;
         const statoClass = isAttivo ? 'attivo' : 'scaduto';
 
         let scadenzaInfo = '';
-        if (f.giorniAllaScadenza !== null) {
+        if (isRinnovata) {
+            scadenzaInfo = `<span style="color:#6c757d;">Rinnovata — sostituita dalla firma successiva</span>`;
+        } else if (f.giorniAllaScadenza !== null) {
             if (f.giorniAllaScadenza < 0) {
                 scadenzaInfo = `<span style="color:#dc3545;">Scaduta da ${Math.abs(f.giorniAllaScadenza)} giorni</span>`;
             } else if (f.giorniAllaScadenza <= 60) {
@@ -1431,11 +1470,15 @@ function renderFirme(firme) {
             }
         }
 
+        const statoBadge = isRinnovata
+            ? `<span class="storico-badge" style="background:#e2e3f3;color:#4b3fae;">Rinnovato</span>`
+            : `<span class="storico-badge ${statoClass}">${f.stato}</span>`;
+
         html += `
         <div class="storico-card">
             <div class="storico-card-header">
                 <span class="storico-id">${f.idFirma} &nbsp;<span style="color:#888;font-weight:400;font-size:13px;">${f.tipo}</span></span>
-                <span class="storico-badge ${statoClass}">${f.stato}</span>
+                ${statoBadge}
             </div>
             <div class="storico-descrizione" style="color:#555;">${f.nomeCliente}</div>
             <div class="firma-card-body">
@@ -1458,13 +1501,18 @@ function renderFirme(firme) {
             ${f.nFattura
                 ? `<div class="storico-date"><i class="fas fa-receipt"></i> Fattura: <strong>${f.nFattura}</strong>${f.dataFattura ? ' — ' + f.dataFattura : ''}</div>`
                 : (isAttivo ? `<div class="storico-actions"><button class="btn-small" style="background:#e8f4fd;color:#0c63e4;" onclick="openFirmaFatturaModal('${f.idFirma}', '${f.nomeCliente}', '${f.tipo}')"><i class="fas fa-clipboard"></i> Registra fattura</button></div>` : '')}
-            ${isAttivo ? `
+            ${(isAttivo || f.idPrecedente) ? `
             <div class="storico-actions">
-                <button class="btn-small btn-storico-detail"
+                ${isAttivo ? `<button class="btn-small btn-storico-detail"
                     onclick="openRinnovoModal('${f.idFirma}', 'FIRMA')">
                     <i class="fas fa-arrows-rotate"></i> Rinnova
-                </button>
-            </div>` : ''}
+                </button>` : ''}
+                ${f.idPrecedente ? `<button class="btn-small"
+                    onclick="toggleStoricoFirma('${f.idFirma}')">
+                    <i class="fas fa-clock-rotate-left"></i> Storico
+                </button>` : ''}
+            </div>
+            <div id="storico-firma-${f.idFirma}" style="display:none;margin-top:8px;"></div>` : ''}
         </div>`;
     });
 
@@ -2231,6 +2279,7 @@ if (typeof window !== 'undefined') {
     window.filterCanoni = filterCanoni;
     window.filterCanoniDebounced = filterCanoniDebounced;
     window.toggleStoricoCanone = toggleStoricoCanone;
+    window.toggleStoricoFirma = toggleStoricoFirma;
     window.toggleControlliCanoneCard = toggleControlliCanoneCard;
     window.toggleVccForm = toggleVccForm;
     window.submitControlloCard = submitControlloCard;

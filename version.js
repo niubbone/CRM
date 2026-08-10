@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.18.0';
+export const VERSION = '4.19.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,18 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.19.0",
+    date: "10/08/2026",
+    type: "feature",
+    changes: [
+      "Firme rinnovate: mostrate come RINNOVATO invece di SCADUTO (stessa logica gia' attiva sui canoni). Rilevamento via catena ID_Precedente, copre anche i rinnovi passati senza migrazione dei dati",
+      "Riepilogo Firme: il filtro di default mostra solo attive + scadute non rinnovate; le rinnovate sono accessibili come 'Rinnovate (storico)' o 'Tutti'",
+      "Firma: pulsante 'Storico' che mostra inline la catena dei rinnovi (periodo, importo, stato di ogni ciclo)",
+      "Fix: rinnovaFirma scriveva lo stato 'SCADUTA', valore non usato da nessun'altra parte del sistema (il foglio Firme usa 'Attivo'/'Scaduto'). Ora scrive 'Rinnovato'",
+      "Backend @257 - Firme.gs + Rinnovi.gs"
+    ]
+  },
   {
     version: "4.18.0",
     date: "07/08/2026",
