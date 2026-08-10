@@ -115,19 +115,19 @@
     margin-bottom: 14px;
     align-items: center;
 }
+/* Il testo sta da solo sulla sua riga, in alto: è il campo principale e
+   ha bisogno di tutta la larghezza. */
 .home-todo-form input[type="text"] {
-    flex: 1 1 260px;
+    flex: 1 1 100%;
     min-width: 0;
 }
 
-/* Priorità, scadenza e pulsante stanno su una riga sola: sono campi
-   piccoli, occupavano tre righe intere sprecando spazio (soprattutto su
-   telefono, dove il testo va comunque a capo da solo). */
+/* Sotto, sulla stessa riga, i due campi piccoli e il pulsante. */
 .home-todo-form-mini {
     display: flex;
     gap: 8px;
     align-items: center;
-    flex: 0 1 auto;
+    flex: 1 1 100%;
 }
 .home-todo-form-mini select { flex: 0 1 auto; }
 .home-todo-form-mini input[type="date"] { flex: 0 1 auto; min-width: 0; }
@@ -465,9 +465,7 @@
     .home-startup-ore { grid-template-columns: repeat(3, 1fr); }
     .home-section-header { flex-wrap: wrap; }
 
-    /* Il testo occupa tutta la riga, i tre campi piccoli quella sotto */
-    .home-todo-form input[type="text"] { flex: 1 1 100%; }
-    .home-todo-form-mini { flex: 1 1 100%; }
+    /* Su telefono i due campi si dividono lo spazio disponibile */
     .home-todo-form-mini select,
     .home-todo-form-mini input[type="date"] { flex: 1 1 0; min-width: 0; }
 

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.26.0';
+export const VERSION = '4.26.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.26.1",
+    date: "10/08/2026",
+    type: "fix",
+    changes: [
+      "Nuovo Da fare: il campo di testo torna su una riga tutta sua, in alto. Sotto, affiancati, priorita' e scadenza col pulsante Aggiungi",
+      "Solo frontend (backend invariato @261)"
+    ]
+  },
   {
     version: "4.26.0",
     date: "10/08/2026",
