@@ -25,6 +25,7 @@ const _homeApiUrl = () => {
 
 let homeData = null;
 let startupDettaglioAperti = {};   // idStartup -> true quando il dettaglio è espanso
+let todoById = {};                 // idTodo -> record, serve alla modifica inline
 
 function _escHome(s) {
     return (s === null || s === undefined ? '' : s.toString())
@@ -45,6 +46,20 @@ function _oggiISO() {
 function _fmtOre(n) {
     const v = parseFloat(n) || 0;
     return (Math.round(v * 100) / 100).toString().replace('.', ',');
+}
+
+/** gg/mm/aaaa → aaaa-mm-gg (formato richiesto da <input type="date">) */
+function _dataPerInput(s) {
+    if (!s) return '';
+    const p = s.split('/');
+    if (p.length !== 3) return '';
+    return `${p[2]}-${p[1]}-${p[0]}`;
+}
+
+/** Indicizza una lista di TODO per id, così la modifica inline li ritrova. */
+function _indicizzaTodo(lista) {
+    (lista || []).forEach(t => { todoById[t.idTodo] = t; });
+    return lista || [];
 }
 
 // =======================================================================
@@ -101,21 +116,27 @@ function renderHome() {
 // =======================================================================
 
 function renderPendenze(p) {
-    const card = (numero, label, icona, colore, onclick) => `
+    const card = (numero, label, icona, colore, onclick, extra) => `
         <div class="home-pendenza-card ${numero > 0 ? '' : 'vuota'}" onclick="${onclick}">
             <div class="home-pendenza-icon ${colore}"><i class="fas ${icona}"></i></div>
             <div>
                 <div class="home-pendenza-numero">${numero}</div>
                 <div class="home-pendenza-label">${label}</div>
+                ${extra ? `<div class="home-pendenza-extra">${extra}</div>` : ''}
             </div>
         </div>`;
 
+    const importo = p.importoNonPagato
+        ? '€ ' + p.importoNonPagato.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '';
+
     return `
     <div class="home-pendenze">
-        ${card(p.controlliDaFare || 0, 'Controlli da fare', 'fa-clipboard-check', 'arancio', "vaiA('controlli')")}
+        ${card(p.controlliDaFare || 0, 'Controlli', 'fa-clipboard-check', 'arancio', "vaiA('controlli')")}
         ${card(p.scadenzeTotale || 0, 'Scadenze 90gg', 'fa-calendar-day', (p.scadenzeCritiche > 0 ? 'rosso' : 'blu'), "vaiA('scadenze')")}
         ${card(p.oreExtra || 0, 'Ore extra sospese', 'fa-hourglass-half', 'rosso', "vaiA('oreextra')")}
         ${card(p.proformaDaFatturare || 0, 'Proforma da fatturare', 'fa-file-invoice', 'verde', "vaiA('proforma')")}
+        ${card(p.fattureNonPagate || 0, 'Fatture non pagate', 'fa-money-bill-wave', 'rosso', "vaiA('fatture')", importo)}
     </div>`;
 }
 
@@ -139,6 +160,9 @@ function vaiA(dove) {
         case 'proforma':
             if (typeof window.switchTab === 'function') window.switchTab('proforma');
             break;
+        case 'fatture':
+            if (typeof window.switchTab === 'function') window.switchTab('fatture');
+            break;
     }
 }
 
@@ -150,7 +174,7 @@ function renderTodoSezione(t) {
     const todos = t.todos || [];
 
     const lista = todos.length
-        ? todos.map(renderTodoItem).join('')
+        ? _indicizzaTodo(todos).map(renderTodoItem).join('')
         : `<div class="empty-state" style="padding:20px;">
                <div class="empty-state-icon">✅</div>
                <div>Nessun promemoria. Tutto sotto controllo.</div>
@@ -208,7 +232,7 @@ function renderTodoItem(t) {
     }
 
     return `
-    <div class="home-todo-item ${classePriorita} ${t.fatto ? 'fatto' : ''}">
+    <div class="home-todo-item ${classePriorita} ${t.fatto ? 'fatto' : ''}" id="todo-item-${t.idTodo}">
         <input type="checkbox" class="home-todo-check" ${t.fatto ? 'checked' : ''}
                onchange="segnaTodo('${t.idTodo}', this.checked)">
         <div class="home-todo-corpo">
@@ -220,9 +244,82 @@ function renderTodoItem(t) {
             </div>
         </div>
         <div class="home-todo-azioni">
+            <button title="Modifica" class="modifica" onclick="modificaTodo('${t.idTodo}')"><i class="fas fa-pen"></i></button>
             <button title="Elimina" onclick="eliminaTodo('${t.idTodo}')"><i class="fas fa-trash"></i></button>
         </div>
     </div>`;
+}
+
+/**
+ * Trasforma la riga del TODO in un form di modifica inline.
+ * Testo, priorità e scadenza sono tutti modificabili; svuotare la data
+ * rimuove la scadenza (il backend tratta data_scadenza='' come "togli").
+ */
+function modificaTodo(idTodo) {
+    const t = todoById[idTodo];
+    const item = document.getElementById(`todo-item-${idTodo}`);
+    if (!t || !item) return;
+
+    item.classList.add('in-modifica');
+    item.innerHTML = `
+        <div class="home-todo-edit">
+            <input type="text" id="edit-testo-${idTodo}" value="${_escHome(t.testo)}"
+                   onkeydown="if(event.key==='Enter') salvaModificaTodo('${idTodo}'); if(event.key==='Escape') annullaModificaTodo('${idTodo}');">
+            <div class="riga">
+                <select id="edit-priorita-${idTodo}">
+                    <option value="Alta"  ${t.priorita === 'Alta'  ? 'selected' : ''}>Alta</option>
+                    <option value="Media" ${t.priorita === 'Media' ? 'selected' : ''}>Media</option>
+                    <option value="Bassa" ${t.priorita === 'Bassa' ? 'selected' : ''}>Bassa</option>
+                </select>
+                <input type="date" id="edit-scadenza-${idTodo}" value="${_dataPerInput(t.dataScadenza)}">
+                <button class="home-btn piccolo" onclick="salvaModificaTodo('${idTodo}')">
+                    <i class="fas fa-check"></i> Salva
+                </button>
+                <button class="home-btn piccolo secondario" onclick="annullaModificaTodo('${idTodo}')">
+                    Annulla
+                </button>
+            </div>
+        </div>`;
+
+    const input = document.getElementById(`edit-testo-${idTodo}`);
+    if (input) { input.focus(); input.select(); }
+}
+
+/** Ripristina la riga senza salvare. */
+function annullaModificaTodo(idTodo) {
+    const t = todoById[idTodo];
+    const item = document.getElementById(`todo-item-${idTodo}`);
+    if (!t || !item) return;
+    item.outerHTML = renderTodoItem(t);
+}
+
+async function salvaModificaTodo(idTodo) {
+    const testo = (document.getElementById(`edit-testo-${idTodo}`)?.value || '').trim();
+
+    if (!testo) {
+        alert('Il testo non può essere vuoto');
+        return;
+    }
+
+    const params = new URLSearchParams({
+        action: 'update_todo',
+        id_todo: idTodo,
+        testo: testo,
+        priorita: document.getElementById(`edit-priorita-${idTodo}`)?.value || 'Media',
+        data_scadenza: document.getElementById(`edit-scadenza-${idTodo}`)?.value || ''
+    });
+
+    try {
+        const res = await fetch(`${_homeApiUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+
+        // Ricarico tutto: cambiando priorità o scadenza cambia anche l'ordine
+        await loadHome();
+
+    } catch (e) {
+        alert('Errore modifica TODO: ' + e.message);
+    }
 }
 
 async function aggiungiTodo() {
@@ -298,7 +395,7 @@ async function toggleTodoFatti() {
         if (!result.success) throw new Error(result.error || 'Errore');
 
         lista.innerHTML = (result.todos || []).length
-            ? result.todos.map(renderTodoItem).join('')
+            ? _indicizzaTodo(result.todos).map(renderTodoItem).join('')
             : `<div class="empty-state" style="padding:20px;"><div class="empty-state-icon">✅</div><div>Nessun promemoria.</div></div>`;
 
     } catch (e) {
@@ -595,6 +692,9 @@ window.aggiungiTodo = aggiungiTodo;
 window.segnaTodo = segnaTodo;
 window.eliminaTodo = eliminaTodo;
 window.toggleTodoFatti = toggleTodoFatti;
+window.modificaTodo = modificaTodo;
+window.salvaModificaTodo = salvaModificaTodo;
+window.annullaModificaTodo = annullaModificaTodo;
 
 window.toggleNuovoStartup = toggleNuovoStartup;
 window.creaStartup = creaStartup;

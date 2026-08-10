@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.20.0';
+export const VERSION = '4.21.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,19 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.21.0",
+    date: "10/08/2026",
+    type: "feature",
+    changes: [
+      "Home / Promemoria: pulsante Modifica su ogni TODO — la riga diventa un form inline con testo, priorita' e scadenza",
+      "Svuotare il campo data rimuove la scadenza; Invio salva, Esc annulla",
+      "Dopo il salvataggio la lista si riordina (cambiare priorita' o scadenza cambia la posizione)",
+      "Home / Pendenze: nuova card 'Fatture non pagate' con il totale da incassare (Pagato != SI; le note di credito sono escluse)",
+      "Home / Pendenze: la prima card si chiama ora 'Controlli' — 'Controlli da fare' si confondeva con la sezione 'Da fare'",
+      "Backend @259 - Home.gs (contaFattureNonPagate_)"
+    ]
+  },
   {
     version: "4.20.0",
     date: "10/08/2026",

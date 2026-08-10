@@ -99,6 +99,12 @@
     color: #777;
     margin-top: 3px;
 }
+.home-pendenza-extra {
+    font-size: 12px;
+    font-weight: 600;
+    color: #dc3545;
+    margin-top: 2px;
+}
 
 /* --- TODO ------------------------------------------------------------ */
 
@@ -201,6 +207,42 @@
     transition: color .15s, background .15s;
 }
 .home-todo-azioni button:hover { color: #dc3545; background: #f8d7da; }
+.home-todo-azioni button.modifica:hover { color: #0c63e4; background: #e8f4fd; }
+
+/* Riga TODO in modifica inline */
+.home-todo-item.in-modifica {
+    display: block;
+    border-left-color: #1a73e8;
+    background: #f8f9fa;
+}
+.home-todo-edit input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    margin-bottom: 8px;
+}
+.home-todo-edit .riga {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.home-todo-edit select,
+.home-todo-edit input[type="date"] {
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.home-todo-edit input:focus,
+.home-todo-edit select:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
 
 /* --- Startup Kleos --------------------------------------------------- */
 
