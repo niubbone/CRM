@@ -14,7 +14,17 @@
     position: sticky;
     top: 0;
     z-index: 200;
+
+    /* Con 7 tab su schermi stretti la barra supera la larghezza dello
+       schermo. Siccome html ha overflow-x:hidden, senza questo verrebbe
+       TAGLIATA e le ultime tab diventerebbero irraggiungibili: qui la
+       rendiamo scorrevole, nascondendo la barra di scorrimento. */
+    overflow-x: auto;
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* Edge legacy */
 }
+
+.tabs::-webkit-scrollbar { display: none; }
 
 /* Tab Button */
 .tab-button {
@@ -26,14 +36,20 @@
     font-size: 16px;
     font-weight: 500;
     transition: all 0.3s ease;
+    flex-shrink: 0;   /* meglio far scorrere la barra che comprimere le tab */
 }
 
+/* Hover giallo: prima usava una sfumatura di blu più scura di quella della
+   tab attiva, quindi passando il mouse una tab inattiva sembrava più
+   selezionata di quella davvero attiva. */
 .tab-button:hover {
-    background-color: var(--primary-dark);
-    color: white;
+    background-color: #ffc107;
+    color: var(--text-color);
 }
 
-.tab-button.active {
+/* La tab attiva resta blu anche sotto il mouse */
+.tab-button.active,
+.tab-button.active:hover {
     background-color: var(--primary-color);
     color: white;
 }
@@ -105,6 +121,9 @@
     .tabs {
         gap: 4px;
         padding: 10px 4px 8px 4px !important;
+        /* Quando il contenuto eccede, "center" nasconde l'inizio della barra
+           rendendo la prima tab irraggiungibile: qui si parte da sinistra. */
+        justify-content: flex-start;
     }
 
     .tab-button {

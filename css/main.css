@@ -25,8 +25,10 @@ h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, blockquote, dl, dd {
 
 /* Variabili CSS */
 :root {
-    --primary-color: #007bff;
-    --primary-dark: #0056b3;
+    /* Blu unico dell'app. Prima qui c'era #007bff mentre tutto il resto
+       usava #1a73e8 scritto a mano: due blu diversi nella stessa interfaccia. */
+    --primary-color: #1a73e8;
+    --primary-dark: #1557b0;
     --success-color: #28a745;
     --success-dark: #1e7e34;
     --danger-color: #dc3545;
@@ -160,17 +162,6 @@ button:disabled {
     font-weight: bold;
 }
 
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 40px 20px !important;
-    color: var(--text-muted);
-}
-
-.empty-state-icon {
-    font-size: 48px;
-    margin-bottom: 15px !important;
-}
 /* =======================================================================
    CSS PER LISTA PROFORMA - DA AGGIUNGERE A main.css o proforma.css
    ======================================================================= */
@@ -337,14 +328,20 @@ button:disabled {
   color: #666;
 }
 
+/* Empty State — blocco unico.
+   Prima era definito due volte in questo stesso file e la cascata pescava un
+   pezzo da ciascuno: padding e margin dal primo (avevano !important),
+   font-size e opacity dal secondo. Qui sono consolidati con gli stessi valori
+   effettivi di prima, per non cambiare nulla a schermo. */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px !important;
+  color: var(--text-muted);
 }
 
 .empty-state-icon {
   font-size: 4em;
-  margin-bottom: 15px;
+  margin-bottom: 15px !important;
   opacity: 0.3;
 }
 
@@ -472,48 +469,9 @@ button:disabled {
     justify-content: flex-end;
 }
 
-#proformaFromPacchettoModal button {
-    min-height: 44px;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.95em;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.4;
-    box-sizing: border-box;
-}
-
-#proformaFromPacchettoModal .btn-secondary {
-    background: #f8f9fa;
-    color: #495057;
-    border: 1px solid #dee2e6;
-}
-
-#proformaFromPacchettoModal .btn-secondary:hover {
-    background: #e9ecef;
-    border-color: #adb5bd;
-}
-
-#proformaFromPacchettoModal .btn-primary {
-    background: #1a73e8;
-    color: white;
-    border: 1px solid #1a73e8;
-}
-
-#proformaFromPacchettoModal .btn-primary:hover {
-    background: #1557b0;
-    border-color: #1557b0;
-}
-
-/* =======================================================================
-   FIX BOTTONI MODAL PACCHETTO - Altezza uniforme
-   ======================================================================= */
-
-/* Bottoni nel modal proforma pacchetto */
+/* Bottoni nel modal proforma pacchetto.
+   NB: questo blocco era duplicato quasi identico poco sopra; vinceva questo
+   (stessa specificità, dichiarato dopo). Rimosso il gemello morto. */
 #proformaFromPacchettoModal button,
 #proformaFromPacchettoModal .btn-secondary,
 #proformaFromPacchettoModal .btn-primary {

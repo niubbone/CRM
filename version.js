@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.24.0';
+export const VERSION = '4.25.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,19 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.25.0",
+    date: "10/08/2026",
+    type: "fix",
+    changes: [
+      "Rimossa la libreria Phosphor Icons: era caricata da CDN ma non usata da nessuna parte (una richiesta di rete in meno all'avvio). Le icone sono e restano Font Awesome",
+      "Barra tab ora scorrevole in orizzontale: con 7 tab su schermi stretti eccedeva la larghezza e veniva TAGLIATA (html ha overflow-x:hidden), rendendo irraggiungibili le ultime voci",
+      "Blu unificato: --primary-color passa da #007bff a #1a73e8, il blu gia' usato da card e bottoni. Erano due blu diversi nella stessa interfaccia (35 punti in 8 file)",
+      "Hover delle tab ora giallo: prima era un blu piu' scuro di quello della tab attiva, quindi una tab inattiva sotto il mouse sembrava piu' selezionata di quella vera. La tab attiva resta blu anche sotto il mouse",
+      "Consolidate le regole CSS duplicate in main.css (.empty-state definita due volte, blocco bottoni modal pacchetto ripetuto): stessi valori effettivi di prima, nessun cambiamento a schermo",
+      "Solo frontend (backend invariato @261)"
+    ]
+  },
   {
     version: "4.24.0",
     date: "10/08/2026",
