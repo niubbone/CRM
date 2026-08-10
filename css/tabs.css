@@ -6,8 +6,9 @@
 .tabs {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    padding: 20px 10px 10px 10px !important;
+    gap: 8px;
+    row-gap: 6px;
+    padding: 16px 10px 8px 10px !important;
     background-color: var(--bg-white);
     box-shadow: var(--shadow-sm);
     /* Barra fissa in cima */
@@ -15,28 +16,32 @@
     top: 0;
     z-index: 200;
 
-    /* Con 7 tab su schermi stretti la barra supera la larghezza dello
-       schermo. Siccome html ha overflow-x:hidden, senza questo verrebbe
-       TAGLIATA e le ultime tab diventerebbero irraggiungibili: qui la
-       rendiamo scorrevole, nascondendo la barra di scorrimento. */
-    overflow-x: auto;
-    scrollbar-width: none;        /* Firefox */
-    -ms-overflow-style: none;     /* Edge legacy */
+    /* Con 7 tab la barra supera facilmente la larghezza di una finestra non
+       massimizzata. Prima era una barra scorrevole con scrollbar nascosta:
+       su desktop, senza scrollbar e senza touch, le tab in eccesso
+       risultavano semplicemente TAGLIATE e irraggiungibili (e con
+       justify-content:center anche la prima tab finiva fuori a sinistra,
+       dove scrollLeft non arriva).
+       Ora le tab vanno a capo: nessun taglio, nessuno scroll da indovinare.
+       Le dimensioni fluide qui sotto fanno sì che la seconda riga compaia
+       solo sotto ~800px. */
+    flex-wrap: wrap;
 }
-
-.tabs::-webkit-scrollbar { display: none; }
 
 /* Tab Button */
 .tab-button {
-    padding: 12px 30px !important;
+    /* padding orizzontale fluido: 30px su schermi larghi, si stringe fino a
+       12px prima di mandare le tab a capo */
+    padding: 12px clamp(12px, 2.2vw, 30px) !important;
     border: none;
     background-color: #e9ecef;
     color: #495057;
     border-radius: 8px 8px 0 0;
-    font-size: 16px;
+    font-size: clamp(14px, 0.6vw + 10px, 16px);
     font-weight: 500;
-    transition: all 0.3s ease;
-    flex-shrink: 0;   /* meglio far scorrere la barra che comprimere le tab */
+    white-space: nowrap;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    flex-shrink: 0;   /* meglio mandare la tab a capo che comprimerla */
 }
 
 /* Hover giallo: prima usava una sfumatura di blu più scura di quella della
@@ -120,14 +125,14 @@
 @media (max-width: 600px) {
     .tabs {
         gap: 4px;
+        row-gap: 4px;
         padding: 10px 4px 8px 4px !important;
-        /* Quando il contenuto eccede, "center" nasconde l'inizio della barra
-           rendendo la prima tab irraggiungibile: qui si parte da sinistra. */
-        justify-content: flex-start;
     }
 
     .tab-button {
-        padding: 10px 12px !important;
+        /* solo icone: padding fluido per tenere le 7 tab su una riga sola
+           anche a 320px, dove 12px fissi facevano già sforare */
+        padding: 10px clamp(6px, 2vw, 12px) !important;
         font-size: 22px;
         line-height: 1;
     }

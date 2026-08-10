@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.26.1';
+export const VERSION = '4.27.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,6 +35,8 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
+    'Fix: barra delle tab non più tagliata su finestre strette — le tab vanno a capo invece di sparire',
+    'Fix: B3 — N_Proforma letto da Sheets come data (fix backend @263, 49 celle migrate)',
     'Feat: nuova tab Home, aperta di default — promemoria, pendenze e Startup Kleos in un colpo solo',
     'Feat: TODO con priorità e scadenza facoltativa, ordinati per urgenza',
     'Feat: Startup Kleos — monti ore informali con cliente a testo libero, senza ID né fatturazione',
@@ -64,6 +66,17 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.27.1",
+    date: "10/08/2026",
+    type: "fix",
+    changes: [
+      "Barra delle tab: su finestre desktop non massimizzate le 7 tab superavano la larghezza disponibile e venivano semplicemente tagliate — senza scrollbar (nascosta) e senza modo di raggiungerle",
+      "Le tab ora vanno a capo su due righe quando non ci stanno: nessun taglio, nessuno scroll orizzontale da indovinare",
+      "Padding e testo delle tab sono fluidi: la seconda riga compare solo sotto ~800px di larghezza",
+      "Su smartphone (solo icone) il padding fluido evita lo sforamento anche a 320px"
+    ]
+  },
   {
     version: "4.27.0",
     date: "10/08/2026",
