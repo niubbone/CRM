@@ -101,7 +101,7 @@ function renderHome() {
     if (!container || !homeData) return;
 
     container.innerHTML =
-        renderPendenze(homeData.pendenze || {}) +
+        renderPendenze(homeData.pendenze || {}, homeData.todos || {}, homeData.controlli || []) +
         renderTodoSezione(homeData.todos || {}) +
         renderControlliSezione(homeData.controlli || []) +
         renderStartupSezione(homeData.startup || {});
@@ -116,7 +116,7 @@ function renderHome() {
 // === BLOCCO 1 — PENDENZE ===
 // =======================================================================
 
-function renderPendenze(p) {
+function renderPendenze(p, todos, controlli) {
     const card = (numero, label, icona, colore, onclick, extra) => `
         <div class="home-pendenza-card ${numero > 0 ? '' : 'vuota'}" onclick="${onclick}">
             <div class="home-pendenza-icon ${colore}"><i class="fas ${icona}"></i></div>
@@ -131,9 +131,15 @@ function renderPendenze(p) {
         ? '€ ' + p.importoNonPagato.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : '';
 
+    // La card ToDo rappresenta TUTTO ciò che incombe qui sulla Home:
+    // i promemoria scritti a mano più i controlli periodici in sospeso.
+    // Contarne solo una parte darebbe un numero che non corrisponde a
+    // quello che si vede scorrendo la pagina.
+    const daFareTotale = ((todos || {}).daFare || 0) + (controlli || []).length;
+
     return `
     <div class="home-pendenze">
-        ${card(p.controlliDaFare || 0, 'ToDo', 'fa-clipboard-check', 'arancio', "vaiA('controlli')")}
+        ${card(daFareTotale, 'ToDo', 'fa-clipboard-check', 'arancio', "vaiA('dafare')")}
         ${card(p.scadenzeTotale || 0, 'Scadenze 90gg', 'fa-calendar-day', (p.scadenzeCritiche > 0 ? 'rosso' : 'blu'), "vaiA('scadenze')")}
         ${card(p.oreExtra || 0, 'Ore extra sospese', 'fa-hourglass-half', 'rosso', "vaiA('oreextra')")}
         ${card(p.proformaDaFatturare || 0, 'Proforma da fatturare', 'fa-file-invoice', 'verde', "vaiA('proforma')")}
@@ -153,6 +159,12 @@ function vaiA(dove) {
     };
 
     switch (dove) {
+        // La card ToDo conta roba che sta già in questa pagina: invece di
+        // cambiare tab, porto lo schermo sulla sezione.
+        case 'dafare':
+            document.getElementById('sezione-dafare')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
         case 'controlli': vaiVendite('canoni', 'controlli'); break;
         case 'scadenze':  vaiVendite('scadenze'); break;
         case 'oreextra':
@@ -182,7 +194,7 @@ function renderTodoSezione(t) {
            </div>`;
 
     return `
-    <div class="home-section">
+    <div class="home-section" id="sezione-dafare">
         <div class="home-section-header">
             <div class="home-section-title">
                 <i class="fas fa-list-check"></i> Da fare
@@ -197,13 +209,15 @@ function renderTodoSezione(t) {
         <div class="home-todo-form">
             <input type="text" id="todo-nuovo-testo" placeholder="Cosa c'è da fare?"
                    onkeydown="if(event.key==='Enter') aggiungiTodo()">
-            <select id="todo-nuova-priorita" title="Priorità">
-                <option value="Media">Media</option>
-                <option value="Alta">Alta</option>
-                <option value="Bassa">Bassa</option>
-            </select>
-            <input type="date" id="todo-nuova-scadenza" title="Scadenza (facoltativa)">
-            <button class="home-btn" onclick="aggiungiTodo()"><i class="fas fa-plus"></i> Aggiungi</button>
+            <div class="home-todo-form-mini">
+                <select id="todo-nuova-priorita" title="Priorità">
+                    <option value="Media">Media</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Bassa">Bassa</option>
+                </select>
+                <input type="date" id="todo-nuova-scadenza" title="Scadenza (facoltativa)">
+                <button class="home-btn" onclick="aggiungiTodo()"><i class="fas fa-plus"></i> Aggiungi</button>
+            </div>
         </div>
 
         <div id="todoLista">${lista}</div>

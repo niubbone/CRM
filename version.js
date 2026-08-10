@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.25.0';
+export const VERSION = '4.26.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,19 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.26.0",
+    date: "10/08/2026",
+    type: "fix",
+    changes: [
+      "Card ToDo: ora conta TUTTO cio' che incombe nella Home (promemoria da fare + controlli in sospeso), non i soli controlli. Cliccandola si scorre alla sezione Da fare invece di cambiare tab",
+      "Promemoria piu' leggibili: testo 15px in peso medio e colore piu' contrastato (16px su telefono), meta 12.5/13px",
+      "Nuovo Da fare: priorita', scadenza e pulsante ora affiancati su una riga sola, sia su PC che su telefono",
+      "Fix mobile: select e campi data non hanno piu' il fondo grigio di sistema — sfondo bianco, testo scuro, freccia del select ridisegnata",
+      "Campi a 16px su telefono: sotto quella soglia iOS zooma la pagina quando ci si clicca dentro",
+      "Solo frontend (backend invariato @261)"
+    ]
+  },
   {
     version: "4.25.0",
     date: "10/08/2026",
