@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.22.0';
+export const VERSION = '4.23.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,19 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.23.0",
+    date: "10/08/2026",
+    type: "feature",
+    changes: [
+      "Home / Da fare: i controlli periodici in sospeso compaiono ora nella lista insieme ai promemoria, con chip viola 'Controllo' e registrazione inline (data + rapportino)",
+      "I controlli hanno finalmente una scadenza propria: viene DEDOTTA dall'etichetta-mese, senza aggiungere colonne al foglio. Canone dal 01/06/2026 con etichette 'Luglio' e 'Gennaio' -> luglio 2026 e gennaio 2027",
+      "L'anno si ricava camminando in avanti dalla data di inizio canone, cosi' il ciclo annuale puo' scavalcare il capodanno",
+      "Etichette che non sono mesi (es. 'Primo giro') restano senza data e ripiegano sulla scadenza del canone",
+      "La lista Da fare e' ordinata per urgenza mescolando promemoria e controlli; il contatore in testa mostra il totale e quanti sono in ritardo",
+      "Backend @260 - Controlli.gs (assegnaPeriodiPrevisti_), Home.gs"
+    ]
+  },
   {
     version: "4.22.0",
     date: "10/08/2026",

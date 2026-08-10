@@ -164,6 +164,32 @@
     color: #888;
 }
 
+/* Voce "controllo periodico" dentro la lista Da fare:
+   stessa forma dei promemoria, bordo e icona diversi per distinguerla. */
+.home-todo-item.controllo { border-left-color: #6f42c1; }
+
+.home-todo-icona {
+    width: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    color: #6f42c1;
+    text-align: center;
+}
+
+.home-chip-controllo {
+    display: inline-block;
+    background: #ede7f6;
+    color: #4b3fae;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
 .home-todo-check {
     width: 20px;
     height: 20px;

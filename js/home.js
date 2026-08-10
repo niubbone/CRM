@@ -102,7 +102,7 @@ function renderHome() {
 
     container.innerHTML =
         renderPendenze(homeData.pendenze || {}) +
-        renderTodoSezione(homeData.todos || {}) +
+        renderTodoSezione(homeData.todos || {}, homeData.controlli || []) +
         renderStartupSezione(homeData.startup || {});
 
     // Ripristina i dettagli che erano aperti prima del refresh
@@ -170,23 +170,55 @@ function vaiA(dove) {
 // === BLOCCO 2 — TODO ===
 // =======================================================================
 
-function renderTodoSezione(t) {
-    const todos = t.todos || [];
+/**
+ * La sezione "Da fare" contiene DUE tipi di voce, in un'unica lista
+ * ordinata per urgenza:
+ *   - i promemoria scritti a mano (foglio Todo)
+ *   - i controlli periodici ancora in sospeso, la cui scadenza è dedotta
+ *     dall'etichetta-mese (es. "Luglio" su un canone del 01/06/2026 →
+ *     luglio 2026)
+ * Le voci con una data vengono prima, in ordine crescente; quelle senza
+ * data chiudono la lista.
+ */
+function renderTodoSezione(t, controlli) {
+    const todos = _indicizzaTodo(t.todos || []);
+    const ctrl  = controlli || [];
 
-    const lista = todos.length
-        ? _indicizzaTodo(todos).map(renderTodoItem).join('')
+    const voci = [
+        ...todos.map(x => ({ tipo: 'todo', giorni: x.fatto ? null : x.giorniAllaScadenza, dato: x })),
+        ...ctrl.map(x  => ({ tipo: 'controllo', giorni: x.giorniAllaScadenza, dato: x }))
+    ];
+
+    voci.sort((a, b) => {
+        // I promemoria completati vanno in fondo a tutto
+        const aFatto = a.tipo === 'todo' && a.dato.fatto;
+        const bFatto = b.tipo === 'todo' && b.dato.fatto;
+        if (aFatto !== bFatto) return aFatto ? 1 : -1;
+
+        const aHa = a.giorni !== null && a.giorni !== undefined;
+        const bHa = b.giorni !== null && b.giorni !== undefined;
+        if (aHa !== bHa) return aHa ? -1 : 1;
+        if (aHa && a.giorni !== b.giorni) return a.giorni - b.giorni;
+        return 0;
+    });
+
+    const lista = voci.length
+        ? voci.map(v => v.tipo === 'todo' ? renderTodoItem(v.dato) : renderControlloItem(v.dato)).join('')
         : `<div class="empty-state" style="padding:20px;">
                <div class="empty-state-icon">✅</div>
                <div>Nessun promemoria. Tutto sotto controllo.</div>
            </div>`;
+
+    const totale = (t.daFare || 0) + ctrl.length;
+    const inRitardo = (t.scaduti || 0) + ctrl.filter(c => c.inRitardo).length;
 
     return `
     <div class="home-section">
         <div class="home-section-header">
             <div class="home-section-title">
                 <i class="fas fa-list-check"></i> Da fare
-                ${t.daFare ? `<span class="home-count">${t.daFare}</span>` : ''}
-                ${t.scaduti ? `<span class="home-count" style="background:#f8d7da;color:#721c24;">${t.scaduti} scaduti</span>` : ''}
+                ${totale ? `<span class="home-count">${totale}</span>` : ''}
+                ${inRitardo ? `<span class="home-count" style="background:#f8d7da;color:#721c24;">${inRitardo} in ritardo</span>` : ''}
             </div>
             <button class="home-btn piccolo secondario" onclick="toggleTodoFatti()">
                 <i class="fas fa-clock-rotate-left"></i> <span id="todo-toggle-label">Mostra completati</span>
@@ -248,6 +280,97 @@ function renderTodoItem(t) {
             <button title="Elimina" onclick="eliminaTodo('${t.idTodo}')"><i class="fas fa-trash"></i></button>
         </div>
     </div>`;
+}
+
+/**
+ * Voce "controllo periodico" dentro la lista Da fare.
+ * Non è modificabile come un TODO: si registra (data + rapportino) e sparisce.
+ */
+function renderControlloItem(c) {
+    let quando = '';
+    let cls = '';
+
+    if (c.periodoPrevisto) {
+        if (c.giorniAllaScadenza !== null && c.giorniAllaScadenza < 0) {
+            cls = 'scaduta';
+            quando = `${c.periodoPrevisto} — in ritardo`;
+        } else if (c.giorniAllaScadenza !== null && c.giorniAllaScadenza <= 31) {
+            cls = 'oggi';
+            quando = `${c.periodoPrevisto} — da fare`;
+        } else {
+            quando = c.periodoPrevisto;
+        }
+    } else {
+        // Etichetta non riconosciuta come mese: ripiego sulla scadenza del canone
+        quando = c.canoneScadenza ? `entro il ${c.canoneScadenza}` : 'periodo non indicato';
+    }
+
+    const titolo = c.etichetta
+        ? `${_escHome(c.nomeCliente)} — ${_escHome(c.etichetta)}`
+        : `${_escHome(c.nomeCliente)} — controllo ${c.nControllo}`;
+
+    return `
+    <div class="home-todo-item controllo" id="controllo-item-${c.idControllo}">
+        <div class="home-todo-icona"><i class="fas fa-clipboard-check"></i></div>
+        <div class="home-todo-corpo">
+            <div class="home-todo-testo">
+                ${titolo}
+                <span class="home-chip-controllo">Controllo</span>
+            </div>
+            <div class="home-todo-meta">
+                <span class="home-todo-scadenza ${cls}"><i class="fas fa-calendar"></i> ${_escHome(quando)}</span>
+            </div>
+            <div id="reg-controllo-${c.idControllo}" class="home-inline-form" style="display:none;">
+                <div class="riga">
+                    <input type="date" id="ctrl-data-${c.idControllo}" value="${_oggiISO()}">
+                </div>
+                <textarea id="ctrl-report-${c.idControllo}" placeholder="Rapportino: cosa è stato fatto"></textarea>
+                <div style="margin-top:8px;">
+                    <button class="home-btn piccolo" onclick="salvaControllo('${c.idControllo}')">
+                        <i class="fas fa-check"></i> Salva
+                    </button>
+                    <button class="home-btn piccolo secondario" onclick="toggleRegistraControllo('${c.idControllo}')">
+                        Annulla
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="home-todo-azioni">
+            <button title="Registra controllo" class="modifica" onclick="toggleRegistraControllo('${c.idControllo}')">
+                <i class="fas fa-check-double"></i>
+            </button>
+        </div>
+    </div>`;
+}
+
+function toggleRegistraControllo(idControllo) {
+    const box = document.getElementById(`reg-controllo-${idControllo}`);
+    if (!box) return;
+    const aperto = box.style.display !== 'none';
+    box.style.display = aperto ? 'none' : 'block';
+    if (!aperto) document.getElementById(`ctrl-report-${idControllo}`)?.focus();
+}
+
+async function salvaControllo(idControllo) {
+    const data = document.getElementById(`ctrl-data-${idControllo}`)?.value || '';
+
+    if (!data) { alert('Indica la data di esecuzione'); return; }
+
+    const params = new URLSearchParams({
+        action: 'registra_controllo',
+        id_controllo: idControllo,
+        data_eseguita: data,
+        report: (document.getElementById(`ctrl-report-${idControllo}`)?.value || '').trim()
+    });
+
+    try {
+        const res = await fetch(`${_homeApiUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        await loadHome();
+    } catch (e) {
+        alert('Errore registrazione controllo: ' + e.message);
+    }
 }
 
 /**
@@ -693,6 +816,8 @@ window.segnaTodo = segnaTodo;
 window.eliminaTodo = eliminaTodo;
 window.toggleTodoFatti = toggleTodoFatti;
 window.modificaTodo = modificaTodo;
+window.toggleRegistraControllo = toggleRegistraControllo;
+window.salvaControllo = salvaControllo;
 window.salvaModificaTodo = salvaModificaTodo;
 window.annullaModificaTodo = annullaModificaTodo;
 
