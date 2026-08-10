@@ -65,6 +65,19 @@ export const BUILD_INFO = {
 // ============================================
 export const CHANGELOG = [
   {
+    version: "4.27.0",
+    date: "10/08/2026",
+    type: "fix",
+    changes: [
+      "B3 RISOLTO alla radice: N_Proforma (formato progressivo/anno, es. 1/2026) veniva letto da Google Sheets come data e convertito in Date, rompendo i confronti sul numero di proforma",
+      "Chiusi i due punti di scrittura non protetti: updateTimesheetProforma (Timesheet.gs) e saveFatturaRecord (Fatture.gs) ora forzano il formato TESTO prima di scrivere. Il foglio Proforma era gia' a posto",
+      "Migrazione dello storico: 49 celle convertite da data a testo (30 Timesheet, 19 Fatture, 0 Proforma). Nessun numero di proforma e' cambiato",
+      "Nuovo modulo Migrazioni.gs con diagnostica in sola lettura (action diagnostica_nproforma) e migrazione protetta da conferma esplicita",
+      "Il numero di proforma NON e' stato rinumerato: nessun cambiamento sui documenti gia' emessi",
+      "Backend @263 - Timesheet.gs, Fatture.gs, Migrazioni.gs, Codice.gs"
+    ]
+  },
+  {
     version: "4.26.1",
     date: "10/08/2026",
     type: "fix",
