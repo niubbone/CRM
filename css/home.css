@@ -150,8 +150,10 @@
 }
 .home-todo-item:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); }
 
+/* Alta rosso, media giallo, bassa grigia.
+   Il rosso e l'arancione erano troppo vicini per distinguerli a colpo d'occhio. */
 .home-todo-item.priorita-alta  { border-left-color: #dc3545; }
-.home-todo-item.priorita-media { border-left-color: #fd7e14; }
+.home-todo-item.priorita-media { border-left-color: #ffc107; }
 .home-todo-item.priorita-bassa { border-left-color: #6c757d; }
 .home-todo-item.fatto {
     opacity: .6;

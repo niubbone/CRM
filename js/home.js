@@ -132,7 +132,7 @@ function renderPendenze(p) {
 
     return `
     <div class="home-pendenze">
-        ${card(p.controlliDaFare || 0, 'Controlli', 'fa-clipboard-check', 'arancio', "vaiA('controlli')")}
+        ${card(p.controlliDaFare || 0, 'ToDo', 'fa-clipboard-check', 'arancio', "vaiA('controlli')")}
         ${card(p.scadenzeTotale || 0, 'Scadenze 90gg', 'fa-calendar-day', (p.scadenzeCritiche > 0 ? 'rosso' : 'blu'), "vaiA('scadenze')")}
         ${card(p.oreExtra || 0, 'Ore extra sospese', 'fa-hourglass-half', 'rosso', "vaiA('oreextra')")}
         ${card(p.proformaDaFatturare || 0, 'Proforma da fatturare', 'fa-file-invoice', 'verde', "vaiA('proforma')")}

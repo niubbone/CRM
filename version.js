@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.21.0';
+export const VERSION = '4.22.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.22.0",
+    date: "10/08/2026",
+    type: "fix",
+    changes: [
+      "Home / Promemoria: priorita' Media ora gialla invece che arancione — rosso e arancione erano troppo simili per distinguerli a colpo d'occhio",
+      "Home / Pendenze: la prima card si chiama 'ToDo'",
+      "Solo frontend (backend invariato @259)"
+    ]
+  },
   {
     version: "4.21.0",
     date: "10/08/2026",
