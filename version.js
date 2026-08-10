@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.23.0';
+export const VERSION = '4.24.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -64,6 +64,18 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.24.0",
+    date: "10/08/2026",
+    type: "feature",
+    changes: [
+      "Home: i controlli hanno ora una SEZIONE PROPRIA. L'ordine e' Da fare / Controlli / Startup Kleos",
+      "Controlli: avviso quando il periodo dedotto dall'etichetta cade DOPO la scadenza del canone (etichetta incoerente col ciclo) — bordo giallo, riquadro di avviso e contatore 'da verificare' in testa alla sezione",
+      "Controlli: link al canone di origine. Porta a Vendite -> Canoni -> Riepilogo, evidenzia la card e apre l'elenco dei suoi controlli",
+      "Il link attende che la card compaia nel DOM invece di usare un ritardo fisso (il riepilogo si carica in modo asincrono)",
+      "Backend @261 - Controlli.gs (oltreScadenzaCanone, canoneDescrizione)"
+    ]
+  },
   {
     version: "4.23.0",
     date: "10/08/2026",

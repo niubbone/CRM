@@ -176,6 +176,29 @@
     text-align: center;
 }
 
+.home-todo-item.controllo.incoerente { border-left-color: #e0a800; }
+
+/* Link al canone da cui nasce il controllo */
+.home-link-canone {
+    color: #0c63e4;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 12px;
+}
+.home-link-canone:hover { text-decoration: underline; }
+
+/* Avviso: il periodo dedotto cade fuori dal ciclo del canone */
+.home-avviso {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 12px;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
 .home-chip-controllo {
     display: inline-block;
     background: #ede7f6;

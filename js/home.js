@@ -102,7 +102,8 @@ function renderHome() {
 
     container.innerHTML =
         renderPendenze(homeData.pendenze || {}) +
-        renderTodoSezione(homeData.todos || {}, homeData.controlli || []) +
+        renderTodoSezione(homeData.todos || {}) +
+        renderControlliSezione(homeData.controlli || []) +
         renderStartupSezione(homeData.startup || {});
 
     // Ripristina i dettagli che erano aperti prima del refresh
@@ -170,55 +171,23 @@ function vaiA(dove) {
 // === BLOCCO 2 — TODO ===
 // =======================================================================
 
-/**
- * La sezione "Da fare" contiene DUE tipi di voce, in un'unica lista
- * ordinata per urgenza:
- *   - i promemoria scritti a mano (foglio Todo)
- *   - i controlli periodici ancora in sospeso, la cui scadenza è dedotta
- *     dall'etichetta-mese (es. "Luglio" su un canone del 01/06/2026 →
- *     luglio 2026)
- * Le voci con una data vengono prima, in ordine crescente; quelle senza
- * data chiudono la lista.
- */
-function renderTodoSezione(t, controlli) {
+function renderTodoSezione(t) {
     const todos = _indicizzaTodo(t.todos || []);
-    const ctrl  = controlli || [];
 
-    const voci = [
-        ...todos.map(x => ({ tipo: 'todo', giorni: x.fatto ? null : x.giorniAllaScadenza, dato: x })),
-        ...ctrl.map(x  => ({ tipo: 'controllo', giorni: x.giorniAllaScadenza, dato: x }))
-    ];
-
-    voci.sort((a, b) => {
-        // I promemoria completati vanno in fondo a tutto
-        const aFatto = a.tipo === 'todo' && a.dato.fatto;
-        const bFatto = b.tipo === 'todo' && b.dato.fatto;
-        if (aFatto !== bFatto) return aFatto ? 1 : -1;
-
-        const aHa = a.giorni !== null && a.giorni !== undefined;
-        const bHa = b.giorni !== null && b.giorni !== undefined;
-        if (aHa !== bHa) return aHa ? -1 : 1;
-        if (aHa && a.giorni !== b.giorni) return a.giorni - b.giorni;
-        return 0;
-    });
-
-    const lista = voci.length
-        ? voci.map(v => v.tipo === 'todo' ? renderTodoItem(v.dato) : renderControlloItem(v.dato)).join('')
+    const lista = todos.length
+        ? todos.map(renderTodoItem).join('')
         : `<div class="empty-state" style="padding:20px;">
                <div class="empty-state-icon">✅</div>
                <div>Nessun promemoria. Tutto sotto controllo.</div>
            </div>`;
-
-    const totale = (t.daFare || 0) + ctrl.length;
-    const inRitardo = (t.scaduti || 0) + ctrl.filter(c => c.inRitardo).length;
 
     return `
     <div class="home-section">
         <div class="home-section-header">
             <div class="home-section-title">
                 <i class="fas fa-list-check"></i> Da fare
-                ${totale ? `<span class="home-count">${totale}</span>` : ''}
-                ${inRitardo ? `<span class="home-count" style="background:#f8d7da;color:#721c24;">${inRitardo} in ritardo</span>` : ''}
+                ${t.daFare ? `<span class="home-count">${t.daFare}</span>` : ''}
+                ${t.scaduti ? `<span class="home-count" style="background:#f8d7da;color:#721c24;">${t.scaduti} scaduti</span>` : ''}
             </div>
             <button class="home-btn piccolo secondario" onclick="toggleTodoFatti()">
                 <i class="fas fa-clock-rotate-left"></i> <span id="todo-toggle-label">Mostra completati</span>
@@ -282,8 +251,42 @@ function renderTodoItem(t) {
     </div>`;
 }
 
+// =======================================================================
+// === BLOCCO 3 — CONTROLLI PERIODICI ===
+// =======================================================================
+// Sezione a sé, non mescolata ai promemoria: sono cose da fare che nascono
+// da un canone, non scritte a mano. La scadenza è dedotta dall'etichetta-mese
+// (es. "Luglio" su un canone del 01/06/2026 → luglio 2026).
+
+function renderControlliSezione(controlli) {
+    const ctrl = controlli || [];
+
+    const lista = ctrl.length
+        ? ctrl.map(renderControlloItem).join('')
+        : `<div class="empty-state" style="padding:20px;">
+               <div class="empty-state-icon">📋</div>
+               <div>Nessun controllo in sospeso.</div>
+           </div>`;
+
+    const inRitardo   = ctrl.filter(c => c.inRitardo).length;
+    const incoerenti  = ctrl.filter(c => c.oltreScadenzaCanone).length;
+
+    return `
+    <div class="home-section">
+        <div class="home-section-header">
+            <div class="home-section-title">
+                <i class="fas fa-clipboard-check"></i> Controlli
+                ${ctrl.length ? `<span class="home-count">${ctrl.length}</span>` : ''}
+                ${inRitardo ? `<span class="home-count" style="background:#f8d7da;color:#721c24;">${inRitardo} in ritardo</span>` : ''}
+                ${incoerenti ? `<span class="home-count" style="background:#fff3cd;color:#856404;">${incoerenti} da verificare</span>` : ''}
+            </div>
+        </div>
+        <div id="controlliLista">${lista}</div>
+    </div>`;
+}
+
 /**
- * Voce "controllo periodico" dentro la lista Da fare.
+ * Voce "controllo periodico".
  * Non è modificabile come un TODO: si registra (data + rapportino) e sparisce.
  */
 function renderControlloItem(c) {
@@ -309,8 +312,18 @@ function renderControlloItem(c) {
         ? `${_escHome(c.nomeCliente)} — ${_escHome(c.etichetta)}`
         : `${_escHome(c.nomeCliente)} — controllo ${c.nControllo}`;
 
+    // L'etichetta colloca il controllo oltre la fine del ciclo: il calcolo è
+    // giusto, è l'etichetta a non stare dentro il canone.
+    const avviso = c.oltreScadenzaCanone
+        ? `<div class="home-avviso">
+               <i class="fas fa-triangle-exclamation"></i>
+               Il periodo dedotto (${_escHome(c.periodoPrevisto)}) cade <strong>dopo la scadenza del canone</strong>
+               (${_escHome(c.canoneScadenza)}): controlla l'etichetta.
+           </div>`
+        : '';
+
     return `
-    <div class="home-todo-item controllo" id="controllo-item-${c.idControllo}">
+    <div class="home-todo-item controllo ${c.oltreScadenzaCanone ? 'incoerente' : ''}" id="controllo-item-${c.idControllo}">
         <div class="home-todo-icona"><i class="fas fa-clipboard-check"></i></div>
         <div class="home-todo-corpo">
             <div class="home-todo-testo">
@@ -319,7 +332,12 @@ function renderControlloItem(c) {
             </div>
             <div class="home-todo-meta">
                 <span class="home-todo-scadenza ${cls}"><i class="fas fa-calendar"></i> ${_escHome(quando)}</span>
+                <a class="home-link-canone" title="Apri il canone da cui nasce questo controllo"
+                   onclick="apriCanone('${c.idCanone}')">
+                    <i class="fas fa-arrow-up-right-from-square"></i> ${_escHome(c.idCanone)}${c.canoneDescrizione ? ' · ' + _escHome(c.canoneDescrizione) : ''}
+                </a>
             </div>
+            ${avviso}
             <div id="reg-controllo-${c.idControllo}" class="home-inline-form" style="display:none;">
                 <div class="riga">
                     <input type="date" id="ctrl-data-${c.idControllo}" value="${_oggiISO()}">
@@ -341,6 +359,47 @@ function renderControlloItem(c) {
             </button>
         </div>
     </div>`;
+}
+
+/**
+ * Apre il canone da cui nasce il controllo, nel riepilogo Vendite → Canoni.
+ *
+ * Il riepilogo si carica in modo asincrono: invece di indovinare un ritardo
+ * fisso, aspetto che la card compaia nel DOM (fino a 15s) e poi ci porto
+ * sopra lo schermo aprendo l'elenco dei suoi controlli.
+ */
+function apriCanone(idCanone) {
+    if (typeof window.switchTab === 'function') window.switchTab('vendite');
+
+    setTimeout(() => {
+        if (typeof switchVenditeSection === 'function') switchVenditeSection('canoni');
+        if (typeof switchVenditeSubtab === 'function') switchVenditeSubtab('canoni', 'riepilogo');
+    }, 50);
+
+    let tentativi = 0;
+    const timer = setInterval(() => {
+        tentativi++;
+
+        const box = document.getElementById(`canone-controlli-${idCanone}`);
+        if (box) {
+            clearInterval(timer);
+
+            const card = box.closest('.storico-card');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.classList.add('evidenziato');
+                setTimeout(() => card.classList.remove('evidenziato'), 2500);
+            }
+
+            // Apre l'elenco controlli del canone se non è già aperto
+            if (box.style.display === 'none' && typeof toggleControlliCanoneCard === 'function') {
+                toggleControlliCanoneCard(idCanone);
+            }
+            return;
+        }
+
+        if (tentativi > 60) clearInterval(timer);   // ~15s, poi lascio perdere
+    }, 250);
 }
 
 function toggleRegistraControllo(idControllo) {
@@ -818,6 +877,7 @@ window.toggleTodoFatti = toggleTodoFatti;
 window.modificaTodo = modificaTodo;
 window.toggleRegistraControllo = toggleRegistraControllo;
 window.salvaControllo = salvaControllo;
+window.apriCanone = apriCanone;
 window.salvaModificaTodo = salvaModificaTodo;
 window.annullaModificaTodo = annullaModificaTodo;
 
