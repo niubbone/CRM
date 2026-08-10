@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.19.0';
+export const VERSION = '4.20.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -29,18 +29,18 @@ export const VERSION = '4.19.0';
 // Metadata versione (auto-generated)
 export const VERSION_INFO = {
   number: VERSION,
-  name: 'Controlli Periodici Edition',
-  date: '06 Agosto 2026',
-  codename: 'ControlliPeriodici',
+  name: 'Home Edition',
+  date: '10 Agosto 2026',
+  codename: 'Home',
 
   // Changelog corrente versione
   changelog: [
-    'Feat: Canoni tipo CONTROLLI — abbonamento a N controlli/visite per ciclo annuale',
-    'Feat: form Nuovo Canone con checkbox "Controlli periodici" (N controlli + etichette)',
-    'Feat: pannello cliente — slot controllo con registrazione data + report per ogni visita',
-    'Feat: rinnovo canone-controlli — rigenera gli slot del nuovo ciclo ereditando le etichette',
-    'Feat: vista "Controlli da fare" — dashboard di tutti i controlli pendenti con registrazione inline',
-    'Backend: nuovo modulo Controlli.gs + foglio Controlli, colonne Tipo/N_Controlli sul foglio Canoni',
+    'Feat: nuova tab Home, aperta di default — promemoria, pendenze e Startup Kleos in un colpo solo',
+    'Feat: TODO con priorità e scadenza facoltativa, ordinati per urgenza',
+    'Feat: Startup Kleos — monti ore informali con cliente a testo libero, senza ID né fatturazione',
+    'Feat: registrazione ore con rapportino e tipo (Formazione/Configurazione/Altro), scalo automatico',
+    'Feat: contatori cliccabili (controlli, scadenze, ore extra, proforma) che portano alla sezione giusta',
+    'Backend: nuovi moduli Todo.gs, StartupKleos.gs, Home.gs + fogli Todo, Startup_Kleos, Startup_Kleos_Movimenti',
   ],
   
   // Features principali
@@ -64,6 +64,21 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.20.0",
+    date: "10/08/2026",
+    type: "feature",
+    changes: [
+      "Nuova tab HOME, ora e' la schermata di apertura dell'app",
+      "Home / Promemoria: lista TODO con priorita (Alta/Media/Bassa) e scadenza facoltativa, ordinati per urgenza; i completati sono nascosti e richiamabili",
+      "Home / Pendenze: quattro contatori cliccabili (controlli da fare, scadenze 90gg, ore extra sospese, proforma da fatturare) che portano direttamente alla sezione che le gestisce",
+      "Home / Startup Kleos: monti ore informali per i pacchetti compresi nelle vendite degli agenti Kleos. Cliente a TESTO LIBERO, nessun ID cliente, nessuna scadenza, nessuna fatturazione",
+      "Startup Kleos: registrazione ore con data, rapportino e tipo (Formazione/Configurazione/Altro); lo scalo e' automatico e le ore residue si ricalcolano dai movimenti",
+      "Startup Kleos: piu' monti ore per lo stesso cliente (uno per vendita), agente e riferimento vendita sulla testata, archiviazione quando le ore finiscono",
+      "Tutta la Home arriva da una sola chiamata get_home (un solo round-trip verso GAS)",
+      "Backend @258 - nuovi moduli Todo.gs, StartupKleos.gs, Home.gs"
+    ]
+  },
   {
     version: "4.19.0",
     date: "10/08/2026",

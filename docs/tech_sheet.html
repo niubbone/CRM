@@ -338,6 +338,22 @@ const f2 = calcolaFiscale(1000, true);
                     <tr><td><code>get_canoni</code></td><td>cliente?, stato?</td><td>{success, data:[]}</td></tr>
                     <tr><td><code>rinnova_canone</code></td><td>canone_id, descrizione, importo, durata_anni</td><td>{success, nuovoCanoneId} — canoni CONTROLLI rigenerano gli slot (etichette ereditate)</td></tr>
 
+                    <tr class="group-row"><td colspan="3">Home — TODO e Startup Kleos (v4.20.0)</td></tr>
+                    <tr><td><code>get_home</code></td><td>giorni_scadenza? (default 90)</td><td>{success, todos, startup, pendenze, errori[]} — tutto il fabbisogno della Home in un round-trip</td></tr>
+                    <tr><td><code>get_todos</code></td><td>includi_fatti? ('true'/'false')</td><td>{success, todos:[], daFare, scaduti}</td></tr>
+                    <tr><td><code>insert_todo</code></td><td>testo, priorita? (Alta/Media/Bassa), data_scadenza?</td><td>{success, idTodo}</td></tr>
+                    <tr><td><code>update_todo</code></td><td>id_todo, testo?, priorita?, data_scadenza? ('' rimuove)</td><td>{success}</td></tr>
+                    <tr><td><code>toggle_todo</code></td><td>id_todo, fatto ('true'/'false')</td><td>{success} — scrive/azzera Data_Completamento</td></tr>
+                    <tr><td><code>delete_todo</code></td><td>id_todo</td><td>{success}</td></tr>
+                    <tr><td><code>get_startup_list</code></td><td>cliente?, includi_archiviati?</td><td>{success, startup:[], attivi, oreResidueTotali}</td></tr>
+                    <tr><td><code>get_startup_movimenti</code></td><td>id_startup</td><td>{success, movimenti:[]} — più recenti in cima</td></tr>
+                    <tr><td><code>insert_startup</code></td><td>cliente (testo libero), ore_totali, data_inizio?, agente?, riferimento?, note?</td><td>{success, idStartup}</td></tr>
+                    <tr><td><code>update_startup</code></td><td>id_startup, cliente?, ore_totali?, agente?, riferimento?, note?</td><td>{success, oreResidue}</td></tr>
+                    <tr><td><code>registra_ore_startup</code></td><td>id_startup, ore, data?, tipo? (Formazione/Configurazione/Altro), rapportino?</td><td>{success, oreResidue, sforato} — scala anche oltre il residuo, segnalandolo</td></tr>
+                    <tr><td><code>delete_movimento_startup</code></td><td>id_movimento</td><td>{success, oreResidue} — le ore tornano disponibili</td></tr>
+                    <tr><td><code>archivia_startup</code></td><td>id_startup, archivia ('true'/'false')</td><td>{success}</td></tr>
+                    <tr><td><code>delete_startup</code></td><td>id_startup</td><td>{success} — elimina anche tutti i movimenti</td></tr>
+
                     <tr class="group-row"><td colspan="3">Controlli periodici (canoni CONTROLLI)</td></tr>
                     <tr><td><code>get_controlli</code></td><td>canone_id</td><td>{success, controlli:[]}</td></tr>
                     <tr><td><code>get_controlli_cliente</code></td><td>cliente_nome | id_cliente</td><td>{success, controlli:[]}</td></tr>

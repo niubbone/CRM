@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="css/vendite.css">
     <link rel="stylesheet" href="css/clienti.css">
     <link rel="stylesheet" href="css/proforma-list.css">
+    <link rel="stylesheet" href="css/home.css">
     
     <style>
         /* STILI PER CAMPI OPZIONALI COLLASSABILI */
@@ -260,7 +261,8 @@
 </script>
 
 <div class="tabs">
-    <button class="tab-button active" onclick="switchTab('timesheet')"><i class="fas fa-stopwatch"></i> <span class="tab-label">Timesheet</span></button>
+    <button class="tab-button active" onclick="switchTab('home')"><i class="fas fa-house"></i> <span class="tab-label">Home</span></button>
+    <button class="tab-button" onclick="switchTab('timesheet')"><i class="fas fa-stopwatch"></i> <span class="tab-label">Timesheet</span></button>
     <button class="tab-button" onclick="switchTab('proforma')"><i class="fas fa-file"></i> <span class="tab-label">Proforma</span></button>
     <button class="tab-button" onclick="switchTab('fatture')"><i class="fas fa-receipt"></i> <span class="tab-label">Fatture</span></button>
     <button class="tab-button" onclick="switchTab('vendite')"><i class="fas fa-cart-shopping"></i> <span class="tab-label">Vendite</span></button>
@@ -268,8 +270,17 @@
     <button class="tab-button" onclick="switchTab('utilities')"><i class="fas fa-gear"></i> <span class="tab-label">Utilities</span></button>
 </div>
 
+<!-- TAB HOME -->
+<div id="home-tab" class="tab-content active">
+    <div class="home-container">
+        <div id="homeContainer">
+            <div class="loading-scadenze">Caricamento...</div>
+        </div>
+    </div>
+</div>
+
 <!-- TAB TIMESHEET -->
-<div id="timesheet-tab" class="tab-content active">
+<div id="timesheet-tab" class="tab-content">
     <div class="form-container">
         <h1>Inserimento Timesheet</h1>
         
@@ -1673,6 +1684,7 @@
 <script src="js/fatture.js"></script>
 <script type="module" src="js/clienti.js"></script>
 <script src="js/proforma-list.js"></script>
+<script src="js/home.js"></script>
 
 <!-- SCRIPT PER TOGGLE CAMPI OPZIONALI -->
 <script>

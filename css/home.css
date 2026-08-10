@@ -1,0 +1,333 @@
+/* =======================================================================
+   HOME — TODO + Startup Kleos + pendenze
+   Riusa il linguaggio visivo di vendite.css (card bordate, badge pill,
+   stat box grigie) per non introdurre un secondo stile nell'app.
+   ======================================================================= */
+
+.home-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.home-section {
+    margin-bottom: 28px;
+}
+
+.home-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.home-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.home-section-title .home-count {
+    background: #e9ecef;
+    color: #555;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 10px;
+    letter-spacing: 0;
+}
+
+/* --- Riga pendenze (contatori cliccabili) --------------------------- */
+
+.home-pendenze {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.home-pendenza-card {
+    background: #fff;
+    border: 2px solid #b0b8c1;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: box-shadow .2s, transform .1s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.home-pendenza-card:hover {
+    box-shadow: 0 3px 12px rgba(0,0,0,.10);
+    transform: translateY(-1px);
+}
+.home-pendenza-card.vuota {
+    opacity: .55;
+}
+
+.home-pendenza-icon {
+    font-size: 20px;
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.home-pendenza-icon.blu     { background: #cce5ff; color: #004085; }
+.home-pendenza-icon.arancio { background: #fff3cd; color: #856404; }
+.home-pendenza-icon.rosso   { background: #f8d7da; color: #721c24; }
+.home-pendenza-icon.verde   { background: #d4edda; color: #155724; }
+
+.home-pendenza-numero {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+.home-pendenza-label {
+    font-size: 12px;
+    color: #777;
+    margin-top: 3px;
+}
+
+/* --- TODO ------------------------------------------------------------ */
+
+.home-todo-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.home-todo-form input[type="text"] {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+.home-todo-form input[type="date"],
+.home-todo-form select {
+    flex: 0 0 auto;
+}
+.home-todo-form input,
+.home-todo-form select {
+    padding: 9px 11px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+}
+.home-todo-form input:focus,
+.home-todo-form select:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+.home-todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #fff;
+    border: 2px solid #b0b8c1;
+    border-left-width: 5px;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    transition: box-shadow .2s;
+}
+.home-todo-item:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+
+.home-todo-item.priorita-alta  { border-left-color: #dc3545; }
+.home-todo-item.priorita-media { border-left-color: #fd7e14; }
+.home-todo-item.priorita-bassa { border-left-color: #6c757d; }
+.home-todo-item.fatto {
+    opacity: .6;
+    border-left-color: #28a745;
+}
+.home-todo-item.fatto .home-todo-testo {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.home-todo-check {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: #28a745;
+}
+
+.home-todo-corpo { flex: 1; min-width: 0; }
+
+.home-todo-testo {
+    font-size: 14px;
+    color: #333;
+    word-break: break-word;
+}
+
+.home-todo-meta {
+    font-size: 12px;
+    color: #888;
+    margin-top: 3px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.home-todo-scadenza.scaduta { color: #dc3545; font-weight: 600; }
+.home-todo-scadenza.oggi    { color: #fd7e14; font-weight: 600; }
+
+.home-todo-azioni {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.home-todo-azioni button {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: color .15s, background .15s;
+}
+.home-todo-azioni button:hover { color: #dc3545; background: #f8d7da; }
+
+/* --- Startup Kleos --------------------------------------------------- */
+
+.home-startup-card {
+    background: #fff;
+    border: 2px solid #b0b8c1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: box-shadow .2s;
+}
+.home-startup-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+.home-startup-card.esaurito { border-color: #e0a800; }
+.home-startup-card.sforato  { border-color: #dc3545; }
+
+.home-startup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.home-startup-cliente {
+    font-weight: 700;
+    font-size: 15px;
+    color: #333;
+}
+.home-startup-sub {
+    font-size: 12px;
+    color: #888;
+    font-weight: 400;
+}
+
+.home-startup-ore {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.home-startup-ore .storico-stat { padding: 6px 4px; }
+
+.home-startup-residue.esaurito { color: #dc3545; }
+
+.home-mov-row {
+    border-left: 3px solid #dee2e6;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    background: #f8f9fa;
+    border-radius: 0 6px 6px 0;
+}
+.home-mov-row.formazione    { border-left-color: #1a73e8; }
+.home-mov-row.configurazione { border-left-color: #6f42c1; }
+
+.home-mov-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #444;
+}
+.home-mov-rapportino {
+    font-size: 12px;
+    color: #555;
+    margin-top: 3px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.home-inline-form {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+}
+.home-inline-form .riga {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.home-inline-form input,
+.home-inline-form select,
+.home-inline-form textarea {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.home-inline-form textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 58px;
+}
+.home-inline-form input:focus,
+.home-inline-form select:focus,
+.home-inline-form textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+.home-btn {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    transition: background .2s;
+}
+.home-btn:hover { background: #1557b0; }
+.home-btn.secondario { background: #6c757d; }
+.home-btn.secondario:hover { background: #565e64; }
+.home-btn.piccolo { padding: 6px 12px; font-size: 13px; }
+
+/* --- Mobile ---------------------------------------------------------- */
+
+@media (max-width: 600px) {
+    .home-container { padding: 10px; }
+    .home-pendenze { grid-template-columns: repeat(2, 1fr); }
+    .home-todo-form input[type="text"] { flex: 1 1 100%; }
+    .home-startup-ore { grid-template-columns: repeat(3, 1fr); }
+    .home-section-header { flex-wrap: wrap; }
+}

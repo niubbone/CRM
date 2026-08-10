@@ -232,6 +232,11 @@ Backend (Google Apps Script)
 │   ├── Firme.js                     → Gestione firme digitali (Token/Remota, 3 anni)
 │   └── Rinnovi.js                   → Sistema rinnovi automatici, chain storico
 │
+├── 🏠 HOME
+│   ├── Home.js                      → getHomeDashboard: TODO + Startup Kleos + pendenze (1 sola chiamata)
+│   ├── Todo.js                      → Promemoria: CRUD, priorità, scadenza, ordinamento per urgenza
+│   └── StartupKleos.js              → Monti ore informali: cliente testo libero, movimenti, scalo
+│
 ├── 📅 SCADENZE & NOTIFICHE
 │   └── Calendar.js                  → Google Calendar integration, eventi automatici
 │
@@ -239,10 +244,15 @@ Backend (Google Apps Script)
     ├── QODNET.js                    → Integrazione QODNET
     └── Trigger.js                   → Trigger temporali, automazioni
 
-TOTALE: 17 file .js
+TOTALE: 20 file .js
 </pre>
                 </div>
 
+                <div class="info-box">
+                    <strong>💡 v4.20.0:</strong> Nuova <strong>Home</strong> (tab di apertura) servita da <code>Home.js</code> → <code>getHomeDashboard()</code>, action <code>get_home</code>: un solo round-trip che restituisce TODO, monti ore Startup Kleos e i contatori delle pendenze (controlli, scadenze, ore extra, proforma). Ogni blocco è isolato in try/catch: se una sezione fallisce la Home si apre lo stesso con quel blocco a zero.<br><br>
+                    <code>Todo.js</code> → foglio <code>Todo</code> (ID_Todo, Testo, Priorita, Data_Scadenza, STATO). <code>StartupKleos.js</code> → fogli <code>Startup_Kleos</code> e <code>Startup_Kleos_Movimenti</code>: monti ore <strong>non fatturati</strong> compresi nelle vendite degli agenti Kleos, con <strong>cliente come testo libero</strong> (nessun ID_Cliente, nessuna scadenza). Le ore residue sono sempre <strong>ricalcolate dalla somma dei movimenti</strong> (<code>ricalcolaStartup_</code>), mai incrementate: così cancellare un movimento rimette a posto i conti da solo.<br><br>
+                    Predisposto <code>findStartupApertoByCliente()</code> per il passo successivo: far scalare da qui il Timesheet con <code>Mod_Addebito = "Startup Kleos"</code> quando il cliente non ha un pacchetto formale attivo (oggi quel ramo va in errore).
+                </div>
                 <div class="info-box">
                     <strong>💡 v4.12.0:</strong> Aggiunto modulo <code>Controlli.js</code> + foglio <code>Controlli</code> per i <strong>canoni tipo CONTROLLI</strong> (ibrido canone/pacchetto): N controlli/visite per ciclo annuale, ognuno tracciato con data eseguita e report. Il foglio Canoni ha nuove colonne <code>Tipo</code> e <code>N_Controlli</code>. Il rinnovo rigenera gli slot ereditando le etichette. Fatturazione invariata (una fattura annua per il canone).
                 </div>

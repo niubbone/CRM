@@ -52,6 +52,14 @@ window.switchTab = function(tabName) {
     .find(btn => btn && btn.textContent && btn.textContent.toLowerCase().includes(tabName));
   if (activeBtn && activeBtn.classList) activeBtn.classList.add('active');
 
+  // La Home fa eccezione al lazy-load: si ricarica a ogni accesso, perché i
+  // suoi contatori (controlli, scadenze, ore extra) cambiano man mano che si
+  // lavora nelle altre tab.
+  if (tabName === 'home') {
+    if (typeof window.initHome === 'function') window.initHome();
+    return;
+  }
+
   // Inizializza solo se non già caricata in questa sessione
   if (_tabLoaded[tabName]) return;
   _tabLoaded[tabName] = true;
@@ -99,6 +107,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Carica badge ore extra in sospeso
   loadOreExtraBadge();
 
+  // La Home è la tab attiva all'apertura: switchTab non viene chiamata,
+  // quindi il caricamento iniziale va fatto qui.
+  if (typeof window.initHome === 'function') window.initHome();
+
   console.log('✅ Applicazione inizializzata con successo!');
 });
 
@@ -111,7 +123,9 @@ function setupTabs() {
     btn.addEventListener('click', () => {
       let tabName;
 
-      if (btn.textContent.includes('Timesheet')) {
+      if (btn.textContent.includes('Home')) {
+        tabName = 'home';
+      } else if (btn.textContent.includes('Timesheet')) {
         tabName = 'timesheet';
       } else if (btn.textContent.includes('Proforma')) {
         tabName = 'proforma';
