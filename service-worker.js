@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.27.1';
+const SW_BUILD = '4.28.0';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -74,7 +74,11 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_FILES);
+        // cache:'reload' obbliga a scaricare dalla rete. Senza, queste fetch
+        // passano dalla cache HTTP del browser (GitHub Pages serve tutto con
+        // max-age=600) e un SW appena installato dopo un deploy si porta
+        // dentro i file VECCHI, congelandoli per l'intera vita della cache.
+        return cache.addAll(STATIC_FILES.map(url => new Request(url, { cache: 'reload' })));
       })
       .then(() => {
         console.log('[SW] Static cache complete');

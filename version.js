@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.27.1';
+export const VERSION = '4.28.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,11 +30,13 @@ export const VERSION = '4.27.1';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Home Edition',
-  date: '10 Agosto 2026',
+  date: '11 Agosto 2026',
   codename: 'Home',
 
   // Changelog corrente versione
   changelog: [
+    'Fix: "Forza aggiornamento app" ora aggiorna davvero anche CSS e JS, non solo la pagina',
+    'Feat: verifica integrità estesa a QODNET, Controlli, Startup Kleos e Todo',
     'Fix: barra delle tab non più tagliata su finestre strette — le tab vanno a capo invece di sparire',
     'Fix: B3 — N_Proforma letto da Sheets come data (fix backend @263, 49 celle migrate)',
     'Feat: nuova tab Home, aperta di default — promemoria, pendenze e Startup Kleos in un colpo solo',
@@ -66,6 +68,20 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.28.0",
+    date: "11/08/2026",
+    type: "fix",
+    changes: [
+      "\"Forza aggiornamento app\" era efficace solo a metà: svuotava la cache del Service Worker ma ricaricava CSS e JS dagli stessi indirizzi, che GitHub Pages serve con max-age=600. Per 10 minuti dopo un rilascio si continuava a vedere il codice vecchio",
+      "Ora il pulsante ri-scarica dalla rete tutti i file dell'app (moduli ES inclusi) prima di ricaricare, aggiornando anche la cache HTTP del browser",
+      "Il Service Worker installa i file statici con richieste 'reload': un SW nuovo non può più nascere con dentro file già scaduti — è la causa del telefono che restava indietro rispetto al PC",
+      "Verifica integrità estesa ai moduli nati dopo la sua prima stesura: QODNET (ID duplicati, cliente inesistente, date incoerenti, stato attivo con scadenza passata), Controlli (canone inesistente, Eseguito senza data e viceversa), Startup Kleos (ore residue che non tornano, monte ore attivo senza ore, movimenti orfani, somma movimenti diversa dalle ore utilizzate), Todo (conteggio)",
+      "Riattivato il controllo dei riferimenti cliente nel Timesheet: era commentato per un dubbio sulla posizione della colonna, ora si usa l'header. Segnalato come avviso, non come errore",
+      "Le anomalie sono raggruppate per categoria reale: i riquadri Orfani/Duplicati/Riferimenti filtravano su un campo che il backend non ha mai valorizzato, quindi restavano sempre vuoti e tutto finiva in \"Altri problemi\" troncato a 5 voci",
+      "Statistiche della verifica estese a QODNET, Controlli, Startup Kleos e Todo"
+    ]
+  },
   {
     version: "4.27.1",
     date: "10/08/2026",

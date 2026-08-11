@@ -209,19 +209,51 @@ window.forceSWUpdate = async function() {
             navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
         }
 
-        // 3. Deregistra tutti i SW
+        // 3. Rinfresca la CACHE HTTP del browser.
+        //    Senza questo passaggio il pulsante era mezzo inutile: il reload
+        //    rimette la stessa URL per CSS e JS, e GitHub Pages li serve con
+        //    max-age=600, quindi per 10 minuti dopo un deploy si continuava a
+        //    ricaricare la versione vecchia (che il SW poi si ri-cachava).
+        //    Le risorse le chiediamo a performance: include anche i moduli ES
+        //    importati a runtime, che nell'HTML non compaiono.
+        await refreshHttpCache();
+
+        // 4. Deregistra tutti i SW
         if (navigator.serviceWorker) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             await Promise.all(registrations.map(r => r.unregister()));
         }
 
-        // 4. Ricarica la pagina
+        // 5. Ricarica la pagina
         const base = window.location.pathname.split('?')[0]; window.location.replace(base + '?_=' + Date.now());
 
     } catch (err) {
         alert('Errore durante l\'aggiornamento: ' + err.message + '\nRicarica manualmente la pagina.');
     }
 };
+
+/**
+ * Riscarica dalla rete (bypassando la cache HTTP) tutti i file dell'app che
+ * la pagina ha effettivamente caricato, così il reload successivo parte da
+ * copie fresche. Le chiamate all'API sono escluse: non sono file dell'app.
+ */
+async function refreshHttpCache() {
+    if (!window.performance || !performance.getEntriesByType) return;
+
+    const urls = [...new Set(
+        performance.getEntriesByType('resource')
+            .filter(e => e.initiatorType !== 'fetch' && e.initiatorType !== 'xmlhttprequest')
+            .map(e => e.name)
+            .filter(u => u.startsWith(window.location.origin))
+    )];
+
+    // index.html non compare tra le risorse: la ricarichiamo esplicitamente.
+    urls.push(window.location.pathname.split('?')[0]);
+
+    await Promise.all(urls.map(u =>
+        fetch(u, { cache: 'reload', noSpinner: true }).catch(() => null)
+    ));
+}
 
 /**
  * Test connessione backend
@@ -339,96 +371,58 @@ function displayIntegrityResults(data) {
             </div>
         `;
     } else {
-        // ERRORI CRITICI
+        // ERRORI — raggruppati per categoria REALE.
+        // Prima si filtrava su issue.type cercando 'orphan'/'duplicate'/
+        // 'reference': campi che il backend non ha mai valorizzato (emette
+        // category + severity). I tre riquadri dedicati restavano quindi
+        // sempre vuoti e ogni errore finiva in "ALTRI PROBLEMI", troncato a 5
+        // voci: con 20 anomalie se ne vedevano 5.
         if (hasIssues) {
-            const orphanIssues = data.issues.filter(i => i.type === 'orphan');
-            const duplicateIssues = data.issues.filter(i => i.type === 'duplicate');
-            const referenceIssues = data.issues.filter(i => i.type === 'reference');
-            const otherIssues = data.issues.filter(i => !['orphan', 'duplicate', 'reference'].includes(i.type));
-            
-            // Orfani
-            if (orphanIssues.length > 0) {
-                html += `
+            const LABEL_CATEGORIA = {
+                DUPLICATO_ID:         '❌ ID DUPLICATI',
+                FATTURA_DUPLICATA:    '❌ FATTURE DUPLICATE',
+                RIFERIMENTO_INVALIDO: '❌ RIFERIMENTI NON VALIDI',
+                CLIENTE_MANCANTE:     '❌ CLIENTE MANCANTE',
+                DATA_INVALIDA:        '❌ DATE NON VALIDE'
+            };
+            const PESO_SEVERITA = { CRITICAL: 0, HIGH: 1, MEDIUM: 2 };
+
+            const perCategoria = {};
+            data.issues.forEach(issue => {
+                const cat = issue.category || 'ALTRO';
+                if (!perCategoria[cat]) perCategoria[cat] = [];
+                perCategoria[cat].push(issue);
+            });
+
+            // I gruppi più gravi per primi
+            Object.keys(perCategoria)
+                .sort((a, b) => {
+                    const pesoA = PESO_SEVERITA[perCategoria[a][0].severity];
+                    const pesoB = PESO_SEVERITA[perCategoria[b][0].severity];
+                    return (pesoA === undefined ? 9 : pesoA) - (pesoB === undefined ? 9 : pesoB);
+                })
+                .forEach(cat => {
+                    const lista = perCategoria[cat];
+                    const label = LABEL_CATEGORIA[cat] || ('❌ ' + cat.replace(/_/g, ' '));
+
+                    html += `
                     <div class="log-entry" data-level="ERROR">
                         <div class="log-header">
-                            <span class="log-level error">❌ RECORD ORFANI (${orphanIssues.length})</span>
+                            <span class="log-level error">${label} (${lista.length})</span>
                         </div>
                         <div class="log-body">
-                `;
-                orphanIssues.slice(0, 5).forEach(issue => {
-                    html += `<strong>• ${issue.message}</strong><br>`;
-                    if (issue.solution) {
-                        html += `<small style="color: #721c24;">💡 ${issue.solution}</small><br>`;
+                    `;
+                    lista.slice(0, 10).forEach(issue => {
+                        html += `<strong>• ${issue.message}</strong><br>`;
+                        if (issue.solution) {
+                            html += `<small style="color: #721c24;">💡 ${issue.solution}</small><br>`;
+                        }
+                    });
+                    if (lista.length > 10) {
+                        html += `<small style="color: #666; font-style: italic;">... e altri ${lista.length - 10}</small>`;
                     }
+                    html += `</div></div>`;
                 });
-                if (orphanIssues.length > 5) {
-                    html += `<small style="color: #666; font-style: italic;">... e altri ${orphanIssues.length - 5} record orfani</small>`;
-                }
-                html += `</div></div>`;
-            }
-            
-            // Duplicati
-            if (duplicateIssues.length > 0) {
-                html += `
-                    <div class="log-entry" data-level="ERROR">
-                        <div class="log-header">
-                            <span class="log-level error">❌ DUPLICATI (${duplicateIssues.length})</span>
-                        </div>
-                        <div class="log-body">
-                `;
-                duplicateIssues.slice(0, 5).forEach(issue => {
-                    html += `<strong>• ${issue.message}</strong><br>`;
-                    if (issue.solution) {
-                        html += `<small style="color: #721c24;">💡 ${issue.solution}</small><br>`;
-                    }
-                });
-                if (duplicateIssues.length > 5) {
-                    html += `<small style="color: #666; font-style: italic;">... e altri ${duplicateIssues.length - 5} duplicati</small>`;
-                }
-                html += `</div></div>`;
-            }
-            
-            // Riferimenti
-            if (referenceIssues.length > 0) {
-                html += `
-                    <div class="log-entry" data-level="ERROR">
-                        <div class="log-header">
-                            <span class="log-level error">❌ RIFERIMENTI NON VALIDI (${referenceIssues.length})</span>
-                        </div>
-                        <div class="log-body">
-                `;
-                referenceIssues.slice(0, 5).forEach(issue => {
-                    html += `<strong>• ${issue.message}</strong><br>`;
-                    if (issue.solution) {
-                        html += `<small style="color: #721c24;">💡 ${issue.solution}</small><br>`;
-                    }
-                });
-                if (referenceIssues.length > 5) {
-                    html += `<small style="color: #666; font-style: italic;">... e altri ${referenceIssues.length - 5} riferimenti non validi</small>`;
-                }
-                html += `</div></div>`;
-            }
-            
-            // Altri problemi
-            if (otherIssues.length > 0) {
-                html += `
-                    <div class="log-entry" data-level="ERROR">
-                        <div class="log-header">
-                            <span class="log-level error">❌ ALTRI PROBLEMI (${otherIssues.length})</span>
-                        </div>
-                        <div class="log-body">
-                `;
-                otherIssues.slice(0, 5).forEach(issue => {
-                    html += `<strong>• ${issue.message}</strong><br>`;
-                    if (issue.solution) {
-                        html += `<small style="color: #721c24;">💡 ${issue.solution}</small><br>`;
-                    }
-                });
-                if (otherIssues.length > 5) {
-                    html += `<small style="color: #666; font-style: italic;">... e altri ${otherIssues.length - 5} problemi</small>`;
-                }
-                html += `</div></div>`;
-            }
         }
         
         // AVVISI
@@ -438,24 +432,37 @@ function displayIntegrityResults(data) {
             const oreExtraWarning  = data.warnings.find(w => w.category === 'ORE_EXTRA_IN_SOSPESO');
             const altriWarnings    = data.warnings.filter(w => w.category !== 'RIGHE_ORFANE_PACCHETTO' && w.category !== 'ORE_EXTRA_IN_SOSPESO');
 
+            // Anche gli avvisi vanno raggruppati per categoria: in un unico
+            // blocco troncato a 10, un problema ripetuto su molte righe
+            // nascondeva tutti gli altri.
             if (altriWarnings.length > 0) {
-                html += `
+                const warningPerCategoria = {};
+                altriWarnings.forEach(w => {
+                    const cat = w.category || 'ALTRO';
+                    if (!warningPerCategoria[cat]) warningPerCategoria[cat] = [];
+                    warningPerCategoria[cat].push(w);
+                });
+
+                Object.keys(warningPerCategoria).forEach(cat => {
+                    const lista = warningPerCategoria[cat];
+                    html += `
                     <div class="log-entry" data-level="WARNING">
                         <div class="log-header">
-                            <span class="log-level warning">⚠️ AVVISI (${altriWarnings.length})</span>
+                            <span class="log-level warning">⚠️ ${cat.replace(/_/g, ' ')} (${lista.length})</span>
                         </div>
                         <div class="log-body">
-                `;
-                altriWarnings.slice(0, 10).forEach(warning => {
-                    html += `<strong>• ${warning.message}</strong><br>`;
-                    if (warning.solution) {
-                        html += `<small style="color: #856404;">💡 ${warning.solution}</small><br>`;
+                    `;
+                    lista.slice(0, 10).forEach(warning => {
+                        html += `<strong>• ${warning.message}</strong><br>`;
+                        if (warning.solution) {
+                            html += `<small style="color: #856404;">💡 ${warning.solution}</small><br>`;
+                        }
+                    });
+                    if (lista.length > 10) {
+                        html += `<small style="color: #666; font-style: italic;">... e altri ${lista.length - 10}</small>`;
                     }
+                    html += `</div></div>`;
                 });
-                if (altriWarnings.length > 10) {
-                    html += `<small style="color: #666; font-style: italic;">... e altri ${altriWarnings.length - 10} avvisi</small>`;
-                }
-                html += `</div></div>`;
             }
 
             // Card dedicata per ore extra in sospeso
@@ -606,6 +613,18 @@ function formatStatsForDisplay(stats) {
     }
     if (stats.fatture !== undefined) {
         html += `<div><strong>🧾 Fatture:</strong> ${stats.fatture} totali</div>`;
+    }
+    if (stats.qodnet !== undefined) {
+        html += `<div><strong>🌐 QODNET:</strong> ${stats.qodnet} contratti (${stats.qodnetAttivi} attivi)</div>`;
+    }
+    if (stats.controlli !== undefined) {
+        html += `<div><strong>🔍 Controlli:</strong> ${stats.controlli} totali (${stats.controlliDaFare} da fare)</div>`;
+    }
+    if (stats.startupKleos !== undefined) {
+        html += `<div><strong>🚀 Startup Kleos:</strong> ${stats.startupKleos} monti ore (${stats.startupKleosAttivi} attivi)</div>`;
+    }
+    if (stats.todo !== undefined) {
+        html += `<div><strong>📝 Da fare:</strong> ${stats.todoAperti} aperti su ${stats.todo}</div>`;
     }
 
     html += '</div>';
