@@ -244,8 +244,29 @@
         active = Math.max(0, active - 1);
         if (active === 0) overlay.classList.remove('visible');
     };
+    // I contatori della Home dipendono da proforma, fatture, timesheet,
+    // canoni e controlli: una scrittura fatta in QUALSIASI tab li rende
+    // vecchi. Invece di rincorrere le decine di punti di scrittura sparsi
+    // nei moduli, li marchiamo qui, nell'unico passaggio obbligato.
+    // Sono letture (non marcano nulla) le action get_/check_/test_/diagnostica_.
+    const SOLA_LETTURA = /^(get_|check_|test_|diagnostica_)/;
+    function _marcaHomeDaRinfrescare(risorsa) {
+        try {
+            const url = typeof risorsa === 'string' ? risorsa : (risorsa && risorsa.url);
+            if (!url) return;
+            const action = new URL(url, location.href).searchParams.get('action');
+            if (!action || SOLA_LETTURA.test(action)) return;
+            localStorage.setItem('crm_home_stale', '1');
+        } catch (e) {
+            // URL non parsabile o storage negato: pazienza, si perde solo
+            // l'invalidazione automatica
+        }
+    }
+
     const _fetch = window.fetch;
     window.fetch = function(...args) {
+        _marcaHomeDaRinfrescare(args[0]);
+
         // Passa { noSpinner: true } come secondo argomento per chiamate silesiose
         const opts = args[1];
         if (opts && opts.noSpinner) {

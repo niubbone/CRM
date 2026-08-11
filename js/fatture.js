@@ -376,9 +376,12 @@ function buildFattureErrorHTML(title, msg, retryFn) {
 function initFattureTab() {
   console.log('🧾 Inizializzazione tab Fatture');
   populateFattureClientFilter();
-  // Default: anno corrente
+  // Default: anno corrente — ma non quando la tab è stata aperta da un
+  // contatore della Home, che ha già scelto i filtri (e vuole tutti gli anni).
   const annoSelect = document.getElementById('fatture-filter-anno');
-  if (annoSelect && !annoSelect.value) {
+  const filtriPreimpostati = !!window._fattureFiltriPreimpostati;
+  window._fattureFiltriPreimpostati = false;
+  if (annoSelect && !annoSelect.value && !filtriPreimpostati) {
     const opt = document.createElement('option');
     const currentYear = new Date().getFullYear().toString();
     opt.value = currentYear;

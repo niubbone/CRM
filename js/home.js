@@ -26,6 +26,56 @@ const _homeApiUrl = () => {
 let homeData = null;
 let startupDettaglioAperti = {};   // idStartup -> true quando il dettaglio è espanso
 let todoById = {};                 // idTodo -> record, serve alla modifica inline
+let homeAggiornatoIl = null;       // timestamp (ms) dei dati attualmente a schermo
+let _rinviaRinfresco = null;       // timer del rinfresco rimandato (vedi _homeInModifica)
+
+// --- Cache locale della Home ------------------------------------------
+// get_home costa 5-10 secondi (latenza GAS + lettura di sette fogli) per
+// restituire 2 KB, e switchTab la richiama a OGNI ritorno sulla tab. Qui i
+// dati vengono tenuti in localStorage: la Home si apre subito con l'ultima
+// fotografia e si rinfresca da sola solo quando serve davvero.
+const HOME_CACHE_KEY  = 'crm_home_cache_v1';
+const HOME_STALE_KEY  = 'crm_home_stale';   // scritta dal wrapper fetch in index.html
+const HOME_MAX_ETA_MS = 5 * 60 * 1000;      // oltre questa età si rinfresca in sottofondo
+
+function _leggiCacheHome() {
+    try {
+        const raw = localStorage.getItem(HOME_CACHE_KEY);
+        if (!raw) return null;
+        const c = JSON.parse(raw);
+        return (c && c.dati && c.ts) ? c : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function _scriviCacheHome(dati) {
+    try {
+        localStorage.setItem(HOME_CACHE_KEY, JSON.stringify({ ts: Date.now(), dati: dati }));
+    } catch (e) {
+        // quota piena o storage negato: la Home continua a funzionare senza cache
+    }
+}
+
+/** true se una scrittura fatta in qualunque tab ha reso vecchi i contatori. */
+function _homeDaRinfrescare() {
+    try {
+        return localStorage.getItem(HOME_STALE_KEY) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+function _segnaHomeAggiornata() {
+    try {
+        localStorage.removeItem(HOME_STALE_KEY);
+    } catch (e) {}
+}
+
+function _oraBreve(ts) {
+    if (!ts) return '';
+    return new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+}
 
 function _escHome(s) {
     return (s === null || s === undefined ? '' : s.toString())
@@ -66,27 +116,80 @@ function _indicizzaTodo(lista) {
 // === CARICAMENTO ===
 // =======================================================================
 
+/**
+ * Apertura della Home: mostra subito l'ultima fotografia salvata e decide se
+ * vale la pena richiedere dati nuovi. Il rinfresco avviene in sottofondo,
+ * senza spinner e senza svuotare lo schermo: i numeri si assestano da soli.
+ */
 function initHome() {
-    loadHome();
+    const cache = _leggiCacheHome();
+
+    if (!cache) {
+        loadHome();
+        return;
+    }
+
+    homeData = cache.dati;
+    homeAggiornatoIl = cache.ts;
+    renderHome();
+
+    const troppoVecchia = (Date.now() - cache.ts) > HOME_MAX_ETA_MS;
+    if (troppoVecchia || _homeDaRinfrescare()) {
+        loadHome({ silenzioso: true });
+    }
 }
 
-async function loadHome() {
+/**
+ * @param {object} opzioni - { silenzioso: true } aggiorna senza toccare quello
+ *        che è già a schermo (nessun "Caricamento...", nessuno spinner).
+ */
+async function loadHome(opzioni) {
     const container = document.getElementById('homeContainer');
     if (!container) return;
 
-    container.innerHTML = '<div class="loading-scadenze">Caricamento...</div>';
+    const silenzioso = !!(opzioni && opzioni.silenzioso) && !!homeData;
+    const forzato    = !!(opzioni && opzioni.forzato);
+
+    // Il rinfresco ricostruisce tutto l'HTML della Home: se parte mentre si
+    // sta scrivendo un promemoria o registrando delle ore, il testo sparisce
+    // sotto le dita. In quel caso si rimanda. Il pulsante ↻ è esplicito e
+    // passa comunque (chi lo preme sta chiedendo proprio quello).
+    if (silenzioso && !forzato && _homeInModifica()) {
+        clearTimeout(_rinviaRinfresco);
+        _rinviaRinfresco = setTimeout(() => loadHome({ silenzioso: true }), 60000);
+        return;
+    }
+
+    if (!silenzioso) {
+        container.innerHTML = '<div class="loading-scadenze">Caricamento...</div>';
+    } else {
+        _segnaRinfrescoInCorso(true);
+    }
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?action=get_home`);
+        const res = await fetch(`${_homeApiUrl()}?action=get_home`,
+                                silenzioso ? { noSpinner: true } : undefined);
         const result = await res.json();
 
         if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
 
         homeData = result;
+        homeAggiornatoIl = Date.now();
+        _scriviCacheHome(result);
+        _segnaHomeAggiornata();
         renderHome();
 
     } catch (error) {
         console.error('Errore caricamento home:', error);
+
+        // In sottofondo un errore non deve cancellare i dati buoni che l'utente
+        // sta guardando: si tiene la fotografia vecchia e lo si dice nel
+        // timestamp, che è l'unico posto dove la cosa è rilevante.
+        if (silenzioso) {
+            _segnaRinfrescoInCorso(false, true);
+            return;
+        }
+
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">⚠️</div>
@@ -96,11 +199,43 @@ async function loadHome() {
     }
 }
 
+/**
+ * true se l'utente ha qualcosa in mano nella Home: un campo a fuoco oppure
+ * del testo già digitato e non ancora salvato (il form "nuovo promemoria" è
+ * sempre presente nel DOM, quindi il solo fuoco non basterebbe).
+ */
+function _homeInModifica() {
+    const c = document.getElementById('homeContainer');
+    if (!c) return false;
+
+    const attivo = document.activeElement;
+    if (attivo && c.contains(attivo) && /^(INPUT|TEXTAREA|SELECT)$/.test(attivo.tagName)) {
+        return true;
+    }
+
+    return Array.from(c.querySelectorAll('input, textarea')).some(el => {
+        if (el.type === 'checkbox' || el.type === 'radio') return false;
+        return el.value && el.value.trim() !== '';
+    });
+}
+
+/** Fa girare l'icona del pulsante mentre il rinfresco silenzioso è in corso. */
+function _segnaRinfrescoInCorso(inCorso, fallito) {
+    const bar = document.getElementById('home-aggiornamento');
+    if (!bar) return;
+    bar.classList.toggle('in-corso', !!inCorso);
+    if (fallito) {
+        const ts = document.getElementById('home-timestamp');
+        if (ts) ts.textContent = 'agg. ' + _oraBreve(homeAggiornatoIl) + ' · rete non raggiungibile';
+    }
+}
+
 function renderHome() {
     const container = document.getElementById('homeContainer');
     if (!container || !homeData) return;
 
     container.innerHTML =
+        renderBarraAggiornamento() +
         renderPendenze(homeData.pendenze || {}, homeData.todos || {}, homeData.controlli || []) +
         renderTodoSezione(homeData.todos || {}) +
         renderControlliSezione(homeData.controlli || []) +
@@ -110,6 +245,22 @@ function renderHome() {
     Object.keys(startupDettaglioAperti).forEach(id => {
         if (startupDettaglioAperti[id]) caricaMovimenti(id);
     });
+}
+
+/**
+ * Riga di servizio sopra le pendenze: quando risalgono i dati e come
+ * chiederne di nuovi. Deliberatamente minuscola e allineata a destra — la
+ * Home è già densa, questa riga non deve rubare spazio alle informazioni.
+ */
+function renderBarraAggiornamento() {
+    return `
+    <div class="home-aggiornamento" id="home-aggiornamento">
+        <span id="home-timestamp">agg. ${_oraBreve(homeAggiornatoIl) || '—'}</span>
+        <button type="button" title="Aggiorna i dati della Home"
+                onclick="loadHome({ silenzioso: true, forzato: true })">
+            <i class="fas fa-rotate-right"></i>
+        </button>
+    </div>`;
 }
 
 // =======================================================================
@@ -170,13 +321,65 @@ function vaiA(dove) {
         case 'oreextra':
             if (typeof window.switchTab === 'function') window.switchTab('clienti');
             break;
-        case 'proforma':
-            if (typeof window.switchTab === 'function') window.switchTab('proforma');
-            break;
-        case 'fatture':
-            if (typeof window.switchTab === 'function') window.switchTab('fatture');
-            break;
+        // I due contatori sotto portavano alla lista completa, lasciando
+        // all'utente il compito di ritrovare a mano le righe contate. Ora la
+        // vista arriva già filtrata sullo stesso criterio del contatore.
+        case 'proforma':  apriProformaDaFatturare();  break;
+        case 'fatture':   apriFattureNonPagate();     break;
     }
+}
+
+/** Imposta il valore di un campo filtro se esiste nel DOM. */
+function _impostaFiltro(id, valore) {
+    const el = document.getElementById(id);
+    if (el) el.value = valore;
+}
+
+/**
+ * Tab Proforma mostrando solo quelle non ancora fatturate — lo stesso insieme
+ * contato da contaProformaDaFatturare_ (N_Proforma valorizzato, N_Fattura no,
+ * che nella lista corrisponde allo stato "Proforma").
+ * Il filtro cliente viene azzerato: il contatore non guarda il cliente.
+ */
+function apriProformaDaFatturare() {
+    if (typeof window.switchTab !== 'function') return;
+
+    const giaAperta = window.isTabLoaded && window.isTabLoaded('proforma');
+
+    _impostaFiltro('filter-cliente-proforma', '');
+    _impostaFiltro('filter-stato-proforma', 'Proforma');
+
+    window.switchTab('proforma');
+
+    // Alla prima apertura ci pensa il caricamento della tab, che legge i
+    // filtri appena impostati. Se la tab era già aperta i dati sono lì e
+    // vanno solo rifiltrati (ricaricando dal server, perché il filtro cliente
+    // che abbiamo azzerato è server-side).
+    if (giaAperta && typeof filterProformaList === 'function') filterProformaList();
+}
+
+/**
+ * Tab Fatture mostrando solo quelle da incassare. L'anno viene azzerato di
+ * proposito: la tab di suo parte dall'anno corrente, mentre il contatore
+ * della Home conta le non pagate di TUTTI gli anni — con l'anno impostato si
+ * vedrebbero meno righe del numero cliccato.
+ */
+function apriFattureNonPagate() {
+    if (typeof window.switchTab !== 'function') return;
+
+    const giaAperta = window.isTabLoaded && window.isTabLoaded('fatture');
+
+    _impostaFiltro('fatture-filter-cliente', '');
+    _impostaFiltro('fatture-filter-pagato', 'NO');
+    _impostaFiltro('fatture-filter-anno', '');
+
+    // Segnala a initFattureTab di non rimettere l'anno corrente sopra la
+    // nostra scelta (lo fa solo quando il campo è vuoto, cioè proprio ora).
+    if (!giaAperta) window._fattureFiltriPreimpostati = true;
+
+    window.switchTab('fatture');
+
+    if (giaAperta && typeof applyFattureFilters === 'function') applyFattureFilters();
 }
 
 // =======================================================================

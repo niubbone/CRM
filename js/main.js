@@ -27,6 +27,13 @@ window.markTabDirty = function(tabName) {
   _tabLoaded[tabName] = false;
 };
 
+// Chi apre una tab con dei filtri preimpostati (es. i contatori della Home)
+// deve sapere se la tab si caricherà da sola — al primo accesso il filtro
+// viene già letto dal caricamento iniziale — o se tocca a lui rileggerla.
+window.isTabLoaded = function(tabName) {
+  return !!_tabLoaded[tabName];
+};
+
 window.switchTab = function(tabName) {
   if (!tabName || tabName === 'undefined') {
     console.warn('⚠️ switchTab chiamata senza parametro valido - operazione ignorata');

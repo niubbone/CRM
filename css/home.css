@@ -45,6 +45,48 @@
     letter-spacing: 0;
 }
 
+/* --- Riga di aggiornamento ------------------------------------------
+   Ora dell'ultima lettura + pulsante per forzarne una nuova. Tenuta
+   volutamente minima (11px, grigia, allineata a destra): la Home è densa e
+   questa riga è servizio, non contenuto. Occupa ~16px di altezza. */
+
+.home-aggiornamento {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin: -4px 0 6px;
+    font-size: 11px;
+    color: #9aa3ab;
+    line-height: 1;
+}
+
+.home-aggiornamento button {
+    background: none;
+    border: none;
+    padding: 2px;
+    color: #9aa3ab;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: 4px;
+}
+
+.home-aggiornamento button:hover {
+    color: var(--primary-color);
+    background: #eef3fb;
+}
+
+/* Mentre il rinfresco silenzioso è in corso l'icona gira: è l'unico segnale
+   che qualcosa sta succedendo, visto che di proposito non c'è spinner. */
+.home-aggiornamento.in-corso button i {
+    animation: home-rotazione 0.9s linear infinite;
+}
+
+@keyframes home-rotazione {
+    to { transform: rotate(360deg); }
+}
+
 /* --- Riga pendenze (contatori cliccabili) --------------------------- */
 
 .home-pendenze {

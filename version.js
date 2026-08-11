@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.28.0';
+export const VERSION = '4.29.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,6 +35,8 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
+    'Feat: la Home si apre subito — i dati restano in cache locale, si aggiornano da soli in sottofondo',
+    'Feat: i contatori Proforma e Fatture aprono la lista già filtrata',
     'Fix: "Forza aggiornamento app" ora aggiorna davvero anche CSS e JS, non solo la pagina',
     'Feat: verifica integrità estesa a QODNET, Controlli, Startup Kleos e Todo',
     'Fix: barra delle tab non più tagliata su finestre strette — le tab vanno a capo invece di sparire',
@@ -68,6 +70,20 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.29.0",
+    date: "11/08/2026",
+    type: "feature",
+    changes: [
+      "La Home si apre istantaneamente: l'ultima lettura resta salvata in locale e viene mostrata subito. Prima ogni ritorno sulla tab costava 5-10 secondi di attesa, anche se non era cambiato nulla",
+      "Aggiornamento in sottofondo se i dati hanno più di 5 minuti o se hai scritto qualcosa in un'altra tab: niente spinner, niente schermata vuota, i numeri si assestano da soli",
+      "Riga di servizio minima in alto a destra (11px): ora dell'ultima lettura + pulsante ↻ per forzare l'aggiornamento",
+      "Ogni scrittura fatta in qualsiasi tab (proforma, fatture, timesheet, canoni) marca automaticamente la Home da rinfrescare: i contatori non restano mai indietro in silenzio",
+      "Il rinfresco automatico si rimanda se stai scrivendo in un campo della Home, per non cancellarti il testo sotto le dita",
+      "Il contatore \"Proforma da fatturare\" apre la lista già filtrata sulle non fatturate, azzerando il filtro cliente",
+      "Il contatore \"Fatture non pagate\" apre la lista già filtrata sulle da pagare e su tutti gli anni (la tab parte dall'anno corrente, ma il contatore conta tutti gli anni: i due numeri non coincidevano)"
+    ]
+  },
   {
     version: "4.28.0",
     date: "11/08/2026",
