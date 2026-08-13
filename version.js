@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.29.0';
+export const VERSION = '4.29.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -30,11 +30,12 @@ export const VERSION = '4.29.0';
 export const VERSION_INFO = {
   number: VERSION,
   name: 'Home Edition',
-  date: '11 Agosto 2026',
+  date: '13 Agosto 2026',
   codename: 'Home',
 
   // Changelog corrente versione
   changelog: [
+    'Fix: ricerca clienti — ritenta automaticamente gli errori transitori del backend invece di fallire subito',
     'Feat: la Home si apre subito — i dati restano in cache locale, si aggiornano da soli in sottofondo',
     'Feat: i contatori Proforma e Fatture aprono la lista già filtrata',
     'Fix: "Forza aggiornamento app" ora aggiorna davvero anche CSS e JS, non solo la pagina',
