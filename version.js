@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.29.1';
+export const VERSION = '4.29.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,6 +35,8 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
+    'Perf: apertura più veloce — lo spreadsheet viene aperto una volta sola per richiesta (era 7-15 volte)',
+    'Perf: eliminata la doppia scansione del foglio Timesheet all\'avvio (il badge ore extra ora legge il dato dalla Home)',
     'Fix: ricerca clienti — ritenta automaticamente gli errori transitori del backend invece di fallire subito',
     'Feat: la Home si apre subito — i dati restano in cache locale, si aggiornano da soli in sottofondo',
     'Feat: i contatori Proforma e Fatture aprono la lista già filtrata',

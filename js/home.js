@@ -245,6 +245,15 @@ function renderHome() {
     Object.keys(startupDettaglioAperti).forEach(id => {
         if (startupDettaglioAperti[id]) caricaMovimenti(id);
     });
+
+    // Alimenta il badge "ore extra" (in cima) col dettaglio già calcolato da
+    // get_home: evita una seconda scansione integrale del Timesheet all'avvio.
+    if (typeof window.renderOreExtraBadge === 'function' && homeData.oreExtraDettaglio) {
+        window.renderOreExtraBadge(
+            homeData.oreExtraDettaglio.count,
+            homeData.oreExtraDettaglio.perCliente
+        );
+    }
 }
 
 /**

@@ -111,8 +111,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Esponi funzioni globali per onclick HTML
   exposeGlobalFunctions();
 
-  // Carica badge ore extra in sospeso
-  loadOreExtraBadge();
+  // Il badge ore extra è ora alimentato dalla Home (renderHome chiama
+  // window.renderOreExtraBadge con il dettaglio già calcolato in get_home):
+  // niente più chiamata get_ore_extra_count separata all'avvio.
 
   // La Home è la tab attiva all'apertura: switchTab non viene chiamata,
   // quindi il caricamento iniziale va fatto qui.
@@ -183,16 +184,15 @@ function exposeGlobalFunctions() {
  * sul tab Clienti se ce ne sono. Il badge è cliccabile e mostra
  * un popover rapido con la lista dei clienti e le ore.
  */
-async function loadOreExtraBadge() {
+function renderOreExtraBadge(count, perCliente) {
   try {
-    const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_ore_extra_count`;
-    const res  = await fetch(url, { noSpinner: true });
-    const data = await res.json();
+    count = count || 0;
+    perCliente = perCliente || [];
     const badge = document.getElementById('clienti-extra-badge');
     if (!badge) return;
 
-    if (data.success && data.count > 0) {
-      badge.textContent = data.count;
+    if (count > 0) {
+      badge.textContent = count;
       badge.style.display = 'inline-block';
       badge.style.cursor = 'pointer';
       badge.title = 'Clicca per vedere i clienti con ore extra';
@@ -210,7 +210,7 @@ async function loadOreExtraBadge() {
       `;
 
       let rows = '';
-      (data.perCliente || []).forEach(c => {
+      (perCliente || []).forEach(c => {
         const totH = c.righe.reduce((s, r) => s + (parseFloat(r.oreExtra) || 0), 0);
         rows += `<tr>
           <td style="padding:7px 12px;font-weight:600;">${c.cliente}</td>
@@ -221,7 +221,7 @@ async function loadOreExtraBadge() {
 
       popover.innerHTML = `
         <div style="background:#dc3545;color:#fff;padding:10px 14px;border-radius:7px 7px 0 0;font-weight:600;font-size:13px;">
-          ⏰ Ore extra in sospeso (${data.count})
+          ⏰ Ore extra in sospeso (${count})
         </div>
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead><tr style="background:#f8f9fa;font-size:11px;text-transform:uppercase;color:#888;">
@@ -257,6 +257,10 @@ async function loadOreExtraBadge() {
       badge.style.display = 'none';
     }
   } catch(e) {
-    console.warn('loadOreExtraBadge: errore silenzioso', e);
+    console.warn('renderOreExtraBadge: errore silenzioso', e);
   }
 }
+
+// Esposta globalmente: la Home la chiama passando il dettaglio ore extra che
+// ha già calcolato, così il badge non fa una seconda scansione del Timesheet.
+window.renderOreExtraBadge = renderOreExtraBadge;
