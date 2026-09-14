@@ -80,53 +80,28 @@ function loadFilterOptions() {
 }
 
 /**
- * Carica tutti i timesheet dal backend
+ * Carica tutti i timesheet dal backend, senza filtri: i filtri si applicano
+ * in locale, così cambiarli non costa un'altra chiamata al server.
  */
-async function loadAllTimesheet(filters = {}) {
+async function loadAllTimesheet() {
     const loading = document.getElementById('timesheet-list-loading');
     const tableContainer = document.getElementById('timesheet-list-table-container');
     const emptyMsg = document.getElementById('timesheet-list-empty');
-    
+
     loading.style.display = 'block';
     tableContainer.style.display = 'none';
     emptyMsg.style.display = 'none';
-    
+
     try {
-        // Costruisci URL con filtri
-        let url = `${CONFIG.APPS_SCRIPT_URL}?action=get_all_timesheet`;
-        
-        if (filters.cliente) {
-            url += `&cliente=${encodeURIComponent(filters.cliente)}`;
-        }
-        if (filters.dataInizio) {
-            url += `&data_inizio=${filters.dataInizio}`;
-        }
-        if (filters.dataFine) {
-            url += `&data_fine=${filters.dataFine}`;
-        }
-        if (filters.tipoIntervento) {
-            url += `&tipo_intervento=${encodeURIComponent(filters.tipoIntervento)}`;
-        }
-        if (filters.modAddebito) {
-            url += `&mod_addebito=${encodeURIComponent(filters.modAddebito)}`;
-        }
-        
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_all_timesheet`;
         const response = await fetch(url);
         const data = await response.json();
-        
+
         loading.style.display = 'none';
-        
+
         if (data.success && data.timesheet) {
             allTimesheetData = data.timesheet;
-            filteredTimesheetData = data.timesheet;
-            
-            if (data.timesheet.length > 0) {
-                renderTimesheetTable(data.timesheet);
-                updateStats(data.timesheet);
-                tableContainer.style.display = 'block';
-            } else {
-                emptyMsg.style.display = 'block';
-            }
+            applyTimesheetFilters();
         } else {
             throw new Error(data.error || 'Errore caricamento timesheet');
         }
@@ -215,18 +190,50 @@ function updateStats(timesheetList) {
 // =======================================================================
 
 /**
- * Applica i filtri selezionati
+ * "dd/MM/yyyy" (formato del backend) → "yyyy-MM-dd", confrontabile come
+ * stringa con il valore dei campi data. null se la data manca ("-").
  */
-async function applyTimesheetFilters() {
-    const filters = {
-        cliente: document.getElementById('filter-cliente').value,
-        dataInizio: document.getElementById('filter-data-inizio').value,
-        dataFine: document.getElementById('filter-data-fine').value,
-        tipoIntervento: document.getElementById('filter-tipo').value,
-        modAddebito: document.getElementById('filter-mod-addebito').value
-    };
-    
-    await loadAllTimesheet(filters);
+function _dataTimesheetISO(data) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(data || '');
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+}
+
+/**
+ * Applica i filtri selezionati in locale su allTimesheetData
+ */
+function applyTimesheetFilters() {
+    const tableContainer = document.getElementById('timesheet-list-table-container');
+    const emptyMsg = document.getElementById('timesheet-list-empty');
+
+    const cliente = document.getElementById('filter-cliente').value.trim().toLowerCase();
+    const dataInizio = document.getElementById('filter-data-inizio').value;
+    const dataFine = document.getElementById('filter-data-fine').value;
+    const tipoIntervento = document.getElementById('filter-tipo').value;
+    const modAddebito = document.getElementById('filter-mod-addebito').value;
+
+    filteredTimesheetData = allTimesheetData.filter(ts => {
+        // Cliente: basta una parte del nome, maiuscole indifferenti
+        if (cliente && !(ts.cliente || '').toLowerCase().includes(cliente)) return false;
+        if (tipoIntervento && ts.tipoIntervento !== tipoIntervento) return false;
+        if (modAddebito && ts.modAddebito !== modAddebito) return false;
+        // Come faceva il backend: le righe senza data valida non vengono escluse
+        const dataISO = _dataTimesheetISO(ts.data);
+        if (dataISO) {
+            if (dataInizio && dataISO < dataInizio) return false;
+            if (dataFine && dataISO > dataFine) return false;
+        }
+        return true;
+    });
+
+    if (filteredTimesheetData.length > 0) {
+        renderTimesheetTable(filteredTimesheetData);
+        updateStats(filteredTimesheetData);
+        tableContainer.style.display = 'block';
+        emptyMsg.style.display = 'none';
+    } else {
+        tableContainer.style.display = 'none';
+        emptyMsg.style.display = 'block';
+    }
 }
 
 /**
@@ -238,8 +245,8 @@ function resetTimesheetFilters() {
     document.getElementById('filter-data-fine').value = '';
     document.getElementById('filter-tipo').value = '';
     document.getElementById('filter-mod-addebito').value = '';
-    
-    loadAllTimesheet();
+
+    applyTimesheetFilters();
 }
 
 // =======================================================================

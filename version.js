@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.29.2';
+export const VERSION = '4.30.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,17 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.30.0",
+    date: "14/09/2026",
+    type: "feature",
+    changes: [
+      "Proforma: il filtro cliente lavora in locale come anno e stato. Prima ogni lettera digitata rifaceva la chiamata al server (3-49 secondi); ora il risultato è immediato",
+      "Proforma e Timesheet: il filtro cliente trova anche una parte del nome, maiuscole indifferenti",
+      "Elenco Timesheet: i dati si scaricano una volta all'apertura, poi cliente, date, tipo intervento e modalità addebito filtrano all'istante mentre li cambi, senza premere Applica",
+      "Elenco Timesheet: dopo un'eliminazione la lista ricaricata mantiene i filtri impostati (prima tornava a mostrare tutto con i campi ancora compilati)"
+    ]
+  },
   {
     version: "4.29.0",
     date: "11/08/2026",

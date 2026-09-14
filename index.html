@@ -2047,15 +2047,15 @@ function toggleOptionalFields() {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                     <div>
                         <label for="filter-cliente">Cliente</label>
-                        <input type="text" id="filter-cliente" class="filter-input" list="filter-cliente-list" placeholder="Tutti i clienti o cerca...">
+                        <input type="text" id="filter-cliente" class="filter-input" list="filter-cliente-list" placeholder="Tutti i clienti o cerca..." oninput="applyTimesheetFilters()">
                         <datalist id="filter-cliente-list">
                             <!-- Popolato da JavaScript -->
                         </datalist>
                     </div>
-                    <div><label for="filter-data-inizio">Data Inizio</label><input type="date" id="filter-data-inizio" class="filter-input"></div>
-                    <div><label for="filter-data-fine">Data Fine</label><input type="date" id="filter-data-fine" class="filter-input"></div>
-                    <div><label for="filter-tipo">Tipo Intervento</label><select id="filter-tipo" class="filter-select"><option value="">Tutti</option></select></div>
-                    <div><label for="filter-mod-addebito">Modalità Addebito</label><select id="filter-mod-addebito" class="filter-select">
+                    <div><label for="filter-data-inizio">Data Inizio</label><input type="date" id="filter-data-inizio" class="filter-input" onchange="applyTimesheetFilters()"></div>
+                    <div><label for="filter-data-fine">Data Fine</label><input type="date" id="filter-data-fine" class="filter-input" onchange="applyTimesheetFilters()"></div>
+                    <div><label for="filter-tipo">Tipo Intervento</label><select id="filter-tipo" class="filter-select" onchange="applyTimesheetFilters()"><option value="">Tutti</option></select></div>
+                    <div><label for="filter-mod-addebito">Modalità Addebito</label><select id="filter-mod-addebito" class="filter-select" onchange="applyTimesheetFilters()">
                             <option value="">Tutti</option>
                             <option value="Da fatturare">Da fatturare</option>
                             <option value="Scala da pacchetto">Scala da pacchetto</option>

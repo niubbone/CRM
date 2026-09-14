@@ -362,8 +362,7 @@ function apriProformaDaFatturare() {
 
     // Alla prima apertura ci pensa il caricamento della tab, che legge i
     // filtri appena impostati. Se la tab era già aperta i dati sono lì e
-    // vanno solo rifiltrati (ricaricando dal server, perché il filtro cliente
-    // che abbiamo azzerato è server-side).
+    // vanno solo rifiltrati, in locale.
     if (giaAperta && typeof filterProformaList === 'function') filterProformaList();
 }
 

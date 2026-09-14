@@ -11,9 +11,8 @@
  * Carica e mostra lista proforma con retry automatico
  * VERSIONE ROBUSTA con protezioni multiple
  */
-async function loadProformaList(clientName = null, retryCount = 0) {
-  console.log('🔄 loadProformaList() chiamata', { 
-    clientName, 
+async function loadProformaList(retryCount = 0) {
+  console.log('🔄 loadProformaList() chiamata', {
     retryCount,
     timestamp: new Date().toISOString() 
   });
@@ -75,13 +74,11 @@ async function loadProformaList(clientName = null, retryCount = 0) {
       throw new Error('API URL non disponibile - CONFIG non caricato');
     }
     
-    // Costruisci URL completo
-    const url = clientName 
-      ? `${API_URL}?action=get_proforma_list&cliente=${encodeURIComponent(clientName)}`
-      : `${API_URL}?action=get_proforma_list`;
-    
+    // Sempre l'elenco completo: il backend legge comunque tutto il foglio,
+    // e tutti i filtri (cliente, anno, stato) si applicano in locale.
+    const url = `${API_URL}?action=get_proforma_list`;
+
     console.log('📡 Chiamata API:', url.substring(0, 100) + '...');
-    console.log('🔗 Parametri:', { action: 'get_proforma_list', cliente: clientName || 'tutti' });
     
     // PROTEZIONE 3: Timeout di 30 secondi (GAS ha picchi di latenza ~18-25s)
     const controller = new AbortController();
@@ -141,7 +138,7 @@ async function loadProformaList(clientName = null, retryCount = 0) {
         </div>
       `;
       
-      setTimeout(() => loadProformaList(clientName, retryCount + 1), retryDelay);
+      setTimeout(() => loadProformaList(retryCount + 1), retryDelay);
       return;
     }
     
@@ -493,25 +490,26 @@ function populateAnnoFilter() {
 }
 
 /**
- * ✅ v3.2: Applica filtri locali (anno e stato) alla lista proforma
+ * Applica i filtri locali (cliente, anno e stato) alla lista proforma
  */
 function applyLocalFilters(proformeList) {
   if (!proformeList || proformeList.length === 0) return [];
-  
+
+  const clienteFilter = document.getElementById('filter-cliente-proforma');
   const annoFilter = document.getElementById('filter-anno-proforma');
   const statoFilter = document.getElementById('filter-stato-proforma');
-  
+
+  const clienteCercato = clienteFilter ? clienteFilter.value.trim().toLowerCase() : '';
   const annoSelezionato = annoFilter ? annoFilter.value : '';
   const statoSelezionato = statoFilter ? statoFilter.value : '';
-  
-  console.log('🔍 Filtri locali:', {
-    anno: annoSelezionato || 'tutti',
-    stato: statoSelezionato || 'tutti',
-    totaleProforma: proformeList.length
-  });
-  
+
   let filtered = proformeList;
-  
+
+  // Filtra per cliente: basta una parte del nome, maiuscole indifferenti
+  if (clienteCercato) {
+    filtered = filtered.filter(p => (p.cliente || '').toLowerCase().includes(clienteCercato));
+  }
+
   // Filtra per anno
   if (annoSelezionato && annoSelezionato.trim() !== '') {
     filtered = filtered.filter(p => {
@@ -532,17 +530,15 @@ function applyLocalFilters(proformeList) {
 }
 
 /**
- * Filtra lista proforma per cliente (richiesta server)
+ * Filtra lista proforma per cliente — in locale, come anno e stato.
+ * Va al server solo se l'elenco non è ancora mai stato caricato.
  */
 function filterProformaList() {
-  const selectCliente = document.getElementById('filter-cliente-proforma');
-  if (!selectCliente) return;
-
-  const clienteSelezionato = selectCliente.value;
-  console.log('🔍 Filtro proforma per cliente:', clienteSelezionato || 'TUTTI');
-
-  // Ricarica da server con filtro cliente (questo popola window.allProformeData)
-  loadProformaList(clienteSelezionato || null);
+  if (window.allProformeData) {
+    renderProformaList(window.allProformeData);
+  } else {
+    loadProformaList();
+  }
 }
 
 /**
@@ -655,7 +651,7 @@ window.filterProformaLocal = filterProformaLocal;
 window.populateProformaClientFilter = populateProformaClientFilter;
 
 /**
- * Resetta tutti i filtri proforma e ricarica lista completa
+ * Resetta tutti i filtri proforma e mostra la lista completa
  */
 function resetProformaFilters() {
   console.log('🔄 Reset filtri proforma');
@@ -672,7 +668,6 @@ function resetProformaFilters() {
   const statoFilter = document.getElementById('filter-stato-proforma');
   if (statoFilter) statoFilter.value = '';
   
-  // Ricarica lista completa
   filterProformaList();
 }
 
