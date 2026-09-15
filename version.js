@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.32.0';
+export const VERSION = '4.33.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.33.0",
+    date: "15/09/2026",
+    type: "feature",
+    changes: [
+      "La Home salvata compare subito all'apertura dell'app: prima aspettava il caricamento di clienti e configurazione (da 2 secondi fino a 30 quando Google risponde con una pagina d'errore e la chiamata va ritentata)",
+      "Ricerca clienti istantanea: l'anagrafica si scarica una volta e resta salvata, la ricerca per nome, P.IVA, CF o email avviene in locale con gli stessi criteri di prima. Prima ogni ricerca era una chiamata al server",
+      "Sopra i risultati della ricerca la riga «dati delle…» con il pulsante Aggiorna; dopo aver creato o modificato un cliente l'anagrafica si rilegge da sola"
+    ]
+  },
   {
     version: "4.32.0",
     date: "15/09/2026",

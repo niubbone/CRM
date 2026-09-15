@@ -104,20 +104,21 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Setup tab switching
   setupTabs();
 
+  // La Home è la tab attiva all'apertura: switchTab non viene chiamata,
+  // quindi il caricamento iniziale va fatto qui. PRIMA di initTimesheet:
+  // la Home non usa clienti né configurazione, e aspettare get_data (da 2 s
+  // fino a 30 s quando Google risponde con una pagina d'errore e va
+  // ritentata) teneva ferma anche la Home già salvata in locale.
+  // Il badge ore extra è alimentato dalla Home (renderHome chiama
+  // window.renderOreExtraBadge con il dettaglio già calcolato in get_home).
+  if (typeof window.initHome === 'function') window.initHome();
+
   // Inizializza moduli essenziali
   await initTimesheet();
   initProforma();
 
   // Esponi funzioni globali per onclick HTML
   exposeGlobalFunctions();
-
-  // Il badge ore extra è ora alimentato dalla Home (renderHome chiama
-  // window.renderOreExtraBadge con il dettaglio già calcolato in get_home):
-  // niente più chiamata get_ore_extra_count separata all'avvio.
-
-  // La Home è la tab attiva all'apertura: switchTab non viene chiamata,
-  // quindi il caricamento iniziale va fatto qui.
-  if (typeof window.initHome === 'function') window.initHome();
 
   console.log('✅ Applicazione inizializzata con successo!');
 });

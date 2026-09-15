@@ -39,32 +39,76 @@ async function populateClienteSearchList() {
     });
 }
 
-async function searchCliente() {
+// Cache persistente delle liste (js/cache-liste.js). Se questo file arriva più
+// nuovo di index.html (cache HTTP nei minuti dopo un deploy) l'aiutante può non
+// esserci: allora si carica come prima, direttamente dal server.
+function _crmCacheListe() {
+    return window.crmCache || {
+        carica: async (o) => {
+            o.caricamento();
+            try { o.mostra(await o.scarica()); } catch (e) { o.errore(e); }
+        }
+    };
+}
+
+/**
+ * Stessi criteri di searchClienti nel backend (Clienti.js): il testo cercato
+ * contenuto in nome, P.IVA, CF o email, maiuscole indifferenti.
+ */
+function _filtraClienti(clienti, termine) {
+    const t = termine.toLowerCase();
+    const contiene = v => v !== undefined && v !== null && v !== '' && v.toString().toLowerCase().includes(t);
+    return clienti.filter(c => contiene(c.nome) || contiene(c.piva) || contiene(c.cf) || contiene(c.email));
+}
+
+/**
+ * Ricerca clienti in locale. L'anagrafica completa si scarica una volta
+ * (search_clienti con testo vuoto restituisce tutti i clienti con tutti i
+ * campi), resta nella cache delle liste e la ricerca filtra lì dentro:
+ * immediata dalla seconda volta. Dopo una scrittura (nuovo cliente,
+ * modifica) la cache risulta vecchia e si rilegge da sola.
+ * @param {object} [opzioni] - { forzato: true } rilegge l'anagrafica dal server
+ */
+async function searchCliente(opzioni) {
     const searchTerm = document.getElementById('cliente-search').value.trim();
     if (!searchTerm) return;
 
-    const url = `${CONFIG.APPS_SCRIPT_URL}?action=search_clienti&search=${encodeURIComponent(searchTerm)}`;
+    return _crmCacheListe().carica({
+        chiave: 'clienti_anagrafica',
+        contenitore: 'search-results',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => searchCliente({ forzato: true }),
 
-    try {
-        showNotification('clienti-info', '⏳ Ricerca in corso...', 'info');
+        caricamento: () => {
+            showNotification('clienti-info', '⏳ Ricerca in corso...', 'info');
+        },
 
-        // La pagina HTML di errore di Google (cold-start / throttling) viene
-        // riconosciuta e ritentata una volta dallo strato comune in index.html.
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+        scarica: async (opzioniFetch) => {
+            const url = `${CONFIG.APPS_SCRIPT_URL}?action=search_clienti&search=`;
+            const response = await fetch(url, opzioniFetch);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (!data.success || !Array.isArray(data.clienti)) {
+                throw new Error(data.error || 'Errore ricerca');
+            }
+            return data.clienti;
+        },
 
-        if (data.success && data.clienti) {
-            displaySearchResults(data.clienti);
-            showNotification('clienti-info', `✅ Trovati ${data.clienti.length} clienti`, 'success');
-            return;
+        // Legge il testo al momento del disegno: un rinfresco in sottofondo
+        // filtra con quello che c'è scritto adesso, non con quello di prima.
+        mostra: (clienti) => {
+            const termine = document.getElementById('cliente-search').value.trim();
+            if (!termine) return;
+            const trovati = _filtraClienti(clienti, termine);
+            displaySearchResults(trovati);
+            showNotification('clienti-info', `✅ Trovati ${trovati.length} clienti`, 'success');
+        },
+
+        errore: (error) => {
+            console.error('Errore ricerca clienti:', error);
+            showNotification('clienti-info', `❌ Errore durante la ricerca (${error.message})`, 'error');
         }
-        showNotification('clienti-info', `❌ ${data.error || 'Errore ricerca'}`, 'error');
-
-    } catch (error) {
-        console.error('Errore ricerca clienti:', error);
-        showNotification('clienti-info', `❌ Errore durante la ricerca (${error.message})`, 'error');
-    }
+    });
 }
 
 /**
