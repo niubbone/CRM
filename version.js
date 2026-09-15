@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.31.0';
+export const VERSION = '4.32.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,18 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.32.0",
+    date: "15/09/2026",
+    type: "feature",
+    changes: [
+      "Proforma, Elenco Timesheet e le liste di Vendite (scadenze, controlli da fare, canoni, firme, pacchetti, QODNET) si aprono subito con l'ultima lettura salvata, come già la Home. Prima ogni apertura costava da 3 a 50 secondi di attesa",
+      "Sopra ogni lista la riga «dati delle 10:32» dice sempre di quando sono i dati a schermo, con il pulsante Aggiorna per rileggerli subito dal server",
+      "Rinfresco automatico in sottofondo se i dati hanno più di 5 minuti o se nel frattempo hai scritto qualcosa in qualunque tab: niente schermata vuota, la lista si assesta da sola",
+      "Il rinfresco non ridisegna la lista mentre stai scrivendo dentro (per esempio il report di un controllo): aspetta che tu abbia finito",
+      "Con i filtri lato server attivi (cliente o stato su canoni, pacchetti e QODNET) la lista si legge dal server come prima, senza cache"
+    ]
+  },
   {
     version: "4.31.0",
     date: "14/09/2026",

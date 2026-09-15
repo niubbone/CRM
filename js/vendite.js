@@ -39,6 +39,18 @@ let currentVenditeSection = 'pacchetti';
 // Traccia se il riepilogo di ogni sezione è già stato caricato
 const riepilogoLoaded = { pacchetti: false, canoni: false, firme: false, qodnet: false };
 
+// Cache persistente delle liste (js/cache-liste.js). Se questo file arriva più
+// nuovo di index.html (cache HTTP nei minuti dopo un deploy) l'aiutante può non
+// esserci: allora si carica come prima, direttamente dal server.
+function _crmCacheListe() {
+    return window.crmCache || {
+        carica: async (o) => {
+            o.caricamento();
+            try { o.mostra(await o.scarica()); } catch (e) { o.errore(e); }
+        }
+    };
+}
+
 function switchVenditeSection(section) {
     // Aggiorna nav cards
     ['pacchetti','canoni','firme','scadenze','qodnet'].forEach(s => {
@@ -146,36 +158,52 @@ async function loadVenditaClienti() {
     }
 }
 
-async function loadScadenze() {
+async function loadScadenze(opzioni) {
     const container = document.getElementById('scadenzeContainer');
     if (!container) return;
-    
-    container.innerHTML = '<div class="loading-scadenze">Caricamento scadenze...</div>';
-    
-    try {
-        // Le due chiamate sono lente (GAS): partono in parallelo per dimezzare l'attesa.
-        const [result] = await Promise.all([
-            fetch(`${getAPIUrl()}?action=get_scadenze&giorni=90`).then(r => r.json()),
-            fetchControlliDaFare().catch(() => { controlliDaFareData = []; })
-        ]);
 
-        if (!result.success) {
-            throw new Error(result.error || 'Errore sconosciuto');
-        }
+    return _crmCacheListe().carica({
+        chiave: 'vendite_scadenze',
+        contenitore: 'scadenzeContainer',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => loadScadenze({ forzato: true }),
 
-        scadenzeData = result.data;
-        renderScadenze(scadenzeData);
+        caricamento: () => {
+            container.innerHTML = '<div class="loading-scadenze">Caricamento scadenze...</div>';
+        },
 
-    } catch (error) {
-        console.error('Errore caricamento scadenze:', error);
-        container.innerHTML = `
+        scarica: async (opzioniFetch) => {
+            // Le due chiamate sono lente (GAS): partono in parallelo per dimezzare l'attesa.
+            const [result, controlli] = await Promise.all([
+                fetch(`${getAPIUrl()}?action=get_scadenze&giorni=90`, opzioniFetch).then(r => r.json()),
+                fetchControlliDaFare(opzioniFetch).catch(() => null)
+            ]);
+            if (!result.success) {
+                throw new Error(result.error || 'Errore sconosciuto');
+            }
+            return { scadenze: result.data, controlli: controlli };
+        },
+
+        // Se i controlli non sono arrivati la risposta è incompleta: si mostra
+        // ma non si salva, altrimenti per 5 minuti sembrerebbe «nessun controllo».
+        salvabile: (dati) => dati.controlli !== null,
+
+        mostra: (dati) => {
+            scadenzeData = dati.scadenze;
+            controlliDaFareData = dati.controlli || [];
+            renderScadenze(scadenzeData);
+        },
+
+        errore: (error) => {
+            container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">⚠️</div>
                 <div>Errore caricamento scadenze</div>
                 <div style="font-size: 12px; margin-top: 8px; color: #999;">${error.message}</div>
             </div>
         `;
-    }
+        }
+    });
 }
 
 function renderScadenze(data) {
@@ -932,31 +960,45 @@ function _escControllo(str) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-async function fetchControlliDaFare() {
-    const response = await fetch(`${getAPIUrl()}?action=get_controlli_da_fare`);
+async function fetchControlliDaFare(opzioniFetch) {
+    const response = await fetch(`${getAPIUrl()}?action=get_controlli_da_fare`, opzioniFetch);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
     controlliDaFareData = result.controlli || [];
     return controlliDaFareData;
 }
 
-// Loader per il subtab dedicato (Vendite → Canoni → Controlli da fare)
-async function loadControlliDaFare() {
+// Loader per il subtab dedicato (Vendite → Canoni → Controlli da fare).
+// Registrare un controllo è una scrittura: la cache risulta vecchia e la
+// lista si rilegge da sola.
+async function loadControlliDaFare(opzioni) {
     const container = document.getElementById('controlliDaFareContainer');
     if (!container) return;
 
-    container.innerHTML = '<div class="loading-scadenze">Caricamento controlli...</div>';
+    return _crmCacheListe().carica({
+        chiave: 'vendite_controlli',
+        contenitore: 'controlliDaFareContainer',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => loadControlliDaFare({ forzato: true }),
 
-    try {
-        const controlli = await fetchControlliDaFare();
-        container.innerHTML = controlli.length
-            ? `<div style="font-size:13px;color:#666;margin-bottom:10px;">${controlli.length} controllo/i da eseguire</div>`
-              + controlliDaFareGroupedHtml(controlli, 'cdf', 'canoni')
-            : `<div class="empty-state"><div class="empty-state-icon">✅</div><div>Nessun controllo da fare</div></div>`;
-    } catch (error) {
-        console.error('Errore caricamento controlli da fare:', error);
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${_escControllo(error.message)}</div></div>`;
-    }
+        caricamento: () => {
+            container.innerHTML = '<div class="loading-scadenze">Caricamento controlli...</div>';
+        },
+
+        scarica: fetchControlliDaFare,
+
+        mostra: (controlli) => {
+            controlliDaFareData = controlli;
+            container.innerHTML = controlli.length
+                ? `<div style="font-size:13px;color:#666;margin-bottom:10px;">${controlli.length} controllo/i da eseguire</div>`
+                  + controlliDaFareGroupedHtml(controlli, 'cdf', 'canoni')
+                : `<div class="empty-state"><div class="empty-state-icon">✅</div><div>Nessun controllo da fare</div></div>`;
+        },
+
+        errore: (error) => {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${_escControllo(error.message)}</div></div>`;
+        }
+    });
 }
 
 // Raggruppa per cliente e restituisce l'HTML. prefix = namespace ID (evita
@@ -1037,33 +1079,45 @@ async function submitCdf(prefix, id, reloadKey) {
     }
 }
 
-async function loadCanoniRiepilogo() {
+async function loadCanoniRiepilogo(opzioni) {
     const container = document.getElementById('canoniContainer');
     if (!container) return;
 
-    container.innerHTML = '<div class="loading-scadenze">Caricamento canoni...</div>';
+    const cliente = (document.getElementById('canoni-filter-cliente')?.value || '').trim();
+    const stato   = document.getElementById('canoni-filter-stato')?.value || '';
 
-    try {
-        const cliente = (document.getElementById('canoni-filter-cliente')?.value || '').trim();
-        const stato   = document.getElementById('canoni-filter-stato')?.value || '';
+    return _crmCacheListe().carica({
+        // Con i filtri lato server attivi la risposta è parziale: niente cache.
+        chiave: (cliente || stato) ? null : 'vendite_canoni',
+        contenitore: 'canoniContainer',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => loadCanoniRiepilogo({ forzato: true }),
 
-        let url = `${getAPIUrl()}?action=get_canoni_riepilogo`;
-        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
-        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
+        caricamento: () => {
+            container.innerHTML = '<div class="loading-scadenze">Caricamento canoni...</div>';
+        },
 
-        const response = await fetch(url);
-        const result   = await response.json();
+        scarica: async (opzioniFetch) => {
+            let url = `${getAPIUrl()}?action=get_canoni_riepilogo`;
+            if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+            if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
 
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            const response = await fetch(url, opzioniFetch);
+            const result   = await response.json();
+            if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            return result.canoni || [];
+        },
 
-        canoniData = result.canoni || [];
-        populateCanoniClientFilter(canoniData);
-        filterCanoni();   // applica il filtro di default (nasconde i rinnovati/storico)
+        mostra: (canoni) => {
+            canoniData = canoni;
+            populateCanoniClientFilter(canoniData);
+            filterCanoni();   // applica il filtro di default (nasconde i rinnovati/storico)
+        },
 
-    } catch (error) {
-        console.error('Errore caricamento canoni:', error);
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
-    }
+        errore: (error) => {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+        }
+    });
 }
 
 function populateCanoniClientFilter(canoni) {
@@ -1377,34 +1431,46 @@ async function resetControlloCard(idCanone, idControllo) {
 let firmeData = [];
 let firmeFilterTimer = null;
 
-async function loadFirmeRiepilogo() {
+async function loadFirmeRiepilogo(opzioni) {
     const container = document.getElementById('firmeContainer');
     if (!container) return;
 
-    container.innerHTML = '<div class="loading-scadenze">Caricamento firme...</div>';
+    // Recupera SEMPRE tutte le firme: il filtro per stato è client-side
+    // (filterFirme), così la rilevazione dei rinnovi lato server lavora
+    // sempre sulla lista completa.
+    const cliente = (document.getElementById('firme-filter-cliente')?.value || '').trim();
 
-    try {
-        // Recupera SEMPRE tutte le firme: il filtro per stato è client-side
-        // (filterFirme), così la rilevazione dei rinnovi lato server lavora
-        // sempre sulla lista completa.
-        const cliente = (document.getElementById('firme-filter-cliente')?.value || '').trim();
+    return _crmCacheListe().carica({
+        // Con il filtro cliente lato server attivo la risposta è parziale: niente cache.
+        chiave: cliente ? null : 'vendite_firme',
+        contenitore: 'firmeContainer',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => loadFirmeRiepilogo({ forzato: true }),
 
-        let url = `${getAPIUrl()}?action=get_firme_riepilogo`;
-        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+        caricamento: () => {
+            container.innerHTML = '<div class="loading-scadenze">Caricamento firme...</div>';
+        },
 
-        const response = await fetch(url);
-        const result   = await response.json();
+        scarica: async (opzioniFetch) => {
+            let url = `${getAPIUrl()}?action=get_firme_riepilogo`;
+            if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
 
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            const response = await fetch(url, opzioniFetch);
+            const result   = await response.json();
+            if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            return result.firme || [];
+        },
 
-        firmeData = result.firme || [];
-        populateFirmeClientFilter(firmeData);
-        filterFirme();   // applica il filtro di default (nasconde le rinnovate/storico)
+        mostra: (firme) => {
+            firmeData = firme;
+            populateFirmeClientFilter(firmeData);
+            filterFirme();   // applica il filtro di default (nasconde le rinnovate/storico)
+        },
 
-    } catch (error) {
-        console.error('Errore caricamento firme:', error);
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
-    }
+        errore: (error) => {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+        }
+    });
 }
 
 function populateFirmeClientFilter(firme) {
@@ -1526,33 +1592,45 @@ function renderFirme(firme) {
 let storicoData = [];
 let storicoFilterTimer = null;
 
-async function loadStoricoPackages() {
+async function loadStoricoPackages(opzioni) {
     const container = document.getElementById('storicoContainer');
     if (!container) return;
 
-    container.innerHTML = '<div class="loading-scadenze">Caricamento storico...</div>';
+    const cliente = (document.getElementById('storico-filter-cliente')?.value || '').trim();
+    const stato   = document.getElementById('storico-filter-stato')?.value || '';
 
-    try {
-        const cliente = (document.getElementById('storico-filter-cliente')?.value || '').trim();
-        const stato   = document.getElementById('storico-filter-stato')?.value || '';
+    return _crmCacheListe().carica({
+        // Con i filtri lato server attivi la risposta è parziale: niente cache.
+        chiave: (cliente || stato) ? null : 'vendite_pacchetti',
+        contenitore: 'storicoContainer',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => loadStoricoPackages({ forzato: true }),
 
-        let url = `${getAPIUrl()}?action=get_pacchetti_storico`;
-        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
-        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
+        caricamento: () => {
+            container.innerHTML = '<div class="loading-scadenze">Caricamento storico...</div>';
+        },
 
-        const response = await fetch(url);
-        const result   = await response.json();
+        scarica: async (opzioniFetch) => {
+            let url = `${getAPIUrl()}?action=get_pacchetti_storico`;
+            if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+            if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
 
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            const response = await fetch(url, opzioniFetch);
+            const result   = await response.json();
+            if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            return result.pacchetti || [];
+        },
 
-        storicoData = result.pacchetti || [];
-        populateStoricoClientFilter(storicoData);
-        renderStorico(storicoData);
+        mostra: (pacchetti) => {
+            storicoData = pacchetti;
+            populateStoricoClientFilter(storicoData);
+            renderStorico(storicoData);
+        },
 
-    } catch (error) {
-        console.error('Errore caricamento storico:', error);
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
-    }
+        errore: (error) => {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+        }
+    });
 }
 
 function populateStoricoClientFilter(pacchetti) {
@@ -1997,32 +2075,44 @@ async function submitQodnet(e) {
     }
 }
 
-async function loadQodnetRiepilogo() {
+async function loadQodnetRiepilogo(opzioni) {
     const container = document.getElementById('qodnetContainer');
     if (!container) return;
 
-    container.innerHTML = '<div class="loading-scadenze">Caricamento abbonamenti QODNET...</div>';
+    const cliente = (document.getElementById('qodnet-filter-cliente')?.value || '').trim();
+    const stato   = document.getElementById('qodnet-filter-stato')?.value || '';
 
-    try {
-        const cliente = (document.getElementById('qodnet-filter-cliente')?.value || '').trim();
-        const stato   = document.getElementById('qodnet-filter-stato')?.value || '';
+    return _crmCacheListe().carica({
+        // Con i filtri lato server attivi la risposta è parziale: niente cache.
+        chiave: (cliente || stato) ? null : 'vendite_qodnet',
+        contenitore: 'qodnetContainer',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => loadQodnetRiepilogo({ forzato: true }),
 
-        let url = `${getAPIUrl()}?action=get_qodnet_riepilogo`;
-        if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
-        if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
+        caricamento: () => {
+            container.innerHTML = '<div class="loading-scadenze">Caricamento abbonamenti QODNET...</div>';
+        },
 
-        const response = await fetch(url);
-        const result   = await response.json();
+        scarica: async (opzioniFetch) => {
+            let url = `${getAPIUrl()}?action=get_qodnet_riepilogo`;
+            if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
+            if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
 
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            const response = await fetch(url, opzioniFetch);
+            const result   = await response.json();
+            if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+            return result.abbonamenti || [];
+        },
 
-        qodnetData = result.abbonamenti || [];
-        renderQodnet(qodnetData);
+        mostra: (abbonamenti) => {
+            qodnetData = abbonamenti;
+            renderQodnet(qodnetData);
+        },
 
-    } catch (error) {
-        console.error('Errore caricamento QODNET:', error);
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
-    }
+        errore: (error) => {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+        }
+    });
 }
 
 function filterQodnetDebounced() {

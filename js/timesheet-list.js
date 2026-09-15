@@ -6,6 +6,18 @@
 let allTimesheetData = [];
 let filteredTimesheetData = [];
 
+// Cache persistente delle liste (js/cache-liste.js). Se questo file arriva più
+// nuovo di index.html (cache HTTP nei minuti dopo un deploy) l'aiutante può non
+// esserci: allora si carica come prima, direttamente dal server.
+function _crmCacheListe() {
+    return window.crmCache || {
+        carica: async (o) => {
+            o.caricamento();
+            try { o.mostra(await o.scarica()); } catch (e) { o.errore(e); }
+        }
+    };
+}
+
 // =======================================================================
 // === APERTURA/CHIUSURA MODAL ===
 // =======================================================================
@@ -82,36 +94,49 @@ function loadFilterOptions() {
 /**
  * Carica tutti i timesheet dal backend, senza filtri: i filtri si applicano
  * in locale, così cambiarli non costa un'altra chiamata al server.
+ * Si apre subito con l'ultima lettura salvata (js/cache-liste.js).
+ * @param {object} [opzioni] - { forzato: true } rilegge anche se la cache è fresca
  */
-async function loadAllTimesheet() {
+async function loadAllTimesheet(opzioni) {
     const loading = document.getElementById('timesheet-list-loading');
     const tableContainer = document.getElementById('timesheet-list-table-container');
     const emptyMsg = document.getElementById('timesheet-list-empty');
 
-    loading.style.display = 'block';
-    tableContainer.style.display = 'none';
-    emptyMsg.style.display = 'none';
+    return _crmCacheListe().carica({
+        chiave: 'timesheet',
+        contenitore: 'timesheet-list-loading',
+        forzato: !!(opzioni && opzioni.forzato),
+        aggiorna: () => loadAllTimesheet({ forzato: true }),
 
-    try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_all_timesheet`;
-        const response = await fetch(url);
-        const data = await response.json();
+        caricamento: () => {
+            loading.style.display = 'block';
+            tableContainer.style.display = 'none';
+            emptyMsg.style.display = 'none';
+        },
 
-        loading.style.display = 'none';
+        scarica: async (opzioniFetch) => {
+            const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_all_timesheet`;
+            const response = await fetch(url, opzioniFetch);
+            const data = await response.json();
+            if (!data.success || !data.timesheet) {
+                throw new Error(data.error || 'Errore caricamento timesheet');
+            }
+            return data.timesheet;
+        },
 
-        if (data.success && data.timesheet) {
-            allTimesheetData = data.timesheet;
+        mostra: (timesheet) => {
+            loading.style.display = 'none';
+            allTimesheetData = timesheet;
             applyTimesheetFilters();
-        } else {
-            throw new Error(data.error || 'Errore caricamento timesheet');
+        },
+
+        errore: (error) => {
+            loading.style.display = 'none';
+            tableContainer.style.display = 'none';
+            emptyMsg.style.display = 'block';
+            alert('❌ Errore durante il caricamento dei timesheet: ' + error.message);
         }
-        
-    } catch (error) {
-        console.error('Errore caricamento timesheet:', error);
-        loading.style.display = 'none';
-        emptyMsg.style.display = 'block';
-        alert('❌ Errore durante il caricamento dei timesheet');
-    }
+    });
 }
 
 // =======================================================================

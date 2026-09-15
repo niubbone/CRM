@@ -7,65 +7,88 @@
 // === 7 Protezioni Anti-Stuck + Retry + Safety Timeout ===
 // =======================================================================
 
+// Cache persistente delle liste (js/cache-liste.js). Se questo file arriva più
+// nuovo di index.html (cache HTTP nei minuti dopo un deploy) l'aiutante può non
+// esserci: allora si carica come prima, direttamente dal server.
+function _crmCacheListe() {
+  return window.crmCache || {
+    carica: async (o) => {
+      o.caricamento();
+      try { o.mostra(await o.scarica()); } catch (e) { o.errore(e); }
+    }
+  };
+}
+
 /**
  * Carica l'elenco completo delle proforma e lo mostra.
- * Timeout, nuovo tentativo su pagina d'errore di Google e cronometro sono
- * nello strato comune del fetch in index.html: qui niente ritentativi propri.
+ * Si apre subito con l'ultima lettura salvata (js/cache-liste.js) e va al
+ * server solo se è vecchia, se c'è stata una scrittura o se lo chiedi con
+ * Aggiorna. Timeout, nuovo tentativo su pagina d'errore di Google e
+ * cronometro sono nello strato comune del fetch in index.html.
+ * @param {object} [opzioni] - { forzato: true } rilegge anche se la cache è fresca
  */
-async function loadProformaList() {
+async function loadProformaList(opzioni) {
   const container = document.getElementById('proforma-list-container');
   if (!container) {
     console.error('❌ CRITICO: Container proforma-list-container non trovato nel DOM');
     return;
   }
 
-  container.innerHTML = '<div class="loading">⏳ Caricamento proforma...</div>';
+  const API_URL = window.CONFIG?.APPS_SCRIPT_URL
+    || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
 
-  try {
-    const API_URL = window.CONFIG?.APPS_SCRIPT_URL
-      || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
-    if (!API_URL) {
-      throw new Error('API URL non disponibile - CONFIG non caricato correttamente');
+  return _crmCacheListe().carica({
+    chiave: 'proforma',
+    contenitore: 'proforma-list-container',
+    forzato: !!(opzioni && opzioni.forzato),
+    aggiorna: () => loadProformaList({ forzato: true }),
+
+    caricamento: () => {
+      container.innerHTML = '<div class="loading">⏳ Caricamento proforma...</div>';
+    },
+
+    scarica: async (opzioniFetch) => {
+      if (!API_URL) {
+        throw new Error('API URL non disponibile - CONFIG non caricato correttamente');
+      }
+      // Sempre l'elenco completo: il backend legge comunque tutto il foglio,
+      // e tutti i filtri (cliente, anno, stato) si applicano in locale.
+      const response = await fetch(`${API_URL}?action=get_proforma_list`, { cache: 'no-cache', ...(opzioniFetch || {}) });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Errore caricamento proforma (success=false)');
+      }
+      return result.data || [];
+    },
+
+    mostra: renderProformaList,
+
+    errore: (error) => {
+      let suggestion = 'Verifica la connessione internet e riprova.';
+      if (error.name === 'CrmTimeout' || error.name === 'CrmRispostaNonValida') {
+        suggestion = 'Il backend Google è lento o sovraccarico in questo momento.';
+      } else if (error.message.includes('CONFIG')) {
+        suggestion = 'Ricarica la pagina (CTRL+F5) per ricaricare la configurazione.';
+      } else if (error.message.includes('HTTP')) {
+        suggestion = 'Errore del server. Controlla i log di Google Apps Script.';
+      }
+
+      container.innerHTML = `
+        <div class="error-state" style="padding: 20px; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+          <div style="font-weight: bold; margin-bottom: 8px;">Errore caricamento proforma</div>
+          <div style="font-size: 14px; color: #666; margin-bottom: 8px;">${error.message}</div>
+          <div style="font-size: 12px; color: #999; margin-bottom: 16px;">${suggestion}</div>
+          <button class="btn-primary btn-small" onclick="loadProformaList()" style="margin-top: 12px;">
+            🔄 Riprova
+          </button>
+        </div>
+      `;
     }
-
-    // Sempre l'elenco completo: il backend legge comunque tutto il foglio,
-    // e tutti i filtri (cliente, anno, stato) si applicano in locale.
-    const response = await fetch(`${API_URL}?action=get_proforma_list`, { cache: 'no-cache' });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error || 'Errore caricamento proforma (success=false)');
-    }
-
-    renderProformaList(result.data || []);
-
-  } catch (error) {
-    console.error('❌ Errore loadProformaList:', error);
-
-    let suggestion = 'Verifica la connessione internet e riprova.';
-    if (error.name === 'CrmTimeout' || error.name === 'CrmRispostaNonValida') {
-      suggestion = 'Il backend Google è lento o sovraccarico in questo momento.';
-    } else if (error.message.includes('CONFIG')) {
-      suggestion = 'Ricarica la pagina (CTRL+F5) per ricaricare la configurazione.';
-    } else if (error.message.includes('HTTP')) {
-      suggestion = 'Errore del server. Controlla i log di Google Apps Script.';
-    }
-
-    container.innerHTML = `
-      <div class="error-state" style="padding: 20px; text-align: center;">
-        <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
-        <div style="font-weight: bold; margin-bottom: 8px;">Errore caricamento proforma</div>
-        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">${error.message}</div>
-        <div style="font-size: 12px; color: #999; margin-bottom: 16px;">${suggestion}</div>
-        <button class="btn-primary btn-small" onclick="loadProformaList()" style="margin-top: 12px;">
-          🔄 Riprova
-        </button>
-      </div>
-    `;
-  }
+  });
 }
 
 /**

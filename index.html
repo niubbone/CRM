@@ -267,14 +267,19 @@
         }
     }
 
-    // I contatori della Home dipendono da proforma, fatture, timesheet,
-    // canoni e controlli: una scrittura fatta in QUALSIASI tab li rende
-    // vecchi. Invece di rincorrere le decine di punti di scrittura sparsi
-    // nei moduli, li marchiamo qui, nell'unico passaggio obbligato.
-    function _marcaHomeDaRinfrescare(action) {
-        if (!action || LETTURA.test(action)) return;
+    // I contatori della Home e le liste in cache (js/cache-liste.js) dipendono
+    // da proforma, fatture, timesheet, canoni e controlli: una scrittura fatta
+    // in QUALSIASI tab li rende vecchi. Invece di rincorrere le decine di punti
+    // di scrittura sparsi nei moduli, li marchiamo qui, nell'unico passaggio
+    // obbligato. L'ora si registra all'inizio e di nuovo alla fine: una lettura
+    // partita mentre la scrittura era in corso risulta così più vecchia di lei.
+    function _scrittura(action) {
+        return !!action && !LETTURA.test(action);
+    }
+    function _marcaScrittura() {
         try {
             localStorage.setItem('crm_home_stale', '1');
+            localStorage.setItem('crm_ultima_scrittura', String(Date.now()));
         } catch (e) {
             // storage negato: pazienza, si perde solo l'invalidazione automatica
         }
@@ -385,7 +390,8 @@
     const _fetch = window.fetch;
     window.fetch = function(...args) {
         const { action, backend } = _analizza(args[0]);
-        _marcaHomeDaRinfrescare(action);
+        const scrittura = _scrittura(action);
+        if (scrittura) _marcaScrittura();
 
         // Passa { noSpinner: true } come secondo argomento per chiamate silenziose
         let spinner = true;
@@ -396,13 +402,15 @@
             spinner = false;
         }
 
-        const promessa = backend ? _chiamaBackend(args, action) : _fetch.apply(window, args);
+        let promessa = backend ? _chiamaBackend(args, action) : _fetch.apply(window, args);
+        if (scrittura) promessa = promessa.finally(_marcaScrittura);
         if (!spinner) return promessa;
         window._showLoading();
         return promessa.finally(() => window._hideLoading());
     };
 })();
 </script>
+<script src="js/cache-liste.js"></script>
 
 <div class="tabs">
     <button class="tab-button active" onclick="switchTab('home')"><i class="fas fa-house"></i> <span class="tab-label">Home</span></button>

@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.31.0';
+const SW_BUILD = '4.32.0';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -49,6 +49,7 @@ const STATIC_FILES = [
 
   // JavaScript
   `${BASE_PATH}js/api.js`,
+  `${BASE_PATH}js/cache-liste.js`,
   `${BASE_PATH}js/clienti.js`,
   `${BASE_PATH}js/config.js`,
   `${BASE_PATH}js/home.js`,
