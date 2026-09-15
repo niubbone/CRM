@@ -8,165 +8,60 @@
 // =======================================================================
 
 /**
- * Carica e mostra lista proforma con retry automatico
- * VERSIONE ROBUSTA con protezioni multiple
+ * Carica l'elenco completo delle proforma e lo mostra.
+ * Timeout, nuovo tentativo su pagina d'errore di Google e cronometro sono
+ * nello strato comune del fetch in index.html: qui niente ritentativi propri.
  */
-async function loadProformaList(retryCount = 0) {
-  console.log('🔄 loadProformaList() chiamata', {
-    retryCount,
-    timestamp: new Date().toISOString() 
-  });
-  
-  // PROTEZIONE 1: Verifica container
+async function loadProformaList() {
   const container = document.getElementById('proforma-list-container');
   if (!container) {
     console.error('❌ CRITICO: Container proforma-list-container non trovato nel DOM');
-    console.log('📋 Containers disponibili:', 
-      Array.from(document.querySelectorAll('[id*="proforma"]')).map(el => el.id)
-    );
     return;
   }
-  
+
   container.innerHTML = '<div class="loading">⏳ Caricamento proforma...</div>';
-  
-  // PROTEZIONE 6: Safety timeout assoluto - dopo 35s mostra sempre qualcosa
-  const safetyTimeoutId = setTimeout(() => {
-    console.error('🚨 SAFETY TIMEOUT: loadProformaList non completata dopo 35 secondi');
-    if (container.innerHTML.includes('loading')) {
-      container.innerHTML = `
-        <div class="error-state" style="padding: 20px; text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 12px;">⏱️</div>
-          <div style="font-weight: bold; margin-bottom: 8px;">Timeout caricamento</div>
-          <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Il caricamento sta impiegando troppo tempo</div>
-          <div style="font-size: 12px; color: #999; margin-bottom: 16px;">
-            Possibili cause: server lento, connessione instabile, backend sovraccarico
-          </div>
-          <button class="btn-primary btn-small" onclick="loadProformaList()" style="margin-top: 12px;">
-            🔄 Riprova
-          </button>
-        </div>
-      `;
-    }
-  }, 35000);
 
   try {
-    // PROTEZIONE 2: Verifica CONFIG con fallback multipli
-    let API_URL = null;
-    
-    // Tentativo 1: window.CONFIG
-    if (window.CONFIG && window.CONFIG.APPS_SCRIPT_URL) {
-      API_URL = window.CONFIG.APPS_SCRIPT_URL;
-      console.log('✅ API URL da window.CONFIG');
-    }
-    // Tentativo 2: CONFIG globale
-    else if (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL) {
-      API_URL = CONFIG.APPS_SCRIPT_URL;
-      console.log('✅ API URL da CONFIG globale');
-    }
-    // Tentativo 3: CONFIG non caricato
-    else {
-      clearTimeout(safetyTimeoutId);
+    const API_URL = window.CONFIG?.APPS_SCRIPT_URL
+      || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
+    if (!API_URL) {
       throw new Error('API URL non disponibile - CONFIG non caricato correttamente');
     }
-    
-    if (!API_URL || API_URL.trim() === '') {
-      clearTimeout(safetyTimeoutId);
-      throw new Error('API URL non disponibile - CONFIG non caricato');
-    }
-    
+
     // Sempre l'elenco completo: il backend legge comunque tutto il foglio,
     // e tutti i filtri (cliente, anno, stato) si applicano in locale.
-    const url = `${API_URL}?action=get_proforma_list`;
-
-    console.log('📡 Chiamata API:', url.substring(0, 100) + '...');
-    
-    // PROTEZIONE 3: Timeout di 30 secondi (GAS ha picchi di latenza ~18-25s)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      console.warn('⏱️ Timeout raggiunto dopo 30 secondi');
-      controller.abort();
-    }, 30000);
-    
-    const fetchStartTime = Date.now();
-    const response = await fetch(url, { 
-      signal: controller.signal,
-      cache: 'no-cache' // Evita cache problematiche
-    });
-    clearTimeout(timeoutId);
-    clearTimeout(safetyTimeoutId); // Cancella safety timeout se fetch completa
-    
-    const fetchDuration = Date.now() - fetchStartTime;
-    console.log(`📥 Risposta ricevuta in ${fetchDuration}ms:`, response.status, response.statusText);
-    
+    const response = await fetch(`${API_URL}?action=get_proforma_list`, { cache: 'no-cache' });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
-    // Parse JSON
+
     const result = await response.json();
-    console.log('📦 Dati JSON ricevuti:', {
-      success: result.success,
-      dataLength: result.data?.length,
-      hasError: !!result.error
-    });
-    
     if (!result.success) {
       throw new Error(result.error || 'Errore caricamento proforma (success=false)');
     }
-    
-    // SUCCESSO: Renderizza lista
+
     renderProformaList(result.data || []);
-    console.log('✅ Lista proforma renderizzata con successo:', result.data?.length || 0, 'elementi');
-    
+
   } catch (error) {
-    clearTimeout(safetyTimeoutId); // Cancella safety timeout su errore
-    console.error('❌ Errore loadProformaList:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack?.substring(0, 200)
-    });
-    
-    // PROTEZIONE 4: Retry automatico (max 2 tentativi)
-    // Ma NON su timeout (AbortError) per evitare loop
-    if (retryCount < 2 && error.name !== 'AbortError') {
-      const retryDelay = 2000 * (retryCount + 1); // Delay progressivo: 2s, 4s
-      console.log(`🔁 Retry ${retryCount + 1}/2 tra ${retryDelay}ms...`);
-      
-      container.innerHTML = `
-        <div class="loading">
-          ⏳ Tentativo ${retryCount + 2}/3...
-        </div>
-      `;
-      
-      setTimeout(() => loadProformaList(retryCount + 1), retryDelay);
-      return;
-    }
-    
-    // PROTEZIONE 5: Mostra errore user-friendly con diagnostica
-    let errorMessage = error.message;
+    console.error('❌ Errore loadProformaList:', error);
+
     let suggestion = 'Verifica la connessione internet e riprova.';
-    
-    if (error.name === 'AbortError') {
-      errorMessage = 'Timeout - il server non risponde entro 30 secondi';
-      suggestion = 'Il backend potrebbe essere lento o non disponibile. Riprova tra qualche minuto.';
+    if (error.name === 'CrmTimeout' || error.name === 'CrmRispostaNonValida') {
+      suggestion = 'Il backend Google è lento o sovraccarico in questo momento.';
     } else if (error.message.includes('CONFIG')) {
-      errorMessage = 'Configurazione mancante';
       suggestion = 'Ricarica la pagina (CTRL+F5) per ricaricare la configurazione.';
     } else if (error.message.includes('HTTP')) {
       suggestion = 'Errore del server. Controlla i log di Google Apps Script.';
     }
-    
+
     container.innerHTML = `
       <div class="error-state" style="padding: 20px; text-align: center;">
         <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
         <div style="font-weight: bold; margin-bottom: 8px;">Errore caricamento proforma</div>
-        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">${errorMessage}</div>
+        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">${error.message}</div>
         <div style="font-size: 12px; color: #999; margin-bottom: 16px;">${suggestion}</div>
         <button class="btn-primary btn-small" onclick="loadProformaList()" style="margin-top: 12px;">
           🔄 Riprova
-        </button>
-        <button class="btn-secondary btn-small" onclick="console.log('Debug info:', window.CONFIG)" style="margin-top: 12px; margin-left: 8px;">
-          🐛 Debug Console
         </button>
       </div>
     `;

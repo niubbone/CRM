@@ -244,38 +244,162 @@
         active = Math.max(0, active - 1);
         if (active === 0) overlay.classList.remove('visible');
     };
+    // ── Strato comune: ogni fetch dell'app passa di qui ──────────────────
+    // Sono letture le action get_/check_/test_/diagnostica_/debug_/search_/
+    // cache_info. Tutto il resto (e le POST senza action nell'URL) è scrittura.
+    const LETTURA = /^(get_|check_|test_|diagnostica_|debug_|search_|cache_info)/;
+    // Timeout solo sulle letture ordinarie: diagnostica e controllo integrità
+    // possono legittimamente metterci di più.
+    const CON_TIMEOUT = /^(get_|search_)/;
+    const TIMEOUT_MS = 60000;
+    const PAUSA_RITENTATIVO_MS = 2500;
+    const CHIAVE_TEMPI = 'crm_tempi';
+
+    function _analizza(risorsa) {
+        try {
+            const url = (typeof risorsa === 'string' || risorsa instanceof URL)
+                ? String(risorsa) : (risorsa && risorsa.url);
+            if (!url) return { action: null, backend: false };
+            const u = new URL(url, location.href);
+            return { action: u.searchParams.get('action'), backend: u.pathname.includes('/macros/s/') };
+        } catch (e) {
+            return { action: null, backend: false };
+        }
+    }
+
     // I contatori della Home dipendono da proforma, fatture, timesheet,
     // canoni e controlli: una scrittura fatta in QUALSIASI tab li rende
     // vecchi. Invece di rincorrere le decine di punti di scrittura sparsi
     // nei moduli, li marchiamo qui, nell'unico passaggio obbligato.
-    // Sono letture (non marcano nulla) le action get_/check_/test_/diagnostica_.
-    const SOLA_LETTURA = /^(get_|check_|test_|diagnostica_)/;
-    function _marcaHomeDaRinfrescare(risorsa) {
+    function _marcaHomeDaRinfrescare(action) {
+        if (!action || LETTURA.test(action)) return;
         try {
-            const url = typeof risorsa === 'string' ? risorsa : (risorsa && risorsa.url);
-            if (!url) return;
-            const action = new URL(url, location.href).searchParams.get('action');
-            if (!action || SOLA_LETTURA.test(action)) return;
             localStorage.setItem('crm_home_stale', '1');
         } catch (e) {
-            // URL non parsabile o storage negato: pazienza, si perde solo
-            // l'invalidazione automatica
+            // storage negato: pazienza, si perde solo l'invalidazione automatica
+        }
+    }
+
+    // Cronometro: ogni chiamata in console, le ultime 300 in localStorage.
+    // crmTempi() dalla console stampa il riepilogo per action.
+    function _registraTempo(action, ms, esito) {
+        const nome = action || '(post)';
+        const msg = `⏱️ ${nome} ${(ms / 1000).toFixed(1)}s${esito === 'ok' ? '' : ' — ' + esito}`;
+        if (esito === 'ok') console.log(msg); else console.warn(msg);
+        try {
+            const tempi = JSON.parse(localStorage.getItem(CHIAVE_TEMPI) || '[]');
+            tempi.push({ a: nome, ms: Math.round(ms), e: esito, t: Date.now() });
+            localStorage.setItem(CHIAVE_TEMPI, JSON.stringify(tempi.slice(-300)));
+        } catch (e) {
+            // storage negato: resta la console
+        }
+    }
+    window.crmTempi = function() {
+        let tempi = [];
+        try { tempi = JSON.parse(localStorage.getItem(CHIAVE_TEMPI) || '[]'); } catch (e) {}
+        const perAction = {};
+        tempi.forEach(r => { (perAction[r.a] = perAction[r.a] || []).push(r); });
+        const sec = v => v === undefined ? '-' : (v / 1000).toFixed(1);
+        const righe = Object.entries(perAction).map(([action, rr]) => {
+            const ok = rr.filter(r => r.e === 'ok').map(r => r.ms).sort((x, y) => x - y);
+            return {
+                action,
+                chiamate: rr.length,
+                errori: rr.length - ok.length,
+                mediana_s: sec(ok[Math.floor((ok.length - 1) / 2)]),
+                max_s: sec(ok[ok.length - 1])
+            };
+        }).sort((x, y) => y.chiamate - x.chiamate);
+        console.table(righe);
+        return righe;
+    };
+
+    function _errore(nome, messaggio) {
+        const e = new Error(messaggio);
+        e.name = nome;
+        return e;
+    }
+
+    async function _chiamaBackend(args, action) {
+        const lettura = !!action && LETTURA.test(action);
+        const opts = args[1] || {};
+        const t0 = performance.now();
+
+        // Timeout che NON ritenta: abortire non ferma il server, ritentare
+        // accoda solo altro lavoro. Vale per singolo tentativo: la pagina
+        // d'errore di Google può arrivare anche dopo 50 s, e il nuovo tentativo
+        // deve avere il suo tempo pieno. Se il chiamante ha già un suo signal,
+        // vale il suo.
+        const conTimeout = lettura && CON_TIMEOUT.test(action) && !opts.signal;
+        let controller = null, timer = null;
+
+        try {
+            for (let tentativo = 1; ; tentativo++) {
+                let argsTentativo = args;
+                if (conTimeout) {
+                    controller = new AbortController();
+                    timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+                    argsTentativo = [args[0], { ...opts, signal: controller.signal }];
+                }
+
+                let response;
+                try {
+                    response = await _fetch.apply(window, argsTentativo);
+                } catch (err) {
+                    if (controller && controller.signal.aborted) {
+                        _registraTempo(action, performance.now() - t0, 'timeout');
+                        throw _errore('CrmTimeout',
+                            `Il server non ha risposto entro ${TIMEOUT_MS / 1000} secondi. Riprova tra qualche minuto.`);
+                    }
+                    _registraTempo(action, performance.now() - t0, 'rete: ' + err.message);
+                    throw err;
+                } finally {
+                    if (timer) { clearTimeout(timer); timer = null; }
+                }
+
+                if ((response.headers.get('content-type') || '').includes('json')) {
+                    _registraTempo(action, performance.now() - t0, response.ok ? 'ok' : 'http ' + response.status);
+                    return response;
+                }
+
+                // Pagina HTML di errore di Google (sotto carico) al posto del JSON.
+                // Letture: un solo nuovo tentativo dopo una pausa. Scritture: mai,
+                // il server potrebbe averla eseguita comunque → dato doppio.
+                if (lettura && tentativo === 1) {
+                    console.warn(`↻ ${action}: risposta non-JSON (HTTP ${response.status}), nuovo tentativo tra ${PAUSA_RITENTATIVO_MS / 1000}s`);
+                    await new Promise(r => setTimeout(r, PAUSA_RITENTATIVO_MS));
+                    continue;
+                }
+                _registraTempo(action, performance.now() - t0, 'non-JSON http ' + response.status);
+                throw lettura
+                    ? _errore('CrmRispostaNonValida',
+                        'Google ha risposto con una pagina di errore invece dei dati (server sovraccarico). Riprova tra qualche secondo.')
+                    : _errore('CrmRispostaNonValida',
+                        "Il server ha risposto in modo non valido: l'operazione potrebbe essere stata eseguita comunque. Ricarica e controlla prima di ripeterla.");
+            }
+        } finally {
+            if (timer) clearTimeout(timer);
         }
     }
 
     const _fetch = window.fetch;
     window.fetch = function(...args) {
-        _marcaHomeDaRinfrescare(args[0]);
+        const { action, backend } = _analizza(args[0]);
+        _marcaHomeDaRinfrescare(action);
 
-        // Passa { noSpinner: true } come secondo argomento per chiamate silesiose
+        // Passa { noSpinner: true } come secondo argomento per chiamate silenziose
+        let spinner = true;
         const opts = args[1];
         if (opts && opts.noSpinner) {
             const { noSpinner, ...rest } = opts;
             args[1] = Object.keys(rest).length ? rest : undefined;
-            return _fetch.apply(this, args);
+            spinner = false;
         }
+
+        const promessa = backend ? _chiamaBackend(args, action) : _fetch.apply(window, args);
+        if (!spinner) return promessa;
         window._showLoading();
-        return _fetch.apply(this, args).finally(() => window._hideLoading());
+        return promessa.finally(() => window._hideLoading());
     };
 })();
 </script>

@@ -44,52 +44,27 @@ async function searchCliente() {
     if (!searchTerm) return;
 
     const url = `${CONFIG.APPS_SCRIPT_URL}?action=search_clienti&search=${encodeURIComponent(searchTerm)}`;
-    const MAX_TENTATIVI = 3;
-    let ultimoErrore = null;
 
-    for (let tentativo = 1; tentativo <= MAX_TENTATIVI; tentativo++) {
-        try {
-            showNotification('clienti-info',
-                tentativo === 1 ? '⏳ Ricerca in corso...' : `⏳ Nuovo tentativo (${tentativo}/${MAX_TENTATIVI})...`,
-                'info');
+    try {
+        showNotification('clienti-info', '⏳ Ricerca in corso...', 'info');
 
-            const response = await fetch(url);
+        // La pagina HTML di errore di Google (cold-start / throttling) viene
+        // riconosciuta e ritentata una volta dallo strato comune in index.html.
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
 
-            // Google Apps Script a volte risponde con una pagina HTML di errore
-            // (cold-start / throttling / spreadsheet occupato subito dopo una scrittura):
-            // in quel caso response.json() esplode. Trattiamolo come errore transitorio.
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-            const testo = await response.text();
-            let data;
-            try {
-                data = JSON.parse(testo);
-            } catch (_) {
-                throw new Error('Risposta non-JSON dal backend (probabile errore transitorio Apps Script)');
-            }
-
-            if (data.success && data.clienti) {
-                displaySearchResults(data.clienti);
-                showNotification('clienti-info', `✅ Trovati ${data.clienti.length} clienti`, 'success');
-                return;
-            }
-            // Errore applicativo vero restituito dal backend: non ha senso riprovare.
-            showNotification('clienti-info', `❌ ${data.error || 'Errore ricerca'}`, 'error');
+        if (data.success && data.clienti) {
+            displaySearchResults(data.clienti);
+            showNotification('clienti-info', `✅ Trovati ${data.clienti.length} clienti`, 'success');
             return;
-
-        } catch (error) {
-            ultimoErrore = error;
-            console.error(`Errore ricerca clienti (tentativo ${tentativo}/${MAX_TENTATIVI}):`, error);
-            // Piccola attesa progressiva prima del retry (300ms, 600ms)
-            if (tentativo < MAX_TENTATIVI) {
-                await new Promise(r => setTimeout(r, 300 * tentativo));
-            }
         }
-    }
+        showNotification('clienti-info', `❌ ${data.error || 'Errore ricerca'}`, 'error');
 
-    showNotification('clienti-info',
-        `❌ Errore durante la ricerca (${ultimoErrore ? ultimoErrore.message : 'sconosciuto'})`,
-        'error');
+    } catch (error) {
+        console.error('Errore ricerca clienti:', error);
+        showNotification('clienti-info', `❌ Errore durante la ricerca (${error.message})`, 'error');
+    }
 }
 
 /**

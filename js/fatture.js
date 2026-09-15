@@ -6,25 +6,17 @@
 let allFattureData = [];
 let _nfVociData = { timesheet: [], canoni: [] };
 
-async function loadFattureList(retryCount = 0) {
+async function loadFattureList() {
   const container = document.getElementById('fatture-list-container');
   if (!container) return;
   container.innerHTML = '<div style="padding:30px;text-align:center;">⏳ Caricamento fatture...</div>';
-  const safetyId = setTimeout(() => {
-    if (container.innerHTML.includes('Caricamento')) {
-      container.innerHTML = buildFattureErrorHTML('Timeout', 'Server non risponde.', 'loadFattureList()');
-    }
-  }, 35000);
   try {
     const API_URL = window.CONFIG?.APPS_SCRIPT_URL;
     if (!API_URL) throw new Error('CONFIG non disponibile');
     const filtri = getFiltriAttivi();
     const params = new URLSearchParams({ action: 'get_fatture_list', ...filtri });
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch(`${API_URL}?${params.toString()}`, { signal: controller.signal, cache: 'no-cache' });
-    clearTimeout(timeoutId);
-    clearTimeout(safetyId);
+    // Timeout, nuovo tentativo su pagina d'errore e cronometro: strato comune in index.html
+    const response = await fetch(`${API_URL}?${params.toString()}`, { cache: 'no-cache' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore caricamento');
@@ -34,12 +26,6 @@ async function loadFattureList(retryCount = 0) {
     populateFattureAnnoFilter();
     console.log('✅ Fatture caricate:', allFattureData.length);
   } catch (error) {
-    clearTimeout(safetyId);
-    if (retryCount < 2 && error.name !== 'AbortError') {
-      container.innerHTML = '<div style="padding:30px;text-align:center;">⏳ Tentativo ' + (retryCount + 2) + '/3...</div>';
-      setTimeout(() => loadFattureList(retryCount + 1), 2000 * (retryCount + 1));
-      return;
-    }
     container.innerHTML = buildFattureErrorHTML('Errore caricamento', error.message, 'loadFattureList()');
   }
 }

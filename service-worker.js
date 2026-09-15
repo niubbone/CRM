@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.30.0';
+const SW_BUILD = '4.31.0';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -168,6 +168,15 @@ function getApiAction(url) {
 }
 
 /**
+ * Solo risposte JSON riuscite vanno in cache: Google a volte risponde con una
+ * pagina HTML di errore al posto del JSON, che non deve mai essere servita
+ * al posto dei dati fino alla scadenza del TTL.
+ */
+function isJsonOk(response) {
+  return response.ok && (response.headers.get('content-type') || '').includes('json');
+}
+
+/**
  * Restituisce il TTL in ms per l'action specificata
  */
 function getApiTTL(action) {
@@ -213,7 +222,7 @@ async function handleApiRequest(request) {
   if (cached && isCacheFresh(cached, ttl)) {
     // Cache fresca: restituisci subito, aggiorna in background
     fetch(request).then(r => {
-      if (r.ok) caches.open(API_CACHE).then(c => c.put(request, r));
+      if (isJsonOk(r)) caches.open(API_CACHE).then(c => c.put(request, r));
     }).catch(() => {});
     return cached;
   }
@@ -221,7 +230,7 @@ async function handleApiRequest(request) {
   // Cache scaduta o assente: vai in rete
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (isJsonOk(networkResponse)) {
       const cache = await caches.open(API_CACHE);
       cache.put(request, networkResponse.clone());
     }

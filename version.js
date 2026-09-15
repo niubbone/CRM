@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.30.0';
+export const VERSION = '4.31.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,19 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.31.0",
+    date: "14/09/2026",
+    type: "feature",
+    changes: [
+      "Tutte le chiamate al server passano da un unico punto che riconosce le pagine di errore di Google (quelle che facevano comparire «Unexpected token <»). Sulle letture ritenta una volta da solo dopo 2,5 secondi; sulle scritture non ritenta mai e avvisa di controllare prima di ripetere, perché l'operazione potrebbe essere andata a buon fine",
+      "Letture con un tempo massimo di 60 secondi e un messaggio chiaro, senza ritentare. Il server Google a volte impiega fino a 49 secondi: il vecchio limite di 30 su proforma e fatture dava errore su richieste che sarebbero riuscite",
+      "Tolti i ritentativi sparsi in proforma, fatture e ricerca clienti: sommati al nuovo strato avrebbero moltiplicato le attese",
+      "Il service worker non salva più in cache una pagina di errore al posto dei dati",
+      "Cronometro: ogni chiamata stampa il suo tempo in console; crmTempi() dalla console mostra il riepilogo delle ultime 300 (chiamate, errori, mediana e massimo per azione)",
+      "La ricerca clienti non segna più la Home da rinfrescare: è una lettura"
+    ]
+  },
   {
     version: "4.30.0",
     date: "14/09/2026",
