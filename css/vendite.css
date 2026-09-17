@@ -560,3 +560,104 @@
     .storico-filtro-group input,
     .storico-filtro-group select { min-width: unset; width: 100%; }
 }
+
+/* =======================================================================
+   QODNET — registro vendite e provvigioni
+   ======================================================================= */
+.modal-content-vendite.qodnet-modal-largo { max-width: 760px; }
+
+.qodnet-griglia-doc {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0 12px;
+}
+
+.qodnet-riga-form {
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+}
+.qodnet-riga-top { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.qodnet-riga-top .qr-prodotto { flex: 1; font-weight: 600; }
+.qodnet-riga-x {
+    background: none; border: none; font-size: 24px; color: #999; cursor: pointer; line-height: 1; padding: 0 4px;
+}
+.qodnet-riga-x:hover { color: #dc3545; }
+.qodnet-riga-griglia {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+.qodnet-riga-form input, .qodnet-riga-form select {
+    width: 100%; padding: 7px 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; box-sizing: border-box;
+}
+.qodnet-mini { display: flex; flex-direction: column; font-size: 11px; color: #6c757d; gap: 2px; }
+.qodnet-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #495057; }
+.qodnet-check input { width: auto; }
+.qodnet-btn-riga { margin-bottom: 4px; }
+.qodnet-totale { text-align: right; font-weight: 700; font-size: 16px; margin: 8px 0 12px; }
+.qodnet-btn-elimina { margin-top: 10px; background: #fff; color: #dc3545; border: 1px solid #dc3545; }
+
+.qodnet-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 12px; white-space: nowrap;
+    background: #e9ecef; color: #495057;
+}
+.qodnet-badge.coperto    { background: #d4edda; color: #155724; }
+.qodnet-badge.inscadenza { background: #fff3cd; color: #856404; }
+.qodnet-badge.scoperto   { background: #f8d7da; color: #721c24; }
+.qodnet-badge.chiuso     { background: #e2e3e5; color: #383d41; }
+.qodnet-contatori { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.qodnet-rosso { color: #dc3545; font-weight: 600; }
+.qodnet-arancio { color: #fd7e14; font-weight: 600; }
+
+.qodnet-dettagli { margin: 6px 0; font-size: 13px; }
+.qodnet-dettagli summary { cursor: pointer; color: #1a73e8; }
+.qodnet-periodo {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 6px;
+    font-size: 12px; color: #495057; padding: 4px 0; border-top: 1px solid #f1f3f5;
+}
+
+.qodnet-saldo { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.qodnet-saldo-box { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px 14px; }
+.qodnet-saldo-box.principale { border: 2px solid #28a745; }
+.qodnet-saldo-label { font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: .4px; }
+.qodnet-saldo-valore { font-size: 24px; font-weight: 700; color: #212529; margin: 2px 0; }
+.qodnet-saldo-sub { font-size: 12px; color: #6c757d; }
+
+.qodnet-titolo { font-size: 16px; margin: 18px 0 8px; }
+.qodnet-titolo small { font-weight: 400; color: #6c757d; font-size: 12px; margin-left: 6px; }
+
+.qodnet-barra-fattura {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;
+}
+.qodnet-barra-fattura #qodnetSelTesto { flex: 1; min-width: 180px; font-size: 14px; }
+.qodnet-btn-fattura { background: #28a745; color: #fff; border: none; }
+.qodnet-btn-fattura:disabled { background: #adb5bd; cursor: not-allowed; }
+
+.qodnet-doc { padding: 10px 14px; }
+.qodnet-doc-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.qodnet-doc-header input[type=checkbox] { width: 18px; height: 18px; }
+.qodnet-doc-titolo { flex: 1; min-width: 180px; }
+.qodnet-doc-titolo small { display: block; color: #6c757d; }
+.qodnet-doc-totale { text-align: right; font-weight: 700; font-size: 14px; padding-top: 6px; }
+.qodnet-voce {
+    display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid #f1f3f5;
+}
+.qodnet-voce .qodnet-sel { width: 16px; height: 16px; flex-shrink: 0; }
+.qodnet-voce-desc { flex: 1; min-width: 0; font-size: 14px; }
+.qodnet-voce-desc small { color: #6c757d; font-size: 12px; }
+.qodnet-voce-importo { font-weight: 600; white-space: nowrap; }
+.qodnet-icona { background: none; border: none; color: #6c757d; cursor: pointer; padding: 4px 6px; }
+.qodnet-icona:hover { color: #1a73e8; }
+.qodnet-fatturate { margin-top: 18px; }
+
+@media (max-width: 600px) {
+    .qodnet-saldo { grid-template-columns: 1fr; }
+    .qodnet-periodo { grid-template-columns: 1fr 1fr; }
+}

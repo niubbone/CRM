@@ -615,7 +615,7 @@ function formatStatsForDisplay(stats) {
         html += `<div><strong>🧾 Fatture:</strong> ${stats.fatture} totali</div>`;
     }
     if (stats.qodnet !== undefined) {
-        html += `<div><strong>🌐 QODNET:</strong> ${stats.qodnet} contratti (${stats.qodnetAttivi} attivi)</div>`;
+        html += `<div><strong>🌐 QODNET:</strong> ${stats.qodnet} voci provvigione (${stats.qodnetAttivi} da fatturare)</div>`;
     }
     if (stats.controlli !== undefined) {
         html += `<div><strong>🔍 Controlli:</strong> ${stats.controlli} totali (${stats.controlliDaFare} da fare)</div>`;

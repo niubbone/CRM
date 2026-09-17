@@ -78,7 +78,7 @@ function switchVenditeSection(section) {
 }
 
 function switchVenditeSubtab(section, subtab) {
-    const subtabs = ['nuovo', 'riepilogo', 'controlli'];
+    const subtabs = ['nuovo', 'riepilogo', 'controlli', 'provvigioni'];
     subtabs.forEach(st => {
         const content = document.getElementById(`vsub-${section}-${st}-content`);
         const btn     = document.getElementById(`vsub-${section}-${st}`);
@@ -93,6 +93,12 @@ function switchVenditeSubtab(section, subtab) {
         if (section === 'canoni')    loadCanoniRiepilogo();
         if (section === 'firme')     loadFirmeRiepilogo();
         if (section === 'qodnet')    loadQodnetRiepilogo();
+    }
+
+    // QODNET: Servizi e Provvigioni leggono gli stessi dati
+    if (subtab === 'provvigioni' && section === 'qodnet') {
+        riepilogoLoaded.qodnet = true;
+        if (qodnetDati) renderQodnetProvvigioni(); else loadQodnetRiepilogo();
     }
 
     // La vista controlli si ricarica sempre (lo stato cambia man mano che registri)
@@ -1960,17 +1966,71 @@ async function submitFirmaFattura(e) {
 }
 
 // =======================================================================
-// === QODNET ===
+// === QODNET — registro vendite e provvigioni ===
 // =======================================================================
+// I servizi si rinnovano da soli: le scadenze servono solo a controllare che
+// ogni periodo sia coperto da una provvigione (vista Servizi). Le provvigioni
+// si fatturano a QODNET quando si vuole (vista Provvigioni).
 
-let qodnetData = [];
+let qodnetDati = null;            // { righe, servizi, saldo, prodottiNoti }
 let qodnetFilterTimer = null;
+let qodnetSelezione = new Set();  // id righe scelte per la fatturazione
+let qodnetRigaOriginale = null;   // valori del modal di modifica all'apertura
+let qodnetContatoreRighe = 0;
+
+// Regola provvigionale: 10% Hosting, Domini/DNS, MailFort/LibraESVA; 20% il resto.
+// Stessa regola in Backend/QODNET.js (percentualeQODNET_).
+function percentualeQodnet(prodotto) {
+    return /hosting|dominio|domini|dns|mailfort|libraesva/i.test(prodotto || '') ? 10 : 20;
+}
+
+function escQodnet(s) {
+    return (s === null || s === undefined ? '' : String(s))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function euroQodnet(n) {
+    if (n === '' || n === null || n === undefined || isNaN(n)) return '—';
+    return '€ ' + Number(n).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function isoQodnet(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Fine periodo annuale: stesso giorno dell'anno dopo, meno un giorno (come nei report) */
+function fineAnnoQodnet(isoInizio) {
+    const p = isoInizio.split('-').map(Number);
+    const d = new Date(p[0] + 1, p[1] - 1, p[2]);
+    d.setDate(d.getDate() - 1);
+    return isoQodnet(d);
+}
+
+async function chiamaQodnet(action, params) {
+    const qs = Object.keys(params || {})
+        .map(k => `${k}=${encodeURIComponent(params[k] === undefined || params[k] === null ? '' : params[k])}`)
+        .join('&');
+    const response = await fetch(`${getAPIUrl()}?action=${action}${qs ? '&' + qs : ''}`);
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+    return result;
+}
+
+function dopoScritturaQodnet() {
+    window.markTabDirty && window.markTabDirty('vendite');
+    riepilogoLoaded.qodnet = true;
+    return loadQodnetRiepilogo({ forzato: true });
+}
+
+// -----------------------------------------------------------------------
+// Registra vendita / documento
+// -----------------------------------------------------------------------
 
 function openQodnetForm() {
     const modal = document.getElementById('qodnetModal');
     if (!modal) return;
 
-    // Popola datalist clienti
     const datalist = document.getElementById('qodnet-client-list');
     if (datalist && datalist.options.length === 0) {
         fetch(`${getAPIUrl()}?action=get_data`)
@@ -1980,26 +2040,18 @@ function openQodnetForm() {
                     const nomi = result.clients
                         .map(c => typeof c === 'string' ? c : (c.name || ''))
                         .filter(Boolean).sort();
-                    datalist.innerHTML = nomi.map(n => `<option value="${n}">`).join('');
+                    datalist.innerHTML = nomi.map(n => `<option value="${escQodnet(n)}">`).join('');
                 }
             })
             .catch(() => {});
     }
+    aggiornaProdottiNotiQodnet();
 
-    // Date di default: oggi → +1 anno
-    const today = new Date().toISOString().split('T')[0];
-    const nextYear = new Date();
-    nextYear.setFullYear(nextYear.getFullYear() + 1);
-    const nextYearStr = nextYear.toISOString().split('T')[0];
-
-    const inizio = document.getElementById('qodnetDataInizio');
-    const scad   = document.getElementById('qodnetDataScadenza');
-    if (inizio && !inizio.value) inizio.value = today;
-    if (scad  && !scad.value)   scad.value   = nextYearStr;
-
-    // Reset provvigione calcolata
-    calcQodnetProvvigione();
-
+    document.getElementById('qodnetForm').reset();
+    document.getElementById('qodnetDataDocumento').value = isoQodnet(new Date());
+    document.getElementById('qodnetRighe').innerHTML = '';
+    aggiornaStatoDocQodnet();
+    aggiungiRigaQodnet();
     modal.classList.add('active');
 }
 
@@ -2008,30 +2060,142 @@ function closeQodnetModal() {
     if (modal) modal.classList.remove('active');
 }
 
-function calcQodnetProvvigione() {
-    const imp  = parseFloat(document.getElementById('qodnetImponibile')?.value) || 0;
-    const perc = parseFloat(document.getElementById('qodnetPercentuale')?.value) || 0;
-    const field = document.getElementById('qodnetProvvigione');
-    if (field) field.value = (imp * perc / 100).toFixed(2);
+function aggiornaProdottiNotiQodnet() {
+    const list = document.getElementById('qodnet-prodotti-list');
+    if (!list) return;
+    const base = [
+        'Microsoft 365 Business Basic', 'Microsoft 365 Business Standard', 'Microsoft 365 Apps for Business',
+        'Microsoft Defender for Business', 'Exchange Online Plan 1', 'Exchange Online Plan 2',
+        'MailFort / LibraESVA - Email Security Gateway', 'Web Hosting Essential', 'Web Hosting Professional',
+        'Dominio e gestione DNS', 'Gestione completa WordPress'
+    ];
+    const noti = (qodnetDati && qodnetDati.prodottiNoti) || [];
+    const tutti = [...new Set([...noti, ...base])].sort();
+    list.innerHTML = tutti.map(p => `<option value="${escQodnet(p)}">`).join('');
 }
 
-async function submitQodnet(e) {
-    e.preventDefault();
+function aggiornaStatoDocQodnet() {
+    const doc = (document.getElementById('qodnetDocumento')?.value || '').trim();
+    const sel = document.getElementById('qodnetStatoDocumento');
+    if (sel) sel.disabled = !doc;
+}
 
-    const cliente      = (document.getElementById('qodnetCliente')?.value || '').trim();
-    const tipo         = document.getElementById('qodnetTipo')?.value || '';
-    const prodotto     = (document.getElementById('qodnetProdotto')?.value || '').trim();
-    const config       = (document.getElementById('qodnetConfigurazione')?.value || '').trim();
-    const dataInizio   = document.getElementById('qodnetDataInizio')?.value || '';
-    const dataScadenza = document.getElementById('qodnetDataScadenza')?.value || '';
-    const imponibile   = document.getElementById('qodnetImponibile')?.value || '';
-    const percentuale  = document.getElementById('qodnetPercentuale')?.value || '20';
-    const provvigione  = document.getElementById('qodnetProvvigione')?.value || '';
-    const note         = (document.getElementById('qodnetNote')?.value || '').trim();
+function aggiungiRigaQodnet() {
+    const n = ++qodnetContatoreRighe;
+    const oggi = isoQodnet(new Date());
+    const div = document.createElement('div');
+    div.className = 'qodnet-riga-form';
+    div.dataset.riga = n;
+    div.innerHTML = `
+        <div class="qodnet-riga-top">
+            <input type="text" class="qr-prodotto" list="qodnet-prodotti-list" placeholder="Prodotto / servizio *" autocomplete="off">
+            <button type="button" class="qodnet-riga-x" title="Togli voce" onclick="togliRigaQodnet(${n})">&times;</button>
+        </div>
+        <div class="qodnet-riga-griglia">
+            <input type="text" class="qr-dettaglio" placeholder="Dominio / dettaglio">
+            <label class="qodnet-mini">Qtà <input type="number" class="qr-quantita" min="1" step="1" value="1"></label>
+            <select class="qr-tipo" title="Tipo">
+                <option value="">Tipo automatico</option>
+                <option value="Nuovo">Nuovo</option>
+                <option value="Rinnovo">Rinnovo</option>
+                <option value="Integrazione">Integrazione / upselling</option>
+            </select>
+        </div>
+        <div class="qodnet-riga-griglia">
+            <label class="qodnet-check"><input type="checkbox" class="qr-unatantum"> Una tantum</label>
+            <label class="qodnet-mini qr-periodo">Dal <input type="date" class="qr-inizio" value="${oggi}"></label>
+            <label class="qodnet-mini qr-periodo">Al <input type="date" class="qr-fine" value="${fineAnnoQodnet(oggi)}"></label>
+        </div>
+        <div class="qodnet-riga-griglia">
+            <label class="qodnet-mini">Imponibile € <input type="number" class="qr-imponibile" step="0.01" min="0" placeholder="facolt."></label>
+            <label class="qodnet-mini">% <input type="number" class="qr-percentuale" step="0.1" min="0" max="100" value="20"></label>
+            <label class="qodnet-mini">Provvigione € <input type="number" class="qr-provvigione" step="0.01" min="0"></label>
+        </div>`;
+    document.getElementById('qodnetRighe').appendChild(div);
+
+    const q = sel => div.querySelector(sel);
+    q('.qr-prodotto').addEventListener('input', () => {
+        if (!q('.qr-percentuale').dataset.manuale) q('.qr-percentuale').value = percentualeQodnet(q('.qr-prodotto').value);
+        ricalcolaRigaQodnet(div);
+    });
+    q('.qr-percentuale').addEventListener('input', () => { q('.qr-percentuale').dataset.manuale = '1'; ricalcolaRigaQodnet(div); });
+    q('.qr-imponibile').addEventListener('input', () => ricalcolaRigaQodnet(div));
+    q('.qr-provvigione').addEventListener('input', () => {
+        q('.qr-provvigione').dataset.manuale = q('.qr-provvigione').value === '' ? '' : '1';
+        aggiornaTotaleQodnet();
+    });
+    q('.qr-inizio').addEventListener('change', () => {
+        if (q('.qr-inizio').value) q('.qr-fine').value = fineAnnoQodnet(q('.qr-inizio').value);
+    });
+    q('.qr-unatantum').addEventListener('change', () => {
+        div.querySelectorAll('.qr-periodo').forEach(el => el.style.display = q('.qr-unatantum').checked ? 'none' : '');
+    });
+
+    q('.qr-prodotto').focus();
+    aggiornaTotaleQodnet();
+}
+
+function togliRigaQodnet(n) {
+    const righe = document.querySelectorAll('#qodnetRighe .qodnet-riga-form');
+    if (righe.length <= 1) return;
+    const div = document.querySelector(`#qodnetRighe .qodnet-riga-form[data-riga="${n}"]`);
+    if (div) div.remove();
+    aggiornaTotaleQodnet();
+}
+
+function ricalcolaRigaQodnet(div) {
+    const imp = parseFloat(div.querySelector('.qr-imponibile').value);
+    const perc = parseFloat(div.querySelector('.qr-percentuale').value);
+    const provv = div.querySelector('.qr-provvigione');
+    if (!provv.dataset.manuale) {
+        provv.value = !isNaN(imp) && !isNaN(perc) ? (Math.round(imp * perc) / 100).toFixed(2) : '';
+    }
+    aggiornaTotaleQodnet();
+}
+
+function aggiornaTotaleQodnet() {
+    let tot = 0;
+    document.querySelectorAll('#qodnetRighe .qr-provvigione').forEach(el => tot += parseFloat(el.value) || 0);
+    const box = document.getElementById('qodnetTotale');
+    if (box) box.textContent = `Provvigione totale: ${euroQodnet(tot)}`;
+}
+
+async function submitQodnet(e, consentiEsistente) {
+    if (e) e.preventDefault();
+
+    const cliente   = (document.getElementById('qodnetCliente')?.value || '').trim();
+    const documento = (document.getElementById('qodnetDocumento')?.value || '').trim();
+    const dataDoc   = document.getElementById('qodnetDataDocumento')?.value || '';
+    const statoDoc  = document.getElementById('qodnetStatoDocumento')?.value || '';
+    const note      = (document.getElementById('qodnetNote')?.value || '').trim();
 
     if (!cliente) { alert('⚠️ Seleziona un cliente'); return; }
-    if (!prodotto) { alert('⚠️ Inserisci il prodotto'); return; }
-    if (!imponibile || parseFloat(imponibile) <= 0) { alert('⚠️ Inserisci un imponibile valido'); return; }
+
+    const righe = [];
+    let errore = '';
+    document.querySelectorAll('#qodnetRighe .qodnet-riga-form').forEach((div, i) => {
+        const v = sel => (div.querySelector(sel).value || '').trim();
+        const prodotto = v('.qr-prodotto');
+        const vuota = !prodotto && !v('.qr-imponibile') && !v('.qr-provvigione');
+        if (vuota) return;
+        const unaTantum = div.querySelector('.qr-unatantum').checked;
+        if (!prodotto) errore = errore || `Voce ${i + 1}: manca il prodotto`;
+        if (v('.qr-provvigione') === '') errore = errore || `Voce ${i + 1}: serve l'imponibile o la provvigione`;
+        if (!unaTantum && (!v('.qr-inizio') || !v('.qr-fine'))) errore = errore || `Voce ${i + 1}: indica il periodo o spunta «Una tantum»`;
+        righe.push({
+            prodotto,
+            dettaglio: v('.qr-dettaglio'),
+            quantita: v('.qr-quantita') || 1,
+            periodo_inizio: unaTantum ? '' : v('.qr-inizio'),
+            periodo_fine: unaTantum ? '' : v('.qr-fine'),
+            imponibile: v('.qr-imponibile'),
+            percentuale: v('.qr-percentuale'),
+            provvigione: v('.qr-provvigione'),
+            tipo: unaTantum ? 'Una tantum' : v('.qr-tipo')
+        });
+    });
+    if (errore) { alert('⚠️ ' + errore); return; }
+    if (!righe.length) { alert('⚠️ Inserisci almeno una voce'); return; }
 
     const btn = document.getElementById('qodnetSubmitBtn');
     const origText = btn.textContent;
@@ -2039,300 +2203,516 @@ async function submitQodnet(e) {
     btn.textContent = 'Salvataggio...';
 
     try {
-        const params = [
-            `cliente_nome=${encodeURIComponent(cliente)}`,
-            `tipo=${encodeURIComponent(tipo)}`,
-            `prodotto=${encodeURIComponent(prodotto)}`,
-            `configurazione=${encodeURIComponent(config)}`,
-            `data_inizio=${dataInizio}`,
-            `data_scadenza=${dataScadenza}`,
-            `imponibile=${imponibile}`,
-            `percentuale=${percentuale}`,
-            `provvigione=${provvigione}`,
-            `note=${encodeURIComponent(note)}`
-        ].join('&');
+        const params = {
+            cliente_nome: cliente,
+            documento,
+            data_documento: dataDoc,
+            stato_documento: documento ? statoDoc : '',
+            note,
+            righe: JSON.stringify(righe)
+        };
+        if (consentiEsistente) params.consenti_documento_esistente = 'true';
+        const result = await chiamaQodnet('insert_documento_qodnet', params);
 
-        const response = await fetch(`${getAPIUrl()}?action=insert_qodnet&${params}`);
-        const result   = await response.json();
-
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
-
-        window.markTabDirty && window.markTabDirty('vendite');
-        alert(`✅ Abbonamento creato: ${result.id}`);
         closeQodnetModal();
-        document.getElementById('qodnetForm').reset();
-        // Forza ricaricamento riepilogo
-        qodnetData = [];
-        riepilogoLoaded.qodnet = false;
-        switchVenditeSubtab('qodnet', 'riepilogo');
-
+        alert(`✅ Registrate ${result.righe} voci — provvigione ${euroQodnet(result.provvigione)}` +
+              (documento ? '' : '\nSenza numero documento: restano «da confermare» finché non compaiono in un report.'));
+        dopoScritturaQodnet();
+        switchVenditeSubtab('qodnet', 'provvigioni');
     } catch (error) {
-        console.error('Errore insert QODNET:', error);
-        alert('❌ Errore: ' + error.message);
+        console.error('Errore registrazione QODNET:', error);
+        if (!consentiEsistente && /già registrato/.test(error.message)) {
+            if (confirm(`${error.message}\n\nAggiungere comunque queste voci allo stesso documento?`)) {
+                btn.disabled = false; btn.textContent = origText;
+                return submitQodnet(null, true);
+            }
+        } else {
+            alert('❌ Errore: ' + error.message);
+        }
     } finally {
         btn.disabled = false;
         btn.textContent = origText;
     }
 }
 
+// -----------------------------------------------------------------------
+// Caricamento dati (una chiamata per Servizi e Provvigioni)
+// -----------------------------------------------------------------------
+
 async function loadQodnetRiepilogo(opzioni) {
-    const container = document.getElementById('qodnetContainer');
+    const vistaProvvigioni = document.getElementById('vsub-qodnet-provvigioni-content')?.style.display !== 'none';
+    const contenitore = vistaProvvigioni ? 'qodnetProvvigioniContainer' : 'qodnetContainer';
+    const container = document.getElementById(contenitore);
     if (!container) return;
 
-    const cliente = (document.getElementById('qodnet-filter-cliente')?.value || '').trim();
-    const stato   = document.getElementById('qodnet-filter-stato')?.value || '';
-
     return _crmCacheListe().carica({
-        // Con i filtri lato server attivi la risposta è parziale: niente cache.
-        chiave: (cliente || stato) ? null : 'vendite_qodnet',
-        contenitore: 'qodnetContainer',
+        chiave: 'vendite_qodnet_registro',
+        contenitore,
         forzato: !!(opzioni && opzioni.forzato),
         aggiorna: () => loadQodnetRiepilogo({ forzato: true }),
 
         caricamento: () => {
-            container.innerHTML = '<div class="loading-scadenze">Caricamento abbonamenti QODNET...</div>';
+            container.innerHTML = '<div class="loading-scadenze">Caricamento QODNET...</div>';
         },
 
         scarica: async (opzioniFetch) => {
-            let url = `${getAPIUrl()}?action=get_qodnet_riepilogo`;
-            if (cliente) url += `&cliente_nome=${encodeURIComponent(cliente)}`;
-            if (stato)   url += `&stato=${encodeURIComponent(stato)}`;
-
-            const response = await fetch(url, opzioniFetch);
-            const result   = await response.json();
+            const response = await fetch(`${getAPIUrl()}?action=get_qodnet_riepilogo`, opzioniFetch);
+            const result = await response.json();
             if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
-            return result.abbonamenti || [];
+            return { righe: result.righe || [], servizi: result.servizi || [], saldo: result.saldo || {}, prodottiNoti: result.prodottiNoti || [] };
         },
 
-        mostra: (abbonamenti) => {
-            qodnetData = abbonamenti;
-            renderQodnet(qodnetData);
+        mostra: (dati) => {
+            qodnetDati = dati;
+            const esistenti = new Set(dati.righe.filter(r => r.statoProvvigione !== 'Fatturata' && r.documento).map(r => r.id));
+            qodnetSelezione = new Set([...qodnetSelezione].filter(id => esistenti.has(id)));
+            filterQodnet();
+            renderQodnetProvvigioni();
         },
 
         errore: (error) => {
-            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${escQodnet(error.message)}</div></div>`;
         }
     });
 }
 
+// -----------------------------------------------------------------------
+// Vista Servizi (copertura)
+// -----------------------------------------------------------------------
+
 function filterQodnetDebounced() {
     clearTimeout(qodnetFilterTimer);
-    qodnetFilterTimer = setTimeout(filterQodnet, 300);
+    qodnetFilterTimer = setTimeout(filterQodnet, 250);
 }
 
 function filterQodnet() {
-    if (!qodnetData.length) { loadQodnetRiepilogo(); return; }
-    const filtroCliente = (document.getElementById('qodnet-filter-cliente')?.value || '').trim().toLowerCase();
-    const filtroStato   = (document.getElementById('qodnet-filter-stato')?.value || '').toLowerCase();
+    if (!qodnetDati) { loadQodnetRiepilogo(); return; }
+    const testo = (document.getElementById('qodnet-filter-cliente')?.value || '').trim().toLowerCase();
+    const stato = document.getElementById('qodnet-filter-stato')?.value || '';
+    const chiuso = s => s.stato === 'Annullato' || s.stato === 'Sostituito';
 
-    const filtered = qodnetData.filter(q => {
-        const matchCliente = !filtroCliente || (q.nomeCliente || '').toLowerCase().includes(filtroCliente);
-        const matchStato   = !filtroStato   || (q.stato || '').toLowerCase() === filtroStato;
-        return matchCliente && matchStato;
+    const lista = qodnetDati.servizi.filter(s => {
+        if (testo && !`${s.nomeCliente} ${s.prodotto} ${s.dettaglio}`.toLowerCase().includes(testo)) return false;
+        if (stato === 'tutti') return true;
+        if (stato === 'chiusi') return chiuso(s);
+        if (stato) return s.stato === stato;
+        return !chiuso(s);
     });
-    renderQodnet(filtered);
+    renderQodnetServizi(lista);
 }
 
-function renderQodnet(lista) {
+function badgeServizioQodnet(stato) {
+    const classi = { 'Coperto': 'coperto', 'In scadenza': 'inscadenza', 'Scoperto': 'scoperto', 'Annullato': 'chiuso', 'Sostituito': 'chiuso' };
+    return `<span class="qodnet-badge ${classi[stato] || ''}">${escQodnet(stato)}</span>`;
+}
+
+function renderQodnetServizi(lista) {
     const container = document.getElementById('qodnetContainer');
     if (!container) return;
 
+    const tutti = qodnetDati.servizi;
+    const conta = st => tutti.filter(s => s.stato === st).length;
+    const riepilogo = `
+        <div class="qodnet-contatori">
+            <span class="qodnet-badge scoperto">${conta('Scoperto')} scoperti</span>
+            <span class="qodnet-badge inscadenza">${conta('In scadenza')} in scadenza</span>
+            <span class="qodnet-badge coperto">${conta('Coperto')} coperti</span>
+        </div>`;
+
     if (!lista.length) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌐</div><div>Nessun abbonamento trovato</div></div>`;
+        container.innerHTML = riepilogo + `<div class="empty-state"><div class="empty-state-icon">🌐</div><div>${tutti.length ? 'Nessun servizio con questi filtri' : 'Nessun servizio registrato: inizia da «Nuova vendita»'}</div></div>`;
         return;
     }
 
-    // Raggruppa per cliente
     const gruppi = {};
-    lista.forEach(q => {
-        const k = q.nomeCliente || '—';
-        if (!gruppi[k]) gruppi[k] = [];
-        gruppi[k].push(q);
-    });
+    lista.forEach(s => { (gruppi[s.nomeCliente] = gruppi[s.nomeCliente] || []).push(s); });
 
-    let html = '';
+    let html = riepilogo;
     Object.keys(gruppi).sort().forEach(cliente => {
-        html += `<div class="storico-gruppo">
-            <div class="storico-gruppo-header"><i class="fas fa-user"></i> ${cliente}</div>`;
+        html += `<div class="storico-gruppo"><div class="storico-gruppo-header"><i class="fas fa-user"></i> ${escQodnet(cliente)}</div>`;
+        gruppi[cliente].forEach(s => {
+            let quando;
+            if (s.stato === 'Scoperto') quando = `<span class="qodnet-rosso">Copertura finita il ${s.coperturaFino} — scoperto da ${Math.abs(s.giorni)} giorni</span>`;
+            else if (s.stato === 'In scadenza') quando = `<span class="qodnet-arancio">Coperto fino al ${s.coperturaFino} (tra ${s.giorni} giorni)</span>`;
+            else quando = `Coperto fino al ${s.coperturaFino}`;
 
-        gruppi[cliente].forEach(q => {
-            const stato = (q.stato || '').toLowerCase();
-            const isAttivo = stato === 'attivo';
-            const statoClass = isAttivo ? 'attivo' : stato === 'rinnovato' ? 'rinnovato' : 'scaduto';
+            const chiuso = s.stato === 'Annullato' || s.stato === 'Sostituito';
+            const azioni = chiuso
+                ? `<button class="btn-small" onclick="statoServizioQodnet('${s.idUltimaRiga}','')"><i class="fas fa-rotate-left"></i> Segui di nuovo</button>`
+                : `<button class="btn-small" onclick="statoServizioQodnet('${s.idUltimaRiga}','Annullato')"><i class="fas fa-ban"></i> Annullato</button>
+                   <button class="btn-small" onclick="statoServizioQodnet('${s.idUltimaRiga}','Sostituito')"><i class="fas fa-right-left"></i> Sostituito</button>`;
 
-            let scadenzaInfo = '';
-            if (q.giorniAllaScadenza != null) {
-                if (q.giorniAllaScadenza < 0) {
-                    scadenzaInfo = `<span style="color:#dc3545;">Scaduto da ${Math.abs(q.giorniAllaScadenza)} giorni</span>`;
-                } else if (q.giorniAllaScadenza <= 30) {
-                    scadenzaInfo = `<span style="color:#dc3545;"><i class="fas fa-triangle-exclamation"></i> Scade tra ${q.giorniAllaScadenza} giorni</span>`;
-                } else if (q.giorniAllaScadenza <= 60) {
-                    scadenzaInfo = `<span style="color:#fd7e14;">Scade tra ${q.giorniAllaScadenza} giorni</span>`;
-                } else {
-                    scadenzaInfo = `<span style="color:#28a745;">Scade tra ${q.giorniAllaScadenza} giorni</span>`;
-                }
-            }
-
-            const configHtml = q.configurazione
-                ? `<div class="storico-date" style="color:#555;white-space:pre-wrap;">${q.configurazione}</div>`
-                : '';
-
-            const actionsHtml = isAttivo ? `
-            <div class="storico-actions">
-                <button class="btn-small btn-storico-detail" onclick="openQodnetRinnovoModal('${q.id}')">
-                    <i class="fas fa-arrows-rotate"></i> Rinnova
-                </button>
-                <button class="btn-small" style="background:#f0f0f0;color:#555;"
-                    onclick="updateStatoQodnet('${q.id}','Incorporato')">
-                    <i class="fas fa-inbox"></i> Incorporato
-                </button>
-            </div>` : '';
+            const periodi = s.periodi.slice().reverse().map(p => `
+                <div class="qodnet-periodo">
+                    <span>${p.inizio} → ${p.fine}</span>
+                    <span>${escQodnet(p.documento || 'da confermare')}</span>
+                    <span>${p.quantita > 1 ? p.quantita + ' x · ' : ''}${escQodnet(p.tipo)}</span>
+                    <span>${euroQodnet(p.provvigione)}</span>
+                </div>`).join('');
 
             html += `
-            <div class="storico-card">
+            <div class="storico-card qodnet-card">
                 <div class="storico-card-header">
-                    <span class="storico-id">${q.id} &nbsp;<span style="color:#888;font-weight:400;font-size:13px;">${q.tipo || ''}</span></span>
-                    <span class="storico-badge ${statoClass}">${q.stato}</span>
+                    <span class="storico-id">${s.quantita > 1 ? s.quantita + ' x ' : ''}${escQodnet(s.prodotto)}</span>
+                    ${badgeServizioQodnet(s.stato)}
                 </div>
-                <div class="storico-descrizione">${q.prodotto || '—'}</div>
-                <div class="firma-card-body">
-                    <div class="firma-stat">
-                        <span class="storico-stat-label">Inizio</span>
-                        <span class="storico-stat-value">${q.dataInizio || '—'}</span>
-                    </div>
-                    <div class="firma-stat">
-                        <span class="storico-stat-label">Scadenza</span>
-                        <span class="storico-stat-value">${q.dataScadenza || '—'}</span>
-                    </div>
-                    <div class="firma-stat">
-                        <span class="storico-stat-label">Imponibile</span>
-                        <span class="storico-stat-value">€ ${parseFloat(q.imponibile || 0).toFixed(2)}</span>
-                    </div>
-                    <div class="firma-stat">
-                        <span class="storico-stat-label">Provvigione</span>
-                        <span class="storico-stat-value">€ ${parseFloat(q.provvigione || 0).toFixed(2)} <small style="color:#888;">(${q.percentuale || 20}%)</small></span>
-                    </div>
-                </div>
-                ${configHtml}
-                ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
-                ${q.note ? `<div class="storico-date">${q.note}</div>` : ''}
-                ${actionsHtml}
+                ${s.dettaglio ? `<div class="storico-descrizione">${escQodnet(s.dettaglio)}</div>` : ''}
+                <div class="storico-date">${quando} · seguito dal ${s.dal}</div>
+                <details class="qodnet-dettagli">
+                    <summary>${s.periodi.length} ${s.periodi.length === 1 ? 'periodo registrato' : 'periodi registrati'}</summary>
+                    ${periodi}
+                </details>
+                <div class="storico-actions">${azioni}</div>
             </div>`;
         });
         html += `</div>`;
     });
-
     container.innerHTML = html;
 }
 
-function openQodnetRinnovoModal(id) {
-    const record = qodnetData.find(q => q.id === id);
-    if (!record) { alert('Record non trovato'); return; }
+async function statoServizioQodnet(idRiga, stato) {
+    const msg = stato
+        ? `Segnare il servizio come «${stato}»? Non verrà più controllata la copertura.`
+        : 'Tornare a controllare la copertura di questo servizio?';
+    if (!confirm(msg)) return;
+    try {
+        await chiamaQodnet('aggiorna_righe_qodnet', { ids: idRiga, stato_servizio: stato });
+        dopoScritturaQodnet();
+    } catch (error) {
+        alert('❌ Errore: ' + error.message);
+    }
+}
 
-    document.getElementById('qodnetRinnovoId').value = id;
-    document.getElementById('qodnetRinnovoCliente').textContent = record.nomeCliente || '';
-    document.getElementById('qodnetRinnovoDettagli').textContent =
-        `${record.tipo || ''} — ${record.prodotto || ''} | Scadenza attuale: ${record.dataScadenza || '—'}`;
+// -----------------------------------------------------------------------
+// Vista Provvigioni (saldo e fatturazione)
+// -----------------------------------------------------------------------
 
-    // Data scadenza default: +1 anno dall'attuale
-    const rinnovoScad = document.getElementById('qodnetRinnovoDataScadenza');
-    if (rinnovoScad) {
-        const base = record.dataScadenza ? new Date(record.dataScadenza) : new Date();
-        base.setFullYear(base.getFullYear() + 1);
-        rinnovoScad.value = base.toISOString().split('T')[0];
+function righeQodnetPerDocumento(righe) {
+    const docs = {};
+    righe.forEach(r => {
+        const k = `${r.documento}|${r.idCliente}`;
+        if (!docs[k]) docs[k] = { documento: r.documento, nomeCliente: r.nomeCliente, data: r.dataDocumento, dataIso: r.dataDocumentoIso, stato: r.statoDocumento, righe: [] };
+        docs[k].righe.push(r);
+    });
+    return Object.values(docs).sort((a, b) => (b.dataIso || '').localeCompare(a.dataIso || ''));
+}
+
+function rigaVoceQodnet(r, conCheckbox) {
+    const periodo = r.unaTantum ? 'Una tantum' : `${r.inizio} → ${r.fine}`;
+    const perc = r.percentuale !== '' ? `${r.percentuale}%` : '';
+    const check = conCheckbox
+        ? `<input type="checkbox" class="qodnet-sel" ${qodnetSelezione.has(r.id) ? 'checked' : ''} onchange="selezionaVoceQodnet('${r.id}', this.checked)">`
+        : '';
+    return `
+        <div class="qodnet-voce">
+            ${check}
+            <div class="qodnet-voce-desc">
+                <div>${r.quantita > 1 ? r.quantita + ' x ' : ''}${escQodnet(r.prodotto)}${r.dettaglio ? ` <small>— ${escQodnet(r.dettaglio)}</small>` : ''}</div>
+                <small>${periodo}${r.unaTantum ? "" : " · " + escQodnet(r.tipo)} · imp. ${euroQodnet(r.imponibile)} ${perc}${r.note ? ' · ' + escQodnet(r.note) : ''}</small>
+            </div>
+            <div class="qodnet-voce-importo">${euroQodnet(r.provvigione)}</div>
+            <button class="qodnet-icona" title="Modifica voce" onclick="openQodnetRigaModal('${r.id}')"><i class="fas fa-pen"></i></button>
+        </div>`;
+}
+
+function renderQodnetProvvigioni() {
+    const container = document.getElementById('qodnetProvvigioniContainer');
+    if (!container || !qodnetDati) return;
+    const { righe, saldo } = qodnetDati;
+
+    const maturate = righe.filter(r => r.statoProvvigione !== 'Fatturata' && r.documento);
+    const daConfermare = righe.filter(r => r.statoProvvigione !== 'Fatturata' && !r.documento);
+    const fatturate = righe.filter(r => r.statoProvvigione === 'Fatturata');
+
+    let html = `
+        <div class="qodnet-saldo">
+            <div class="qodnet-saldo-box principale">
+                <div class="qodnet-saldo-label">Da fatturare a QODNET</div>
+                <div class="qodnet-saldo-valore">${euroQodnet(saldo.maturate)}</div>
+                <div class="qodnet-saldo-sub">clienti che hanno pagato ${euroQodnet(saldo.maturatePagate)} · non ancora pagato ${euroQodnet(saldo.maturateNonPagate)}</div>
+            </div>
+            <div class="qodnet-saldo-box">
+                <div class="qodnet-saldo-label">Da confermare</div>
+                <div class="qodnet-saldo-valore">${euroQodnet(saldo.daConfermare)}</div>
+                <div class="qodnet-saldo-sub">${saldo.nDaConfermare || 0} voci non ancora in un report</div>
+            </div>
+            <div class="qodnet-saldo-box">
+                <div class="qodnet-saldo-label">Già fatturate</div>
+                <div class="qodnet-saldo-valore">${euroQodnet(saldo.fatturate)}</div>
+                <div class="qodnet-saldo-sub">${saldo.nFatturate || 0} voci</div>
+            </div>
+        </div>`;
+
+    // --- Da fatturare ---
+    html += `<h3 class="qodnet-titolo">Da fatturare</h3>`;
+    if (!maturate.length) {
+        html += `<div class="empty-state" style="padding:16px;">Nessuna provvigione da fatturare</div>`;
+    } else {
+        html += `
+        <div class="qodnet-barra-fattura">
+            <span id="qodnetSelTesto"></span>
+            <button class="btn-small" onclick="selezionaTutteQodnet('pagate')">Scegli le pagate</button>
+            <button class="btn-small" onclick="selezionaTutteQodnet('tutte')">Tutte</button>
+            <button class="btn-small" onclick="selezionaTutteQodnet('nessuna')">Nessuna</button>
+            <button class="btn-small qodnet-btn-fattura" id="qodnetBtnFattura" onclick="fatturaQodnetSelezionate()">
+                <i class="fas fa-file-invoice"></i> Fattura a QODNET
+            </button>
+        </div>`;
+        righeQodnetPerDocumento(maturate).forEach(d => {
+            const tot = d.righe.reduce((s, r) => s + (r.provvigione || 0), 0);
+            const ids = d.righe.map(r => r.id);
+            const tutteSel = ids.every(id => qodnetSelezione.has(id));
+            const pagato = d.stato === 'Pagato';
+            html += `
+            <div class="storico-card qodnet-doc">
+                <div class="qodnet-doc-header">
+                    <input type="checkbox" ${tutteSel ? 'checked' : ''} onchange="selezionaDocumentoQodnet('${ids.join(',')}', this.checked)">
+                    <div class="qodnet-doc-titolo">
+                        <strong>${escQodnet(d.documento)}</strong> · ${escQodnet(d.nomeCliente)}
+                        <small>${d.data || ''}</small>
+                    </div>
+                    <span class="qodnet-badge ${pagato ? 'coperto' : 'inscadenza'}">${pagato ? 'Pagato' : 'Non pagato'}</span>
+                    <button class="qodnet-icona" title="Modifica documento (numero, data, pagamento)" onclick="openQodnetDocumentoModal('${ids.join(',')}')"><i class="fas fa-pen"></i></button>
+                </div>
+                ${d.righe.map(r => rigaVoceQodnet(r, true)).join('')}
+                <div class="qodnet-doc-totale">Totale ${euroQodnet(tot)}</div>
+            </div>`;
+        });
     }
 
-    // Pre-popola configurazione e valori economici
-    const configEl = document.getElementById('qodnetRinnovoConfigurazione');
-    if (configEl) configEl.value = record.configurazione || '';
+    // --- Da confermare ---
+    if (daConfermare.length) {
+        html += `<h3 class="qodnet-titolo">Da confermare <small>vendite registrate che non hanno ancora un documento QODNET</small></h3>`;
+        const perCliente = {};
+        daConfermare.forEach(r => { (perCliente[r.nomeCliente] = perCliente[r.nomeCliente] || []).push(r); });
+        Object.keys(perCliente).sort().forEach(c => {
+            const ids = perCliente[c].map(r => r.id);
+            html += `
+            <div class="storico-card qodnet-doc">
+                <div class="qodnet-doc-header">
+                    <div class="qodnet-doc-titolo"><strong>${escQodnet(c)}</strong></div>
+                    <button class="btn-small" onclick="openQodnetDocumentoModal('${ids.join(',')}')"><i class="fas fa-check"></i> Conferma con documento</button>
+                </div>
+                ${perCliente[c].map(r => rigaVoceQodnet(r, false)).join('')}
+            </div>`;
+        });
+    }
 
-    const impEl  = document.getElementById('qodnetRinnovoImponibile');
-    const percEl = document.getElementById('qodnetRinnovoPercentuale');
-    if (impEl)  impEl.value  = record.imponibile  || '';
-    if (percEl) percEl.value = record.percentuale || '20';
-    calcQodnetRinnovoProvvigione();
+    // --- Fatturate ---
+    if (fatturate.length) {
+        html += `<details class="qodnet-dettagli qodnet-fatturate"><summary>Già fatturate (${fatturate.length} voci)</summary>`;
+        const perRif = {};
+        fatturate.forEach(r => { (perRif[r.rifFatturazione] = perRif[r.rifFatturazione] || []).push(r); });
+        Object.keys(perRif).sort().reverse().forEach(rif => {
+            const rr = perRif[rif];
+            const tot = rr.reduce((s, r) => s + (r.provvigione || 0), 0);
+            const docs = [...new Set(rr.map(r => r.documento))].join(', ');
+            html += `
+            <div class="storico-card qodnet-doc">
+                <div class="qodnet-doc-header">
+                    <div class="qodnet-doc-titolo">
+                        <strong>${euroQodnet(tot)}</strong> · ${rr.length} voci · Timesheet ${escQodnet(rif)}
+                        <small>${rr[0].dataFatturazione} — ${escQodnet(docs)}</small>
+                    </div>
+                    <button class="btn-small" onclick="annullaFatturazioneQodnet('${escQodnet(rif)}')"><i class="fas fa-rotate-left"></i> Annulla</button>
+                </div>
+            </div>`;
+        });
+        html += `</details>`;
+    }
 
-    const modal = document.getElementById('qodnetRinnovoModal');
-    if (modal) modal.classList.add('active');
+    container.innerHTML = html;
+    aggiornaSelezioneQodnet();
 }
 
-function closeQodnetRinnovoModal() {
-    const modal = document.getElementById('qodnetRinnovoModal');
-    if (modal) modal.classList.remove('active');
+function selezionaVoceQodnet(id, on) {
+    if (on) qodnetSelezione.add(id); else qodnetSelezione.delete(id);
+    aggiornaSelezioneQodnet();
 }
 
-function calcQodnetRinnovoProvvigione() {
-    const imp  = parseFloat(document.getElementById('qodnetRinnovoImponibile')?.value) || 0;
-    const perc = parseFloat(document.getElementById('qodnetRinnovoPercentuale')?.value) || 0;
-    const field = document.getElementById('qodnetRinnovoProvvigione');
-    if (field) field.value = (imp * perc / 100).toFixed(2);
+function selezionaDocumentoQodnet(ids, on) {
+    ids.split(',').forEach(id => { if (on) qodnetSelezione.add(id); else qodnetSelezione.delete(id); });
+    renderQodnetProvvigioni();
 }
 
-async function submitQodnetRinnovo(e) {
-    e.preventDefault();
+function selezionaTutteQodnet(quali) {
+    const maturate = qodnetDati.righe.filter(r => r.statoProvvigione !== 'Fatturata' && r.documento);
+    qodnetSelezione = new Set(
+        quali === 'nessuna' ? [] :
+        maturate.filter(r => quali === 'tutte' || r.statoDocumento === 'Pagato').map(r => r.id)
+    );
+    renderQodnetProvvigioni();
+}
 
-    const id           = document.getElementById('qodnetRinnovoId')?.value || '';
-    const dataScadenza = document.getElementById('qodnetRinnovoDataScadenza')?.value || '';
-    const config       = (document.getElementById('qodnetRinnovoConfigurazione')?.value || '').trim();
-    const imponibile   = document.getElementById('qodnetRinnovoImponibile')?.value || '';
-    const percentuale  = document.getElementById('qodnetRinnovoPercentuale')?.value || '20';
-    const provvigione  = document.getElementById('qodnetRinnovoProvvigione')?.value || '';
-    const note         = (document.getElementById('qodnetRinnovoNote')?.value || '').trim();
+function aggiornaSelezioneQodnet() {
+    const testo = document.getElementById('qodnetSelTesto');
+    const btn = document.getElementById('qodnetBtnFattura');
+    if (!testo || !qodnetDati) return;
+    const scelte = qodnetDati.righe.filter(r => qodnetSelezione.has(r.id));
+    const tot = scelte.reduce((s, r) => s + (r.provvigione || 0), 0);
+    testo.innerHTML = scelte.length ? `Scelte <strong>${scelte.length}</strong> voci · <strong>${euroQodnet(tot)}</strong>` : 'Scegli le voci da fatturare';
+    if (btn) btn.disabled = !scelte.length;
+}
 
-    if (!id || !dataScadenza) { alert('⚠️ Dati mancanti'); return; }
+async function fatturaQodnetSelezionate() {
+    const scelte = qodnetDati.righe.filter(r => qodnetSelezione.has(r.id));
+    if (!scelte.length) return;
+    const tot = scelte.reduce((s, r) => s + (r.provvigione || 0), 0);
+    const nonPagate = scelte.filter(r => r.statoDocumento !== 'Pagato').length;
+    if (!confirm(`Creare una riga Timesheet «Da fatturare» su QODNET SRL da ${euroQodnet(tot)} per ${scelte.length} voci?` +
+                 (nonPagate ? `\n\nAttenzione: ${nonPagate} voci sono di documenti che il cliente non ha ancora pagato.` : '') +
+                 '\n\nPoi la proforma si fa come al solito dal Timesheet.')) return;
 
-    const btn = e.submitter || document.querySelector('#qodnetRinnovoForm button[type="submit"]');
-    const origText = btn ? btn.textContent : '';
-    if (btn) { btn.disabled = true; btn.textContent = 'Rinnovando...'; }
-
+    const btn = document.getElementById('qodnetBtnFattura');
+    if (btn) { btn.disabled = true; btn.textContent = 'Creazione...'; }
     try {
-        const params = [
-            `id=${encodeURIComponent(id)}`,
-            `data_scadenza=${dataScadenza}`,
-            `configurazione=${encodeURIComponent(config)}`,
-            `imponibile=${imponibile}`,
-            `percentuale=${percentuale}`,
-            `provvigione=${provvigione}`,
-            `note=${encodeURIComponent(note)}`
-        ].join('&');
-
-        const response = await fetch(`${getAPIUrl()}?action=rinnova_qodnet&${params}`);
-        const result   = await response.json();
-
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
-
-        window.markTabDirty && window.markTabDirty('vendite');
-        alert(`✅ Rinnovo completato: ${result.nuovoId}`);
-        closeQodnetRinnovoModal();
-        document.getElementById('qodnetRinnovoForm').reset();
-        qodnetData = [];
-        riepilogoLoaded.qodnet = false;
-        switchVenditeSubtab('qodnet', 'riepilogo');
-
+        const result = await chiamaQodnet('fattura_provvigioni_qodnet', { ids: scelte.map(r => r.id).join(',') });
+        qodnetSelezione.clear();
+        window.markTabDirty && window.markTabDirty('proforma');
+        alert(`✅ Creata la riga Timesheet ${result.timesheetId} da ${euroQodnet(result.totale)} per QODNET SRL.`);
+        dopoScritturaQodnet();
     } catch (error) {
-        console.error('Errore rinnovo QODNET:', error);
+        alert('❌ Errore: ' + error.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-file-invoice"></i> Fattura a QODNET'; }
+    }
+}
+
+async function annullaFatturazioneQodnet(rif) {
+    if (!confirm(`Annullare la fatturazione ${rif}?\n\nLa riga Timesheet viene eliminata (solo se non è già in una proforma) e le voci tornano da fatturare.`)) return;
+    try {
+        const result = await chiamaQodnet('annulla_fatturazione_qodnet', { rif });
+        window.markTabDirty && window.markTabDirty('proforma');
+        alert(`✅ ${result.righe} voci tornate da fatturare.`);
+        dopoScritturaQodnet();
+    } catch (error) {
+        alert('❌ Errore: ' + error.message);
+    }
+}
+
+// -----------------------------------------------------------------------
+// Modifica voce / documento
+// -----------------------------------------------------------------------
+
+function valoriFormRigaQodnet() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    return {
+        documento: v('qodnetRigaDocumento'),
+        data_documento: v('qodnetRigaDataDocumento'),
+        stato_documento: v('qodnetRigaStatoDocumento'),
+        prodotto: v('qodnetRigaProdotto'),
+        dettaglio: v('qodnetRigaDettaglio'),
+        quantita: v('qodnetRigaQuantita'),
+        tipo: v('qodnetRigaTipo'),
+        periodo_inizio: v('qodnetRigaInizio'),
+        periodo_fine: v('qodnetRigaFine'),
+        imponibile: v('qodnetRigaImponibile'),
+        percentuale: v('qodnetRigaPercentuale'),
+        provvigione: v('qodnetRigaProvvigione'),
+        note: v('qodnetRigaNote')
+    };
+}
+
+function apriModalRigaQodnet(ids, titolo, r, soloDocumento) {
+    aggiornaProdottiNotiQodnet();
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val === undefined || val === null ? '' : val; };
+    set('qodnetRigaIds', ids.join(','));
+    set('qodnetRigaDocumento', r.documento);
+    set('qodnetRigaDataDocumento', r.dataDocumentoIso || isoQodnet(new Date()));
+    set('qodnetRigaStatoDocumento', r.statoDocumento || (soloDocumento && !r.documento ? 'Non pagato' : ''));
+    set('qodnetRigaProdotto', r.prodotto);
+    set('qodnetRigaDettaglio', r.dettaglio);
+    set('qodnetRigaQuantita', r.quantita);
+    set('qodnetRigaTipo', r.tipo || 'Nuovo');
+    set('qodnetRigaInizio', r.inizioIso);
+    set('qodnetRigaFine', r.fineIso);
+    set('qodnetRigaImponibile', r.imponibile);
+    set('qodnetRigaPercentuale', r.percentuale);
+    set('qodnetRigaProvvigione', r.provvigione);
+    set('qodnetRigaNote', r.note);
+
+    document.getElementById('qodnetRigaTitolo').textContent = titolo;
+    document.getElementById('qodnetRigaCampiVoce').style.display = soloDocumento ? 'none' : '';
+    document.getElementById('qodnetRigaNote').closest('.form-group').style.display = soloDocumento ? 'none' : '';
+    document.getElementById('qodnetRigaEliminaBtn').style.display = soloDocumento || r.statoProvvigione === 'Fatturata' ? 'none' : '';
+
+    const avviso = document.getElementById('qodnetRigaAvviso');
+    const fatturata = r.statoProvvigione === 'Fatturata';
+    avviso.style.display = fatturata || soloDocumento ? '' : 'none';
+    avviso.textContent = fatturata
+        ? `Voce già fatturata (${r.rifFatturazione}): puoi cambiare solo pagamento e note. Per il resto annulla prima la fatturazione.`
+        : `Le modifiche valgono per ${ids.length} ${ids.length === 1 ? 'voce' : 'voci'}.`;
+
+    qodnetRigaOriginale = { ids, soloDocumento, fatturata, valori: valoriFormRigaQodnet() };
+    document.getElementById('qodnetRigaModal').classList.add('active');
+}
+
+function openQodnetRigaModal(id) {
+    const r = qodnetDati && qodnetDati.righe.find(x => x.id === id);
+    if (!r) { alert('Voce non trovata: ricarica la pagina'); return; }
+    apriModalRigaQodnet([id], `Modifica voce ${id}`, r, false);
+}
+
+function openQodnetDocumentoModal(idsCsv) {
+    const ids = idsCsv.split(',');
+    const r = qodnetDati && qodnetDati.righe.find(x => x.id === ids[0]);
+    if (!r) { alert('Documento non trovato: ricarica la pagina'); return; }
+    apriModalRigaQodnet(ids, r.documento ? `Documento ${r.documento}` : `Conferma vendite ${r.nomeCliente}`, r, true);
+}
+
+function closeQodnetRigaModal() {
+    document.getElementById('qodnetRigaModal')?.classList.remove('active');
+}
+
+function calcQodnetRiga() {
+    const imp = parseFloat(document.getElementById('qodnetRigaImponibile').value);
+    const perc = parseFloat(document.getElementById('qodnetRigaPercentuale').value);
+    if (!isNaN(imp) && !isNaN(perc)) {
+        document.getElementById('qodnetRigaProvvigione').value = (Math.round(imp * perc) / 100).toFixed(2);
+    }
+}
+
+async function submitQodnetRiga(e) {
+    e.preventDefault();
+    if (!qodnetRigaOriginale) return;
+    const { ids, soloDocumento, fatturata, valori: prima } = qodnetRigaOriginale;
+    const dopo = valoriFormRigaQodnet();
+
+    const ammessi = fatturata
+        ? ['stato_documento', 'note']
+        : soloDocumento ? ['documento', 'data_documento', 'stato_documento'] : Object.keys(dopo);
+    const params = { ids: ids.join(',') };
+    ammessi.forEach(k => { if (dopo[k] !== prima[k]) params[k] = dopo[k]; });
+    if (soloDocumento && dopo.documento) params.stato_documento = dopo.stato_documento || 'Non pagato';
+
+    if (Object.keys(params).length === 1) { closeQodnetRigaModal(); return; }
+    if (!soloDocumento && !fatturata && (!!dopo.periodo_inizio !== !!dopo.periodo_fine)) {
+        alert('⚠️ Indica sia inizio sia fine del periodo, oppure svuotali entrambi (una tantum)'); return;
+    }
+
+    const btn = document.getElementById('qodnetRigaSubmitBtn');
+    const origText = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Salvataggio...';
+    try {
+        await chiamaQodnet('aggiorna_righe_qodnet', params);
+        closeQodnetRigaModal();
+        dopoScritturaQodnet();
+    } catch (error) {
         alert('❌ Errore: ' + error.message);
     } finally {
-        if (btn) { btn.disabled = false; btn.textContent = origText; }
+        btn.disabled = false; btn.textContent = origText;
     }
 }
 
-async function updateStatoQodnet(id, stato) {
-    if (!confirm(`Segnare questo abbonamento come "${stato}"?`)) return;
-
+async function eliminaRigaQodnet() {
+    if (!qodnetRigaOriginale || qodnetRigaOriginale.ids.length !== 1) return;
+    const id = qodnetRigaOriginale.ids[0];
+    if (!confirm(`Eliminare definitivamente la voce ${id}?`)) return;
     try {
-        const params = `id=${encodeURIComponent(id)}&stato=${encodeURIComponent(stato)}`;
-        const response = await fetch(`${getAPIUrl()}?action=update_stato_qodnet&${params}`);
-        const result   = await response.json();
-
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
-
-        qodnetData = [];
-        riepilogoLoaded.qodnet = false;
-        loadQodnetRiepilogo();
-
+        await chiamaQodnet('elimina_riga_qodnet', { id });
+        qodnetSelezione.delete(id);
+        closeQodnetRigaModal();
+        dopoScritturaQodnet();
     } catch (error) {
-        console.error('Errore update stato QODNET:', error);
         alert('❌ Errore: ' + error.message);
     }
 }
@@ -2381,14 +2761,23 @@ if (typeof window !== 'undefined') {
     window.submitCdf = submitCdf;
     window.openQodnetForm = openQodnetForm;
     window.closeQodnetModal = closeQodnetModal;
-    window.calcQodnetProvvigione = calcQodnetProvvigione;
     window.submitQodnet = submitQodnet;
+    window.aggiungiRigaQodnet = aggiungiRigaQodnet;
+    window.togliRigaQodnet = togliRigaQodnet;
+    window.aggiornaStatoDocQodnet = aggiornaStatoDocQodnet;
     window.loadQodnetRiepilogo = loadQodnetRiepilogo;
     window.filterQodnet = filterQodnet;
     window.filterQodnetDebounced = filterQodnetDebounced;
-    window.openQodnetRinnovoModal = openQodnetRinnovoModal;
-    window.closeQodnetRinnovoModal = closeQodnetRinnovoModal;
-    window.calcQodnetRinnovoProvvigione = calcQodnetRinnovoProvvigione;
-    window.submitQodnetRinnovo = submitQodnetRinnovo;
-    window.updateStatoQodnet = updateStatoQodnet;
+    window.statoServizioQodnet = statoServizioQodnet;
+    window.selezionaVoceQodnet = selezionaVoceQodnet;
+    window.selezionaDocumentoQodnet = selezionaDocumentoQodnet;
+    window.selezionaTutteQodnet = selezionaTutteQodnet;
+    window.fatturaQodnetSelezionate = fatturaQodnetSelezionate;
+    window.annullaFatturazioneQodnet = annullaFatturazioneQodnet;
+    window.openQodnetRigaModal = openQodnetRigaModal;
+    window.openQodnetDocumentoModal = openQodnetDocumentoModal;
+    window.closeQodnetRigaModal = closeQodnetRigaModal;
+    window.calcQodnetRiga = calcQodnetRiga;
+    window.submitQodnetRiga = submitQodnetRiga;
+    window.eliminaRigaQodnet = eliminaRigaQodnet;
 }

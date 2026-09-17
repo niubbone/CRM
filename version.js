@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.33.0';
+export const VERSION = '4.34.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,20 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.34.0",
+    date: "17/09/2026",
+    type: "feature",
+    changes: [
+      "QODNET rifatto come registro vendite e provvigioni: una vendita si registra come documento con più voci (prodotto, quantità, dominio, periodo o una tantum, imponibile facoltativo) e la percentuale si propone da sola (10% hosting, domini/DNS, MailFort; 20% il resto)",
+      "Senza numero documento la vendita resta «da confermare» finché non compare in un report QODNET; con il numero entra nel saldo da fatturare",
+      "Vista Servizi: i servizi si rinnovano da soli, qui si controlla solo che ogni periodo sia coperto da una provvigione (Coperto / In scadenza / Scoperto). Annullato e Sostituito tolgono il servizio dal controllo",
+      "Vista Provvigioni: saldo da fatturare (diviso tra clienti che hanno pagato e no), voci da confermare, già fatturate. Scegli le voci e «Fattura a QODNET» crea una sola riga Timesheet su QODNET SRL, poi la proforma come sempre; la fatturazione si può annullare finché non è in proforma",
+      "Tolti rinnovi manuali, stati Scaduto/Rinnovato e le email di scadenza QODNET, che non servono per servizi a rinnovo automatico",
+      "Scheda cliente: servizi QODNET con la copertura e le attività una tantum",
+      "Importato il report provvigioni: 9 documenti, 34 voci, € 1.677,86"
+    ]
+  },
   {
     version: "4.33.0",
     date: "15/09/2026",

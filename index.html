@@ -1058,10 +1058,13 @@
         <div id="vendite-section-qodnet" class="vendite-section" style="display:none;">
             <div class="vendite-subtab-bar">
                 <button class="vendite-subtab active" id="vsub-qodnet-nuovo" onclick="switchVenditeSubtab('qodnet','nuovo')">
-                    <i class="fas fa-plus"></i> Nuovo abbonamento
+                    <i class="fas fa-plus"></i> Nuova vendita
                 </button>
                 <button class="vendite-subtab" id="vsub-qodnet-riepilogo" onclick="switchVenditeSubtab('qodnet','riepilogo')">
-                    <i class="fas fa-list"></i> Riepilogo
+                    <i class="fas fa-list"></i> Servizi
+                </button>
+                <button class="vendite-subtab" id="vsub-qodnet-provvigioni" onclick="switchVenditeSubtab('qodnet','provvigioni')">
+                    <i class="fas fa-euro-sign"></i> Provvigioni
                 </button>
             </div>
 
@@ -1070,31 +1073,43 @@
                 <div class="vendite-action-card" onclick="openQodnetForm()">
                     <span class="vendite-action-icon"><i class="fas fa-globe"></i></span>
                     <div>
-                        <div class="vendite-action-title">Nuovo Abbonamento QODNET</div>
-                        <div class="vendite-action-desc">Software o ore sistemistiche — provvigione 20% calcolata automaticamente</div>
+                        <div class="vendite-action-title">Registra vendita / documento QODNET</div>
+                        <div class="vendite-action-desc">Una o più voci. Senza numero documento resta «da confermare» finché non compare in un report</div>
                     </div>
                 </div>
             </div>
 
-            <!-- RIEPILOGO -->
+            <!-- SERVIZI (copertura) -->
             <div id="vsub-qodnet-riepilogo-content" class="vendite-subtab-content" style="display:none;">
+                <div class="info-banner" style="margin-bottom:12px;">
+                    I servizi si rinnovano da soli: qui controlli che ogni periodo sia coperto da una provvigione.
+                    <strong>Scoperto</strong> = l'ultimo periodo registrato è finito e nessun report ha ancora coperto il successivo.
+                </div>
                 <div class="storico-filtri">
                     <div class="storico-filtro-group">
-                        <input type="text" id="qodnet-filter-cliente" placeholder="Filtra per cliente..."
+                        <input type="text" id="qodnet-filter-cliente" placeholder="Filtra per cliente o prodotto..."
                                oninput="filterQodnetDebounced()" autocomplete="off">
                     </div>
                     <div class="storico-filtro-group">
                         <select id="qodnet-filter-stato" onchange="filterQodnet()">
-                            <option value="">Tutti gli stati</option>
-                            <option value="Attivo">Attivo</option>
-                            <option value="Scaduto">Scaduto</option>
-                            <option value="Rinnovato">Rinnovato</option>
-                            <option value="Incorporato">Incorporato</option>
+                            <option value="">Seguiti (tutti tranne annullati)</option>
+                            <option value="Scoperto">Scoperti</option>
+                            <option value="In scadenza">In scadenza (30 gg)</option>
+                            <option value="Coperto">Coperti</option>
+                            <option value="chiusi">Annullati / sostituiti</option>
+                            <option value="tutti">Tutti</option>
                         </select>
                     </div>
                 </div>
                 <div id="qodnetContainer">
                     <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-globe"></i></div><div>Caricamento...</div></div>
+                </div>
+            </div>
+
+            <!-- PROVVIGIONI -->
+            <div id="vsub-qodnet-provvigioni-content" class="vendite-subtab-content" style="display:none;">
+                <div id="qodnetProvvigioniContainer">
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-euro-sign"></i></div><div>Caricamento...</div></div>
                 </div>
             </div>
         </div>
@@ -1217,101 +1232,138 @@
     </div>
 </div>
 
-<!-- Modal QODNET - Inserimento -->
+<!-- Modal QODNET - Registra documento / vendita -->
 <div id="qodnetModal" class="modal-vendite">
-    <div class="modal-content-vendite">
+    <div class="modal-content-vendite qodnet-modal-largo">
         <div class="modal-header-vendite">
-            <span id="qodnetModalTitle">Nuovo Abbonamento QODNET</span>
+            <span>Registra vendita QODNET</span>
             <button class="modal-close-vendite" onclick="closeQodnetModal()">&times;</button>
         </div>
         <form id="qodnetForm" onsubmit="submitQodnet(event)">
             <div class="form-group">
                 <label>Cliente *</label>
-                <input type="text" id="qodnetCliente" list="qodnet-client-list" required placeholder="Cerca o seleziona cliente...">
+                <input type="text" id="qodnetCliente" list="qodnet-client-list" required placeholder="Cerca o seleziona cliente..." autocomplete="off">
                 <datalist id="qodnet-client-list"></datalist>
+                <datalist id="qodnet-prodotti-list"></datalist>
             </div>
-            <div class="form-group">
-                <label>Tipo *</label>
-                <select id="qodnetTipo" required>
-                    <option value="Software">Software</option>
-                    <option value="Ore Sistemistiche">Ore Sistemistiche</option>
-                </select>
+            <div class="qodnet-griglia-doc">
+                <div class="form-group">
+                    <label>N. documento QODNET</label>
+                    <input type="text" id="qodnetDocumento" placeholder="es. FAT-36-W (vuoto = da confermare)" oninput="aggiornaStatoDocQodnet()">
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="qodnetDataDocumento">
+                </div>
+                <div class="form-group">
+                    <label>Pagamento cliente</label>
+                    <select id="qodnetStatoDocumento" disabled>
+                        <option value="Non pagato">Non pagato</option>
+                        <option value="Pagato">Pagato</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Prodotto / Descrizione *</label>
-                <input type="text" id="qodnetProdotto" required placeholder="es. Microsoft 365, Backup Cloud...">
-            </div>
-            <div class="form-group">
-                <label>Configurazione</label>
-                <textarea id="qodnetConfigurazione" rows="3" placeholder="Dettagli tecnici, n° licenze, utenti, server..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>Data Inizio *</label>
-                <input type="date" id="qodnetDataInizio" required>
-            </div>
-            <div class="form-group">
-                <label>Data Scadenza *</label>
-                <input type="date" id="qodnetDataScadenza" required>
-            </div>
-            <div class="form-group">
-                <label>Imponibile (€) *</label>
-                <input type="number" id="qodnetImponibile" step="0.01" min="0.01" required oninput="calcQodnetProvvigione()">
-            </div>
-            <div class="form-group">
-                <label>Percentuale provvigione (%)</label>
-                <input type="number" id="qodnetPercentuale" step="0.1" min="0" max="100" value="20" oninput="calcQodnetProvvigione()">
-            </div>
-            <div class="form-group">
-                <label>Provvigione (€) <small style="color:#666;">— calcolata, modificabile per arrotondamenti</small></label>
-                <input type="number" id="qodnetProvvigione" step="0.01" min="0">
-            </div>
-            <div class="form-group">
+
+            <div id="qodnetRighe"></div>
+            <button type="button" class="btn-small qodnet-btn-riga" onclick="aggiungiRigaQodnet()">
+                <i class="fas fa-plus"></i> Aggiungi voce
+            </button>
+
+            <div class="form-group" style="margin-top:12px;">
                 <label>Note</label>
-                <textarea id="qodnetNote" rows="2"></textarea>
+                <textarea id="qodnetNote" rows="2" placeholder="es. upselling, modifica licenze..."></textarea>
             </div>
-            <button type="submit" class="btn-primary" id="qodnetSubmitBtn">Salva Abbonamento</button>
+            <div class="qodnet-totale" id="qodnetTotale">Provvigione totale: € 0,00</div>
+            <button type="submit" class="btn-primary" id="qodnetSubmitBtn">Salva</button>
         </form>
     </div>
 </div>
 
-<!-- Modal QODNET - Rinnovo -->
-<div id="qodnetRinnovoModal" class="modal-vendite">
+<!-- Modal QODNET - Modifica voce o documento -->
+<div id="qodnetRigaModal" class="modal-vendite">
     <div class="modal-content-vendite">
         <div class="modal-header-vendite">
-            <span>Rinnova Abbonamento QODNET</span>
-            <button class="modal-close-vendite" onclick="closeQodnetRinnovoModal()">&times;</button>
+            <span id="qodnetRigaTitolo">Modifica voce</span>
+            <button class="modal-close-vendite" onclick="closeQodnetRigaModal()">&times;</button>
         </div>
-        <form id="qodnetRinnovoForm" onsubmit="submitQodnetRinnovo(event)">
-            <input type="hidden" id="qodnetRinnovoId">
-            <div class="info-banner" style="margin-bottom:16px;">
-                <strong id="qodnetRinnovoCliente"></strong><br>
-                <span id="qodnetRinnovoDettagli"></span>
+        <form id="qodnetRigaForm" onsubmit="submitQodnetRiga(event)">
+            <input type="hidden" id="qodnetRigaIds">
+            <div id="qodnetRigaAvviso" class="info-banner" style="margin-bottom:12px;display:none;"></div>
+            <div class="qodnet-griglia-doc">
+                <div class="form-group">
+                    <label>N. documento</label>
+                    <input type="text" id="qodnetRigaDocumento" placeholder="vuoto = da confermare">
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="qodnetRigaDataDocumento">
+                </div>
+                <div class="form-group">
+                    <label>Pagamento cliente</label>
+                    <select id="qodnetRigaStatoDocumento">
+                        <option value="">—</option>
+                        <option value="Non pagato">Non pagato</option>
+                        <option value="Pagato">Pagato</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Nuova Data Scadenza *</label>
-                <input type="date" id="qodnetRinnovoDataScadenza" required>
-            </div>
-            <div class="form-group">
-                <label>Configurazione</label>
-                <textarea id="qodnetRinnovoConfigurazione" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Nuovo Imponibile (€)</label>
-                <input type="number" id="qodnetRinnovoImponibile" step="0.01" min="0" oninput="calcQodnetRinnovoProvvigione()">
-            </div>
-            <div class="form-group">
-                <label>Percentuale (%)</label>
-                <input type="number" id="qodnetRinnovoPercentuale" step="0.1" min="0" max="100" oninput="calcQodnetRinnovoProvvigione()">
-            </div>
-            <div class="form-group">
-                <label>Provvigione (€) <small style="color:#666;">— modificabile</small></label>
-                <input type="number" id="qodnetRinnovoProvvigione" step="0.01" min="0">
+            <div id="qodnetRigaCampiVoce">
+                <div class="form-group">
+                    <label>Prodotto *</label>
+                    <input type="text" id="qodnetRigaProdotto" list="qodnet-prodotti-list">
+                </div>
+                <div class="qodnet-griglia-doc">
+                    <div class="form-group">
+                        <label>Dettaglio / dominio</label>
+                        <input type="text" id="qodnetRigaDettaglio">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantità</label>
+                        <input type="number" id="qodnetRigaQuantita" min="1" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="qodnetRigaTipo">
+                            <option value="Nuovo">Nuovo</option>
+                            <option value="Rinnovo">Rinnovo</option>
+                            <option value="Integrazione">Integrazione</option>
+                            <option value="Una tantum">Una tantum</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="qodnet-griglia-doc">
+                    <div class="form-group">
+                        <label>Periodo dal</label>
+                        <input type="date" id="qodnetRigaInizio">
+                    </div>
+                    <div class="form-group">
+                        <label>al <small>(vuoti = una tantum)</small></label>
+                        <input type="date" id="qodnetRigaFine">
+                    </div>
+                </div>
+                <div class="qodnet-griglia-doc">
+                    <div class="form-group">
+                        <label>Imponibile (€)</label>
+                        <input type="number" id="qodnetRigaImponibile" step="0.01" min="0" oninput="calcQodnetRiga()">
+                    </div>
+                    <div class="form-group">
+                        <label>%</label>
+                        <input type="number" id="qodnetRigaPercentuale" step="0.1" min="0" max="100" oninput="calcQodnetRiga()">
+                    </div>
+                    <div class="form-group">
+                        <label>Provvigione (€) *</label>
+                        <input type="number" id="qodnetRigaProvvigione" step="0.01" min="0">
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label>Note</label>
-                <textarea id="qodnetRinnovoNote" rows="2"></textarea>
+                <textarea id="qodnetRigaNote" rows="2"></textarea>
             </div>
-            <button type="submit" class="btn-primary">Conferma Rinnovo</button>
+            <button type="submit" class="btn-primary" id="qodnetRigaSubmitBtn">Salva modifiche</button>
+            <button type="button" class="btn-small qodnet-btn-elimina" id="qodnetRigaEliminaBtn" onclick="eliminaRigaQodnet()">
+                <i class="fas fa-trash"></i> Elimina voce
+            </button>
         </form>
     </div>
 </div>
@@ -1787,9 +1839,9 @@
              SEZIONE STORICO QODNET
         ========================= -->
         <div id="cliente-qodnet-section" class="clienti-section" style="display:none;">
-            <h3>🔗 Abbonamenti QODNET</h3>
+            <h3>🔗 Servizi QODNET</h3>
             <div id="cliente-qodnet-content">
-                <p class="empty-state">Nessun abbonamento QODNET per questo cliente</p>
+                <p class="empty-state">Nessun servizio QODNET per questo cliente</p>
             </div>
         </div>
 

@@ -202,9 +202,10 @@ async function loadClienteDetail(clienteId) {
             // QODNET
             const qodnetSection  = document.getElementById('cliente-qodnet-section');
             const qodnetContent  = document.getElementById('cliente-qodnet-content');
-            if (data.qodnet && data.qodnet.length > 0) {
+            const qodnetHtml = renderQODNETCliente(data.qodnet);
+            if (qodnetHtml) {
                 qodnetSection.style.display = 'block';
-                qodnetContent.innerHTML = data.qodnet.map(p => renderQODNETProdottoTimeline(p)).join('');
+                qodnetContent.innerHTML = qodnetHtml;
             } else {
                 qodnetSection.style.display = 'none';
             }
@@ -1830,73 +1831,69 @@ async function loadClienteQODNETStorico(clienteId) {
         const response = await fetch(url);
         const data = await response.json();
 
-        if (!data.success || !data.prodotti || data.prodotti.length === 0) return;
+        const html = data.success ? renderQODNETCliente(data) : '';
+        if (!html) return;
 
         section.style.display = 'block';
-        contentDiv.innerHTML = data.prodotti.map(p => renderQODNETProdottoTimeline(p)).join('');
+        contentDiv.innerHTML = html;
 
     } catch(err) {
         // Silenzioso: se non ci sono abbonamenti QODNET non mostrare errori
     }
 }
 
-function renderQODNETProdottoTimeline(prodotto) {
-    const statoColori = {
-        'Attivo':      { bg: '#d4edda', color: '#155724', badge: '#28a745' },
-        'Scaduto':     { bg: '#f8d7da', color: '#721c24', badge: '#dc3545' },
-        'Rinnovato':   { bg: '#e2e3e5', color: '#383d41', badge: '#6c757d' },
-        'Incorporato': { bg: '#e2d9f3', color: '#4a235a', badge: '#6f42c1' }
-    };
+/**
+ * Servizi QODNET del cliente con la copertura provvigioni, più le voci una tantum.
+ * I servizi si rinnovano da soli: si mostra fino a quando sono coperti.
+ * @param {{servizi: Array, unaTantum: Array}} dati
+ * @returns {string} html, vuoto se non c'è nulla
+ */
+function renderQODNETCliente(dati) {
+    const servizi = (dati && dati.servizi) || [];
+    const unaTantum = (dati && dati.unaTantum) || [];
+    if (!servizi.length && !unaTantum.length) return '';
 
-    const sc = statoColori[prodotto.statoCorrente] || statoColori['Scaduto'];
+    const esc = v => (v === null || v === undefined ? '' : String(v))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const euro = n => (n === '' || n === null || n === undefined || isNaN(n)) ? '—'
+        : '€ ' + Number(n).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const colori = { 'Coperto': '#28a745', 'In scadenza': '#fd7e14', 'Scoperto': '#dc3545', 'Annullato': '#6c757d', 'Sostituito': '#6c757d' };
 
-    const vociHtml = prodotto.voci.map((v, idx) => {
-        const c = statoColori[v.stato] || statoColori['Scaduto'];
-        const isLast = idx === prodotto.voci.length - 1;
-        const isFirst = idx === 0;
+    let html = servizi.map(s => {
+        const periodi = s.periodi.slice().reverse().map(p => `
+            <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#495057;padding:3px 0;border-top:1px solid #f1f3f5;">
+                <span style="min-width:170px;">${p.inizio} → ${p.fine}</span>
+                <span style="min-width:90px;">${esc(p.documento || 'da confermare')}</span>
+                <span style="min-width:80px;">${esc(p.tipo)}</span>
+                <span>provv. ${euro(p.provvigione)}</span>
+            </div>`).join('');
         return `
-        <div style="display:flex;gap:12px;position:relative;">
-            <!-- linea verticale + dot -->
-            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
-                <div style="width:12px;height:12px;border-radius:50%;background:${c.badge};margin-top:3px;flex-shrink:0;"></div>
-                ${!isLast ? `<div style="width:2px;flex:1;background:#dee2e6;margin-top:2px;"></div>` : ''}
-            </div>
-            <!-- contenuto voce -->
-            <div style="flex:1;padding-bottom:${isLast ? '0' : '12px'};">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                    <span style="font-size:12px;font-weight:600;color:#495057;">
-                        ${v.dataInizio} → ${v.dataScadenza}
-                    </span>
-                    <span style="font-size:11px;padding:1px 7px;border-radius:10px;background:${c.badge};color:#fff;font-weight:600;">
-                        ${v.stato}
-                    </span>
-                    ${isFirst ? '<span style="font-size:10px;color:#6c757d;font-style:italic;">prima sottoscrizione</span>' : ''}
+        <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:12px 16px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <div>
+                    <span style="font-weight:700;font-size:15px;color:#212529;">${s.quantita > 1 ? s.quantita + ' x ' : ''}${esc(s.prodotto)}</span>
+                    ${s.dettaglio ? `<span style="margin-left:8px;font-size:12px;color:#6c757d;">${esc(s.dettaglio)}</span>` : ''}
                 </div>
-                <div style="margin-top:4px;display:flex;gap:16px;flex-wrap:wrap;">
-                    <span style="font-size:13px;color:#212529;">€ ${v.imponibile.toFixed(2)}</span>
-                    ${v.configurazione ? `<span style="font-size:12px;color:#6c757d;">${v.configurazione}</span>` : ''}
-                    ${v.note ? `<span style="font-size:12px;color:#6c757d;font-style:italic;">${v.note}</span>` : ''}
-                </div>
+                <span style="font-size:12px;padding:2px 10px;border-radius:12px;background:${colori[s.stato] || '#6c757d'};color:#fff;font-weight:600;">${esc(s.stato)}</span>
             </div>
+            <div style="font-size:12px;color:#6c757d;margin:4px 0 6px;">Coperto fino al ${s.coperturaFino} · dal ${s.dal}</div>
+            ${periodi}
         </div>`;
     }).join('');
 
-    return `
-    <div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-            <div>
-                <span style="font-weight:700;font-size:15px;color:#212529;">${prodotto.prodotto}</span>
-                <span style="margin-left:8px;font-size:12px;color:#6c757d;">${prodotto.tipo}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;color:#6c757d;">dal ${prodotto.primaData}</span>
-                <span style="font-size:12px;padding:2px 10px;border-radius:12px;background:${sc.badge};color:#fff;font-weight:600;">
-                    ${prodotto.statoCorrente}
-                </span>
-            </div>
-        </div>
-        <div>${vociHtml}</div>
-    </div>`;
+    if (unaTantum.length) {
+        html += `<div style="background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:12px 16px;margin-bottom:10px;">
+            <div style="font-weight:700;font-size:14px;margin-bottom:6px;">Attività una tantum</div>
+            ${unaTantum.map(u => `
+            <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#495057;padding:3px 0;border-top:1px solid #f1f3f5;">
+                <span style="flex:1;min-width:180px;">${esc(u.prodotto)}${u.dettaglio ? ' — ' + esc(u.dettaglio) : ''}</span>
+                <span style="min-width:90px;">${esc(u.documento || 'da confermare')}</span>
+                <span style="min-width:80px;">${u.dataDocumento || ''}</span>
+                <span>provv. ${euro(u.provvigione)}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+    return html;
 }
 
 // =======================================================================
