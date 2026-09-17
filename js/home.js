@@ -236,7 +236,7 @@ function renderHome() {
 
     container.innerHTML =
         renderBarraAggiornamento() +
-        renderPendenze(homeData.pendenze || {}, homeData.todos || {}, homeData.controlli || []) +
+        renderPendenze(homeData.pendenze || {}, homeData.todos || {}, homeData.controlli || [], homeData.qodnet) +
         renderTodoSezione(homeData.todos || {}) +
         renderControlliSezione(homeData.controlli || []) +
         renderStartupSezione(homeData.startup || {});
@@ -276,7 +276,7 @@ function renderBarraAggiornamento() {
 // === BLOCCO 1 — PENDENZE ===
 // =======================================================================
 
-function renderPendenze(p, todos, controlli) {
+function renderPendenze(p, todos, controlli, qodnet) {
     const card = (numero, label, icona, colore, onclick, extra) => `
         <div class="home-pendenza-card ${numero > 0 ? '' : 'vuota'}" onclick="${onclick}">
             <div class="home-pendenza-icon ${colore}"><i class="fas ${icona}"></i></div>
@@ -304,7 +304,21 @@ function renderPendenze(p, todos, controlli) {
         ${card(p.oreExtra || 0, 'Ore extra sospese', 'fa-hourglass-half', 'rosso', "vaiA('oreextra')")}
         ${card(p.proformaDaFatturare || 0, 'Proforma da fatturare', 'fa-file-invoice', 'verde', "vaiA('proforma')")}
         ${card(p.fattureNonPagate || 0, 'Fatture non pagate', 'fa-money-bill-wave', 'rosso', "vaiA('fatture')", importo)}
+        ${qodnet ? card(qodnet.attenzione || 0, 'QODNET', 'fa-globe', 'blu', "vaiA('qodnet')", _extraQodnet(qodnet)) : ''}
     </div>`;
+}
+
+/**
+ * Riga sotto il numero della card QODNET: cosa c'è da guardare e il saldo
+ * provvigioni da fatturare (che non è un'urgenza, solo un promemoria).
+ */
+function _extraQodnet(q) {
+    const pezzi = [];
+    if (q.scoperti) pezzi.push(`${q.scoperti} scopert${q.scoperti === 1 ? 'o' : 'i'}`);
+    if (q.nonPagatiVecchi) pezzi.push(`${q.nonPagatiVecchi} non pagat${q.nonPagatiVecchi === 1 ? 'o' : 'i'}`);
+    if (q.daConfermareVecchie) pezzi.push(`${q.daConfermareVecchie} da confermare`);
+    if (q.daFatturare) pezzi.push('€ ' + q.daFatturare.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '');
+    return pezzi.join(' · ');
 }
 
 /** Porta l'utente alla sezione esistente che gestisce quella pendenza. */
@@ -335,6 +349,18 @@ function vaiA(dove) {
         // vista arriva già filtrata sullo stesso criterio del contatore.
         case 'proforma':  apriProformaDaFatturare();  break;
         case 'fatture':   apriFattureNonPagate();     break;
+        case 'qodnet': {
+            // Servizi scoperti → vista Servizi filtrata; altrimenti Provvigioni
+            const q = (homeData && homeData.qodnet) || {};
+            if (q.scoperti) {
+                _impostaFiltro('qodnet-filter-stato', 'Scoperto');
+                vaiVendite('qodnet', 'riepilogo');
+                setTimeout(() => { if (typeof filterQodnet === 'function') filterQodnet(); }, 100);
+            } else {
+                vaiVendite('qodnet', 'provvigioni');
+            }
+            break;
+        }
     }
 }
 

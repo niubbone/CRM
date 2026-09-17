@@ -78,7 +78,7 @@ function switchVenditeSection(section) {
 }
 
 function switchVenditeSubtab(section, subtab) {
-    const subtabs = ['nuovo', 'riepilogo', 'controlli', 'provvigioni'];
+    const subtabs = ['nuovo', 'riepilogo', 'controlli', 'provvigioni', 'riscontro'];
     subtabs.forEach(st => {
         const content = document.getElementById(`vsub-${section}-${st}-content`);
         const btn     = document.getElementById(`vsub-${section}-${st}`);
@@ -2455,7 +2455,7 @@ function renderQodnetProvvigioni() {
             <button class="btn-small" onclick="selezionaTutteQodnet('tutte')">Tutte</button>
             <button class="btn-small" onclick="selezionaTutteQodnet('nessuna')">Nessuna</button>
             <button class="btn-small qodnet-btn-fattura" id="qodnetBtnFattura" onclick="fatturaQodnetSelezionate()">
-                <i class="fas fa-file-invoice"></i> Fattura a QODNET
+                <i class="fas fa-file-invoice"></i> Fattura a QODNET…
             </button>
         </div>`;
         righeQodnetPerDocumento(maturate).forEach(d => {
@@ -2511,7 +2511,7 @@ function renderQodnetProvvigioni() {
             <div class="storico-card qodnet-doc">
                 <div class="qodnet-doc-header">
                     <div class="qodnet-doc-titolo">
-                        <strong>${euroQodnet(tot)}</strong> · ${rr.length} voci · Timesheet ${escQodnet(rif)}
+                        Fattura <strong>${escQodnet(rif)}</strong> · ${euroQodnet(tot)} · ${rr.length} voci
                         <small>${rr[0].dataFatturazione} — ${escQodnet(docs)}</small>
                     </div>
                     <button class="btn-small" onclick="annullaFatturazioneQodnet('${escQodnet(rif)}')"><i class="fas fa-rotate-left"></i> Annulla</button>
@@ -2554,35 +2554,80 @@ function aggiornaSelezioneQodnet() {
     if (btn) btn.disabled = !scelte.length;
 }
 
-async function fatturaQodnetSelezionate() {
+/** Apre la finestra per numero e data della fattura diretta a QODNET */
+function fatturaQodnetSelezionate() {
     const scelte = qodnetDati.righe.filter(r => qodnetSelezione.has(r.id));
     if (!scelte.length) return;
-    const tot = scelte.reduce((s, r) => s + (r.provvigione || 0), 0);
+    const tot = Math.round(scelte.reduce((s, r) => s + (r.provvigione || 0), 0) * 100) / 100;
+    const iva = Math.round(tot * 22) / 100;
     const nonPagate = scelte.filter(r => r.statoDocumento !== 'Pagato').length;
-    if (!confirm(`Creare una riga Timesheet «Da fatturare» su QODNET SRL da ${euroQodnet(tot)} per ${scelte.length} voci?` +
-                 (nonPagate ? `\n\nAttenzione: ${nonPagate} voci sono di documenti che il cliente non ha ancora pagato.` : '') +
-                 '\n\nPoi la proforma si fa come al solito dal Timesheet.')) return;
+    const docs = [...new Set(scelte.map(r => r.documento))];
 
-    const btn = document.getElementById('qodnetBtnFattura');
-    if (btn) { btn.disabled = true; btn.textContent = 'Creazione...'; }
+    document.getElementById('qodnetFatturaRiepilogo').innerHTML =
+        `<strong>${scelte.length} voci</strong> di ${docs.length} documenti<br>` +
+        `Imponibile <strong>${euroQodnet(tot)}</strong> + IVA 22% ${euroQodnet(iva)} = <strong>${euroQodnet(Math.round((tot + iva) * 100) / 100)}</strong>` +
+        (nonPagate ? `<br><span class="qodnet-arancio">${nonPagate} voci sono di documenti che il cliente non ha ancora pagato</span>` : '');
+    document.getElementById('qodnetFatturaData').value = isoQodnet(new Date());
+    const numero = document.getElementById('qodnetFatturaNumero');
+    numero.value = '';
+    proponiNumeroFatturaQodnet(numero);
+    document.getElementById('qodnetFatturaModal').classList.add('active');
+    numero.focus();
+}
+
+/** Propone il numero successivo nel formato NN/A-AAAA leggendo le fatture dell'anno */
+async function proponiNumeroFatturaQodnet(input) {
     try {
-        const result = await chiamaQodnet('fattura_provvigioni_qodnet', { ids: scelte.map(r => r.id).join(',') });
+        const anno = new Date().getFullYear();
+        const response = await fetch(`${getAPIUrl()}?action=get_fatture_list`);
+        const result = await response.json();
+        const lista = result.fatture || result.data || [];
+        let max = 0;
+        lista.forEach(f => {
+            const m = /^(\d+)\/A-(\d{4})$/.exec(String(f.nFattura || '').trim());
+            if (m && parseInt(m[2]) === anno) max = Math.max(max, parseInt(m[1]));
+        });
+        if (max && !input.value) input.placeholder = `${max + 1}/A-${anno} (proposto)`, input.value = `${max + 1}/A-${anno}`;
+    } catch (e) { /* il numero si scrive a mano */ }
+}
+
+function closeQodnetFatturaModal() {
+    document.getElementById('qodnetFatturaModal')?.classList.remove('active');
+}
+
+async function submitQodnetFattura(e) {
+    e.preventDefault();
+    const scelte = qodnetDati.righe.filter(r => qodnetSelezione.has(r.id));
+    const nFattura = document.getElementById('qodnetFatturaNumero').value.trim();
+    const data = document.getElementById('qodnetFatturaData').value;
+    if (!scelte.length || !nFattura || !data) return;
+
+    const btn = document.getElementById('qodnetFatturaSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Registrazione...';
+    try {
+        const result = await chiamaQodnet('fattura_provvigioni_qodnet', {
+            ids: scelte.map(r => r.id).join(','), n_fattura: nFattura, data_fattura: data
+        });
         qodnetSelezione.clear();
-        window.markTabDirty && window.markTabDirty('proforma');
-        alert(`✅ Creata la riga Timesheet ${result.timesheetId} da ${euroQodnet(result.totale)} per QODNET SRL.`);
+        closeQodnetFatturaModal();
+        window.markTabDirty && window.markTabDirty('fatture');
+        alert(result.fatturaEsistente
+            ? `✅ ${result.voci} voci collegate alla fattura ${nFattura} già presente nel tab Fatture.` + (result.avviso ? `\n\n⚠️ ${result.avviso}` : '')
+            : `✅ Fattura ${nFattura} registrata: imponibile ${euroQodnet(result.totale)} a QODNET SRL.`);
         dopoScritturaQodnet();
     } catch (error) {
         alert('❌ Errore: ' + error.message);
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-file-invoice"></i> Fattura a QODNET'; }
+    } finally {
+        btn.disabled = false; btn.textContent = 'Registra fattura';
     }
 }
 
 async function annullaFatturazioneQodnet(rif) {
-    if (!confirm(`Annullare la fatturazione ${rif}?\n\nLa riga Timesheet viene eliminata (solo se non è già in una proforma) e le voci tornano da fatturare.`)) return;
+    if (!confirm(`Annullare la fatturazione ${rif}?\n\nLe voci tornano da fatturare. La fattura nel tab Fatture viene eliminata se l'hai creata da qui e non è incassata; se l'avevi inserita a mano resta e si scollegano solo le voci.`)) return;
     try {
         const result = await chiamaQodnet('annulla_fatturazione_qodnet', { rif });
-        window.markTabDirty && window.markTabDirty('proforma');
-        alert(`✅ ${result.righe} voci tornate da fatturare.`);
+        window.markTabDirty && window.markTabDirty('fatture');
+        alert(`✅ ${result.righe} voci tornate da fatturare.` + (result.fatturaEliminata ? `\nFattura ${rif} eliminata dal tab Fatture.` : `\nLa fattura ${rif} è rimasta nel tab Fatture.`));
         dopoScritturaQodnet();
     } catch (error) {
         alert('❌ Errore: ' + error.message);
@@ -2773,6 +2818,8 @@ if (typeof window !== 'undefined') {
     window.selezionaDocumentoQodnet = selezionaDocumentoQodnet;
     window.selezionaTutteQodnet = selezionaTutteQodnet;
     window.fatturaQodnetSelezionate = fatturaQodnetSelezionate;
+    window.closeQodnetFatturaModal = closeQodnetFatturaModal;
+    window.submitQodnetFattura = submitQodnetFattura;
     window.annullaFatturazioneQodnet = annullaFatturazioneQodnet;
     window.openQodnetRigaModal = openQodnetRigaModal;
     window.openQodnetDocumentoModal = openQodnetDocumentoModal;

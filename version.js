@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.34.0';
+export const VERSION = '4.35.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -74,6 +74,18 @@ export const BUILD_INFO = {
 // ============================================
 export const CHANGELOG = [
   {
+    version: "4.35.0",
+    date: "17/09/2026",
+    type: "feature",
+    changes: [
+      "QODNET, nuova scheda Riscontro: carichi il PDF del report provvigioni (o ne incolli il testo) e vedi documenti nuovi da registrare con un clic, differenze voce per voce, documenti diventati pagati e voci da fatturare nel CRM che il report non riporta. Controlla anche che il totale letto quadri con quello del report",
+      "Registrando un documento dal report, le vendite «da confermare» dello stesso cliente e prodotto vengono confermate invece di duplicarle",
+      "Riscontro con il pannello QODNET: incolli la tabella Prodotti/Servizi e vedi i servizi attivi senza provvigione, quelli rinnovati nel pannello ma non ancora coperti e quelli presenti nel CRM ma spariti dal pannello. Abbinamenti clienti e servizi da ignorare restano salvati per tutti i dispositivi",
+      "«Fattura a QODNET» ora registra direttamente la fattura nel tab Fatture (QODNET SRL, IVA 22%, senza ritenuta, numero successivo proposto): niente più riga Timesheet né proforma. Se il numero esiste già, collega le voci a quella fattura",
+      "Home: nuova card QODNET con servizi scoperti, documenti non pagati da oltre 60 giorni, vendite da confermare vecchie e saldo da fatturare"
+    ]
+  },
+  {
     version: "4.34.0",
     date: "17/09/2026",
     type: "feature",
@@ -81,7 +93,7 @@ export const CHANGELOG = [
       "QODNET rifatto come registro vendite e provvigioni: una vendita si registra come documento con più voci (prodotto, quantità, dominio, periodo o una tantum, imponibile facoltativo) e la percentuale si propone da sola (10% hosting, domini/DNS, MailFort; 20% il resto)",
       "Senza numero documento la vendita resta «da confermare» finché non compare in un report QODNET; con il numero entra nel saldo da fatturare",
       "Vista Servizi: i servizi si rinnovano da soli, qui si controlla solo che ogni periodo sia coperto da una provvigione (Coperto / In scadenza / Scoperto). Annullato e Sostituito tolgono il servizio dal controllo",
-      "Vista Provvigioni: saldo da fatturare (diviso tra clienti che hanno pagato e no), voci da confermare, già fatturate. Scegli le voci e «Fattura a QODNET» crea una sola riga Timesheet su QODNET SRL, poi la proforma come sempre; la fatturazione si può annullare finché non è in proforma",
+      "Vista Provvigioni: saldo da fatturare (diviso tra clienti che hanno pagato e no), voci da confermare, già fatturate",
       "Tolti rinnovi manuali, stati Scaduto/Rinnovato e le email di scadenza QODNET, che non servono per servizi a rinnovo automatico",
       "Scheda cliente: servizi QODNET con la copertura e le attività una tantum",
       "Importato il report provvigioni: 9 documenti, 34 voci, € 1.677,86"
