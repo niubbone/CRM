@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.36.1';
+export const VERSION = '4.36.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.36.2",
+    date: "17/09/2026",
+    type: "fix",
+    changes: [
+      "Niente più righe doppie in tutto il CRM: se si preme due volte lo stesso pulsante mentre il server sta ancora lavorando, la seconda richiesta non parte e aspetta la prima",
+      "Sul server, una creazione identica ripetuta entro 4 minuti (nuovo cliente, canone, firma, pacchetto, proforma, fattura, promemoria, vendita QODNET, email proforma) non viene rieseguita: si riceve la risposta della prima volta. Protegge anche da Apps Script, che a volte esegue due volte la stessa richiesta da solo",
+      "Modifiche, cancellazioni e interruttori restano sempre eseguiti: gli ID delle righe vengono riusati, quindi la stessa cancellazione può servire davvero due volte"
+    ]
+  },
   {
     version: "4.36.1",
     date: "17/09/2026",

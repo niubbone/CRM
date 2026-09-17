@@ -285,6 +285,26 @@
         }
     }
 
+    // Due clic sullo stesso pulsante mentre il server ci pensa (30 s non sono
+    // rari) mandavano due scritture identiche, e nascevano righe doppie. Qui la
+    // seconda richiesta identica, se la prima è ancora in volo, non parte: si
+    // aggancia a quella. Il resto lo para il backend (scritturaUnaVoltaSola_).
+    const _scrittureInVolo = new Map();
+
+    function _chiaveScrittura(risorsa) {
+        try {
+            const url = (typeof risorsa === 'string' || risorsa instanceof URL)
+                ? String(risorsa) : (risorsa && risorsa.url);
+            if (!url) return null;
+            const u = new URL(url, location.href);
+            ['_t', 'nc'].forEach(p => u.searchParams.delete(p));
+            u.searchParams.sort();
+            return u.pathname + '?' + u.searchParams.toString();
+        } catch (e) {
+            return null;
+        }
+    }
+
     // Cronometro: ogni chiamata in console, le ultime 300 in localStorage.
     // crmTempi() dalla console stampa il riepilogo per action.
     function _registraTempo(action, ms, esito) {
@@ -393,6 +413,13 @@
         const scrittura = _scrittura(action);
         if (scrittura) _marcaScrittura();
 
+        // Scrittura identica già in volo: si riusa quella, senza rimandarla
+        const chiaveDoppione = (backend && scrittura) ? _chiaveScrittura(args[0]) : null;
+        if (chiaveDoppione && _scrittureInVolo.has(chiaveDoppione)) {
+            console.warn('⇢ ' + action + ': già in corso, non la ripeto');
+            return _scrittureInVolo.get(chiaveDoppione).then(r => r.clone());
+        }
+
         // Passa { noSpinner: true } come secondo argomento per chiamate silenziose
         let spinner = true;
         const opts = args[1];
@@ -404,6 +431,12 @@
 
         let promessa = backend ? _chiamaBackend(args, action) : _fetch.apply(window, args);
         if (scrittura) promessa = promessa.finally(_marcaScrittura);
+        if (chiaveDoppione) {
+            // In volo finché non si sa com'è andata; la risposta si consegna
+            // clonata, così anche un secondo chiamante può leggerne il corpo.
+            _scrittureInVolo.set(chiaveDoppione, promessa);
+            promessa = promessa.finally(() => _scrittureInVolo.delete(chiaveDoppione)).then(r => r.clone());
+        }
         if (!spinner) return promessa;
         window._showLoading();
         return promessa.finally(() => window._hideLoading());
