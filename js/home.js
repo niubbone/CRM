@@ -445,7 +445,7 @@ function renderTodoSezione(t) {
 
         <div class="home-todo-form">
             <input type="text" id="todo-nuovo-testo" placeholder="Cosa c'è da fare?"
-                   onkeydown="if(event.key==='Enter') aggiungiTodo()">
+                   onkeydown="if(event.key==='Enter') { event.preventDefault(); aggiungiTodo(); }">
             <div class="home-todo-form-mini">
                 <select id="todo-nuova-priorita" title="Priorità">
                     <option value="Media">Media</option>
@@ -453,7 +453,7 @@ function renderTodoSezione(t) {
                     <option value="Bassa">Bassa</option>
                 </select>
                 <input type="date" id="todo-nuova-scadenza" title="Scadenza (facoltativa)">
-                <button class="home-btn" onclick="aggiungiTodo()"><i class="fas fa-plus"></i> Aggiungi</button>
+                <button class="home-btn" id="todo-aggiungi-btn" onclick="aggiungiTodo()"><i class="fas fa-plus"></i> Aggiungi</button>
             </div>
         </div>
 
@@ -755,6 +755,10 @@ async function salvaModificaTodo(idTodo) {
     }
 }
 
+// Il server può metterci decine di secondi: finché non ha risposto il pulsante
+// resta bloccato, altrimenti si preme di nuovo e nascono tre promemoria uguali.
+let _todoInCorso = false;
+
 async function aggiungiTodo() {
     const inputTesto = document.getElementById('todo-nuovo-testo');
     const testo = (inputTesto?.value || '').trim();
@@ -763,12 +767,19 @@ async function aggiungiTodo() {
         inputTesto?.focus();
         return;
     }
+    if (_todoInCorso) return;
 
     const priorita = document.getElementById('todo-nuova-priorita')?.value || 'Media';
     const scadenza = document.getElementById('todo-nuova-scadenza')?.value || '';
 
     let url = `${_homeApiUrl()}?action=insert_todo&testo=${encodeURIComponent(testo)}&priorita=${encodeURIComponent(priorita)}`;
     if (scadenza) url += `&data_scadenza=${encodeURIComponent(scadenza)}`;
+
+    const btn = document.getElementById('todo-aggiungi-btn');
+    const testoBtn = btn ? btn.innerHTML : '';
+    _todoInCorso = true;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aggiungo...'; }
+    if (inputTesto) inputTesto.disabled = true;
 
     try {
         const res = await fetch(url);
@@ -777,11 +788,18 @@ async function aggiungiTodo() {
 
         inputTesto.value = '';
         document.getElementById('todo-nuova-scadenza').value = '';
+        if (result.duplicato) alert('Questo promemoria era già stato aggiunto poco fa: non l\'ho ripetuto.');
         await loadHome();
         document.getElementById('todo-nuovo-testo')?.focus();
 
     } catch (e) {
-        alert('Errore aggiunta TODO: ' + e.message);
+        alert('Errore aggiunta TODO: ' + e.message + '\n\nControlla l\'elenco prima di riprovare: il promemoria potrebbe essere stato comunque aggiunto.');
+    } finally {
+        _todoInCorso = false;
+        const b = document.getElementById('todo-aggiungi-btn');
+        if (b) { b.disabled = false; b.innerHTML = testoBtn || '<i class="fas fa-plus"></i> Aggiungi'; }
+        const i = document.getElementById('todo-nuovo-testo');
+        if (i) i.disabled = false;
     }
 }
 

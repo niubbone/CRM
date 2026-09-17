@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.36.0';
+export const VERSION = '4.36.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.36.1",
+    date: "17/09/2026",
+    type: "fix",
+    changes: [
+      "Promemoria doppi: premendo «Aggiungi» il pulsante si blocca finché il server non risponde (può metterci decine di secondi) e il backend ignora un promemoria con lo stesso testo inviato negli ultimi 5 minuti. Prima ogni pressione ne creava uno nuovo",
+      "Se la risposta si perde per strada, l'avviso dice di controllare l'elenco prima di riprovare: il promemoria potrebbe essere stato comunque aggiunto"
+    ]
+  },
   {
     version: "4.36.0",
     date: "17/09/2026",
