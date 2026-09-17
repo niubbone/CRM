@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.35.0';
+export const VERSION = '4.36.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.36.0",
+    date: "17/09/2026",
+    type: "feature",
+    changes: [
+      "Fattura a QODNET: nella finestra compaiono le voci scelte, togli la spunta a quelle che verranno pagate più avanti e restano da fatturare",
+      "L'imponibile della fattura si propone uguale alla somma delle voci ma si può modificare: la differenza viene mostrata e resta scritta nelle note della fattura",
+      "Fatture già registrate: sotto «Voci» ogni provvigione ha «Togli» per rimetterla tra quelle da fatturare senza toccare la fattura"
+    ]
+  },
   {
     version: "4.35.0",
     date: "17/09/2026",

@@ -1310,8 +1310,13 @@
             <button class="modal-close-vendite" onclick="closeQodnetFatturaModal()">&times;</button>
         </div>
         <form onsubmit="submitQodnetFattura(event)">
-            <div class="info-banner" id="qodnetFatturaRiepilogo" style="margin-bottom:12px;"></div>
+            <div class="qodnet-fattura-voci" id="qodnetFatturaVoci"></div>
+            <div class="info-banner" id="qodnetFatturaRiepilogo" style="margin:12px 0;"></div>
             <div class="qodnet-griglia-doc">
+                <div class="form-group">
+                    <label>Imponibile fatturato (€) *</label>
+                    <input type="number" id="qodnetFatturaImponibile" step="0.01" min="0.01" required oninput="aggiornaTotaliFatturaQodnet(true)">
+                </div>
                 <div class="form-group">
                     <label>N. fattura *</label>
                     <input type="text" id="qodnetFatturaNumero" required placeholder="es. 18/A-2026" autocomplete="off">
@@ -1322,7 +1327,8 @@
                 </div>
             </div>
             <p style="font-size:12px;color:#6c757d;margin:0 0 12px;">
-                Viene registrata nel tab Fatture intestata a QODNET SRL (IVA 22%, senza ritenuta) e le voci diventano «fatturate».
+                Togli la spunta alle voci che QODNET pagherà più avanti: restano da fatturare. L'imponibile si propone uguale alla somma delle voci ma puoi cambiarlo.
+                Viene registrata nel tab Fatture intestata a QODNET SRL (IVA 22%, senza ritenuta) e le voci spuntate diventano «fatturate».
                 Se il numero è già nel tab Fatture, le voci vengono collegate a quella fattura.
             </p>
             <button type="submit" class="btn-primary" id="qodnetFatturaSubmitBtn">Registra fattura</button>

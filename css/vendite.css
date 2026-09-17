@@ -679,3 +679,10 @@
 .qodnet-riscontro-azione input { padding: 7px 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; }
 .qodnet-riscontro-nome { min-width: 200px; flex: 1; font-size: 14px; }
 .qodnet-voce small.qodnet-arancio, .qodnet-voce small.qodnet-rosso { display: block; }
+
+/* QODNET — finestra fattura */
+.qodnet-fattura-voci { max-height: 260px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; padding: 4px 10px; }
+.qodnet-fattura-doc { font-size: 12px; font-weight: 700; color: #495057; padding: 8px 0 2px; }
+.qodnet-fattura-voce { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 4px 0; border-top: 1px solid #f1f3f5; cursor: pointer; }
+.qodnet-fattura-voce span { flex: 1; }
+.qodnet-fattura-voce input { width: 16px; height: 16px; }

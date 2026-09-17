@@ -2516,6 +2516,13 @@ function renderQodnetProvvigioni() {
                     </div>
                     <button class="btn-small" onclick="annullaFatturazioneQodnet('${escQodnet(rif)}')"><i class="fas fa-rotate-left"></i> Annulla</button>
                 </div>
+                <details class="qodnet-dettagli"><summary>Voci</summary>
+                    ${rr.map(r => `<div class="qodnet-voce">
+                        <div class="qodnet-voce-desc">${escQodnet(r.documento)} · ${escQodnet(r.nomeCliente)} — ${escQodnet(r.prodotto)}</div>
+                        <div class="qodnet-voce-importo">${euroQodnet(r.provvigione)}</div>
+                        <button class="btn-small" title="Torna da fatturare: verrà pagata più avanti" onclick="togliDaFatturaQodnet('${escQodnet(rif)}', '${r.id}')">Togli</button>
+                    </div>`).join('')}
+                </details>
             </div>`;
         });
         html += `</details>`;
@@ -2554,19 +2561,23 @@ function aggiornaSelezioneQodnet() {
     if (btn) btn.disabled = !scelte.length;
 }
 
-/** Apre la finestra per numero e data della fattura diretta a QODNET */
+/** Apre la finestra della fattura diretta a QODNET con le voci scelte */
 function fatturaQodnetSelezionate() {
     const scelte = qodnetDati.righe.filter(r => qodnetSelezione.has(r.id));
     if (!scelte.length) return;
-    const tot = Math.round(scelte.reduce((s, r) => s + (r.provvigione || 0), 0) * 100) / 100;
-    const iva = Math.round(tot * 22) / 100;
-    const nonPagate = scelte.filter(r => r.statoDocumento !== 'Pagato').length;
-    const docs = [...new Set(scelte.map(r => r.documento))];
 
-    document.getElementById('qodnetFatturaRiepilogo').innerHTML =
-        `<strong>${scelte.length} voci</strong> di ${docs.length} documenti<br>` +
-        `Imponibile <strong>${euroQodnet(tot)}</strong> + IVA 22% ${euroQodnet(iva)} = <strong>${euroQodnet(Math.round((tot + iva) * 100) / 100)}</strong>` +
-        (nonPagate ? `<br><span class="qodnet-arancio">${nonPagate} voci sono di documenti che il cliente non ha ancora pagato</span>` : '');
+    document.getElementById('qodnetFatturaVoci').innerHTML = righeQodnetPerDocumento(scelte).map(d => `
+        <div class="qodnet-fattura-doc">${escQodnet(d.documento)} · ${escQodnet(d.nomeCliente)} ${d.stato === 'Pagato' ? '' : '<span class="qodnet-arancio">(non pagato)</span>'}</div>
+        ${d.righe.map(r => `
+        <label class="qodnet-fattura-voce">
+            <input type="checkbox" class="qodnet-fattura-cb" value="${r.id}" data-provvigione="${r.provvigione || 0}" checked onchange="aggiornaTotaliFatturaQodnet(false)">
+            <span>${r.quantita > 1 ? r.quantita + ' x ' : ''}${escQodnet(r.prodotto)}${r.dettaglio ? ' — ' + escQodnet(r.dettaglio) : ''}</span>
+            <strong>${euroQodnet(r.provvigione)}</strong>
+        </label>`).join('')}`).join('');
+
+    const imp = document.getElementById('qodnetFatturaImponibile');
+    delete imp.dataset.manuale;
+    aggiornaTotaliFatturaQodnet(false);
     document.getElementById('qodnetFatturaData').value = isoQodnet(new Date());
     const numero = document.getElementById('qodnetFatturaNumero');
     numero.value = '';
@@ -2591,34 +2602,63 @@ async function proponiNumeroFatturaQodnet(input) {
     } catch (e) { /* il numero si scrive a mano */ }
 }
 
+/** Somma delle voci spuntate; l'imponibile la segue finché non lo modifichi a mano */
+function aggiornaTotaliFatturaQodnet(daImponibile) {
+    const imp = document.getElementById('qodnetFatturaImponibile');
+    const cb = [...document.querySelectorAll('.qodnet-fattura-cb:checked')];
+    const somma = Math.round(cb.reduce((s, c) => s + (parseFloat(c.dataset.provvigione) || 0), 0) * 100) / 100;
+    if (daImponibile) imp.dataset.manuale = imp.value === '' ? '' : '1';
+    if (!imp.dataset.manuale) imp.value = somma ? somma.toFixed(2) : '';
+
+    const fatturato = parseFloat(imp.value) || 0;
+    const iva = Math.round(fatturato * 22) / 100;
+    const diff = Math.round((fatturato - somma) * 100) / 100;
+    document.getElementById('qodnetFatturaRiepilogo').innerHTML =
+        `<strong>${cb.length} voci</strong> per ${euroQodnet(somma)} di provvigioni<br>` +
+        `Imponibile <strong>${euroQodnet(fatturato)}</strong> + IVA 22% ${euroQodnet(iva)} = <strong>${euroQodnet(Math.round((fatturato + iva) * 100) / 100)}</strong>` +
+        (Math.abs(diff) >= 0.01 ? `<br><span class="qodnet-arancio">Differenza rispetto alle voci: ${diff > 0 ? '+' : ''}${euroQodnet(diff)}</span>` : '');
+    document.getElementById('qodnetFatturaSubmitBtn').disabled = !cb.length || fatturato <= 0;
+}
+
 function closeQodnetFatturaModal() {
     document.getElementById('qodnetFatturaModal')?.classList.remove('active');
 }
 
 async function submitQodnetFattura(e) {
     e.preventDefault();
-    const scelte = qodnetDati.righe.filter(r => qodnetSelezione.has(r.id));
+    const ids = [...document.querySelectorAll('.qodnet-fattura-cb:checked')].map(c => c.value);
     const nFattura = document.getElementById('qodnetFatturaNumero').value.trim();
     const data = document.getElementById('qodnetFatturaData').value;
-    if (!scelte.length || !nFattura || !data) return;
+    const imponibile = document.getElementById('qodnetFatturaImponibile').value;
+    if (!ids.length || !nFattura || !data || !(parseFloat(imponibile) > 0)) return;
 
     const btn = document.getElementById('qodnetFatturaSubmitBtn');
     btn.disabled = true; btn.textContent = 'Registrazione...';
     try {
         const result = await chiamaQodnet('fattura_provvigioni_qodnet', {
-            ids: scelte.map(r => r.id).join(','), n_fattura: nFattura, data_fattura: data
+            ids: ids.join(','), n_fattura: nFattura, data_fattura: data, imponibile
         });
         qodnetSelezione.clear();
         closeQodnetFatturaModal();
         window.markTabDirty && window.markTabDirty('fatture');
         alert(result.fatturaEsistente
             ? `✅ ${result.voci} voci collegate alla fattura ${nFattura} già presente nel tab Fatture.` + (result.avviso ? `\n\n⚠️ ${result.avviso}` : '')
-            : `✅ Fattura ${nFattura} registrata: imponibile ${euroQodnet(result.totale)} a QODNET SRL.`);
+            : `✅ Fattura ${nFattura} registrata: imponibile ${euroQodnet(result.imponibile)} a QODNET SRL (${result.voci} voci).`);
         dopoScritturaQodnet();
     } catch (error) {
         alert('❌ Errore: ' + error.message);
     } finally {
         btn.disabled = false; btn.textContent = 'Registra fattura';
+    }
+}
+
+async function togliDaFatturaQodnet(rif, id) {
+    if (!confirm(`Togliere questa voce dalla fattura ${rif}?\n\nTorna tra quelle da fatturare. L'importo della fattura nel tab Fatture non cambia.`)) return;
+    try {
+        await chiamaQodnet('annulla_fatturazione_qodnet', { rif, ids: id });
+        dopoScritturaQodnet();
+    } catch (error) {
+        alert('❌ Errore: ' + error.message);
     }
 }
 
@@ -2820,6 +2860,8 @@ if (typeof window !== 'undefined') {
     window.fatturaQodnetSelezionate = fatturaQodnetSelezionate;
     window.closeQodnetFatturaModal = closeQodnetFatturaModal;
     window.submitQodnetFattura = submitQodnetFattura;
+    window.aggiornaTotaliFatturaQodnet = aggiornaTotaliFatturaQodnet;
+    window.togliDaFatturaQodnet = togliDaFatturaQodnet;
     window.annullaFatturazioneQodnet = annullaFatturazioneQodnet;
     window.openQodnetRigaModal = openQodnetRigaModal;
     window.openQodnetDocumentoModal = openQodnetDocumentoModal;
