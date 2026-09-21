@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.36.2';
+export const VERSION = '4.36.3';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.36.3",
+    date: "21/09/2026",
+    type: "fix",
+    changes: [
+      "QODNET: la fattura delle provvigioni ora applica la ritenuta d'acconto 20% sull'imponibile (prima veniva registrata senza). Il riepilogo nella finestra mostra ritenuta e netto a pagare"
+    ]
+  },
   {
     version: "4.36.2",
     date: "17/09/2026",

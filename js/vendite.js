@@ -2612,10 +2612,12 @@ function aggiornaTotaliFatturaQodnet(daImponibile) {
 
     const fatturato = parseFloat(imp.value) || 0;
     const iva = Math.round(fatturato * 22) / 100;
+    const ritenuta = Math.round(fatturato * 20) / 100;
+    const netto = Math.round((fatturato + iva - ritenuta) * 100) / 100;
     const diff = Math.round((fatturato - somma) * 100) / 100;
     document.getElementById('qodnetFatturaRiepilogo').innerHTML =
         `<strong>${cb.length} voci</strong> per ${euroQodnet(somma)} di provvigioni<br>` +
-        `Imponibile <strong>${euroQodnet(fatturato)}</strong> + IVA 22% ${euroQodnet(iva)} = <strong>${euroQodnet(Math.round((fatturato + iva) * 100) / 100)}</strong>` +
+        `Imponibile <strong>${euroQodnet(fatturato)}</strong> + IVA 22% ${euroQodnet(iva)} − ritenuta 20% ${euroQodnet(ritenuta)} = <strong>${euroQodnet(netto)}</strong> netto a pagare` +
         (Math.abs(diff) >= 0.01 ? `<br><span class="qodnet-arancio">Differenza rispetto alle voci: ${diff > 0 ? '+' : ''}${euroQodnet(diff)}</span>` : '');
     document.getElementById('qodnetFatturaSubmitBtn').disabled = !cb.length || fatturato <= 0;
 }
