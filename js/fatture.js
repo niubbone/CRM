@@ -61,7 +61,9 @@ function buildFatturaCard(f) {
   const badgeStyle = isPagata
     ? 'background:#28a745;color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;'
     : 'background:#fd7e14;color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;';
-  const badgeText   = isPagata ? '✓ Pagata' : '⏳ Da pagare';
+  const badgeText   = isNC
+    ? (isPagata ? '✓ Regolata' : '⏳ Da regolare')
+    : (isPagata ? '✓ Pagata' : '⏳ Da pagare');
   const badgeAction = isPagata
     ? `annullaPagamento('${f.nFattura.replace(/'/g, "\\'")}')`
     : `openPagamentoModal('${f.nFattura.replace(/'/g, "\\'")}')`;
@@ -78,13 +80,14 @@ function buildFatturaCard(f) {
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:12px;color:#6c757d;">${f.dataFattura || '—'}</div>
           <div style="font-weight:700;font-size:18px;color:${isNC ? '#dc3545' : '#212529'};">€ ${formatFattureNum(f.totale)}</div>
-          ${f.ritenuta ? `<div style="font-size:11px;color:#6c757d;">di cui rit. acconto -€ ${formatFattureNum(f.ritenuta)}</div>` : ''}
+          ${f.ritenuta ? `<div style="font-size:11px;color:#6c757d;">di cui rit. acconto ${f.ritenuta < 0 ? '+' : '-'}€ ${formatFattureNum(Math.abs(f.ritenuta))}</div>` : ''}
         </div>
       </div>
       <div style="padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
         <div><i class="fas fa-user" style="font-size:13px;color:#6c757d;margin-right:4px;"></i><span style="font-weight:500;">${f.nomeCliente || '—'}</span></div>
-        ${isPagata && f.dataPagamento ? `<div style="font-size:12px;color:#28a745;margin-left:8px;">Pagata il ${f.dataPagamento}</div>` : ''}
+        ${isPagata && f.dataPagamento ? `<div style="font-size:12px;color:#28a745;margin-left:8px;">${isNC ? 'Regolata' : 'Pagata'} il ${f.dataPagamento}</div>` : ''}
       </div>
+      ${f.note ? `<div style="padding:0 16px 10px;font-size:12px;color:#6c757d;">${escapeFattureHtml(f.note)}</div>` : ''}
     </div>`;
 }
 
@@ -101,6 +104,7 @@ function renderFattureTotali(totali) {
         <div style="background:#e8f5e9;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px;">
           <div style="font-size:16px;font-weight:700;color:#28a745;">€ ${formatFattureNum(totali.totale || 0)}</div>
           <div style="font-size:12px;color:#6c757d;">Totale fatturato</div>
+          <div style="font-size:10px;color:#6c757d;">note di credito sottratte</div>
         </div>
         <div style="background:#fff3cd;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px;">
           <div style="font-size:16px;font-weight:700;color:#fd7e14;">€ ${formatFattureNum(totali.daPagare || 0)}</div>
@@ -166,8 +170,19 @@ function openNuovaFatturaModal() {
   document.getElementById('nf-imponibile').value = '';
   document.getElementById('nf-iva-display').textContent = '€ 0,00';
   document.getElementById('nf-totale-display').textContent = '€ 0,00';
-  document.getElementById('nf-descrizione').value = '';
   document.getElementById('nf-note').value = '';
+  const nc = document.getElementById('nf-nota-credito');
+  if (nc) nc.checked = false;
+  const rif = document.getElementById('nf-rif-fattura');
+  if (rif) rif.value = '';
+  const rifList = document.getElementById('nf-rif-list');
+  if (rifList) {
+    rifList.innerHTML = allFattureData
+      .filter(f => parseFloat(f.totale) > 0)
+      .map(f => `<option value="${escapeFattureHtml(f.nFattura)}">${escapeFattureHtml(f.nomeCliente)} · € ${formatFattureNum(f.totale)}</option>`)
+      .join('');
+  }
+  aggiornaModoNotaCredito();
   const ritenuta = document.getElementById('nf-ritenuta');
   if (ritenuta) ritenuta.checked = false;
   const ritRow = document.getElementById('nf-ritenuta-row');
@@ -210,12 +225,51 @@ function closeNuovaFatturaModal() {
   if (modal) modal.style.display = 'none';
 }
 
+/** Nota di credito: cambia titolo, pulsante e nasconde il collegamento a timesheet/canoni */
+function aggiornaModoNotaCredito() {
+  const nc = document.getElementById('nf-nota-credito')?.checked || false;
+  const rifRow = document.getElementById('nf-rif-row');
+  if (rifRow) rifRow.style.display = nc ? 'block' : 'none';
+  const voci = document.getElementById('nf-voci-section');
+  if (voci) voci.style.display = nc ? 'none' : 'block';
+  const titolo = document.getElementById('nf-titolo');
+  if (titolo) titolo.innerHTML = nc
+    ? '<i class="fas fa-file-pen"></i> Nuova Nota di Credito'
+    : '<i class="fas fa-plus"></i> Nuova Fattura Diretta';
+  const btn = document.getElementById('nf-submit-btn');
+  if (btn) btn.innerHTML = '<i class="fas fa-floppy-disk"></i> ' + (nc ? 'Salva Nota di Credito' : 'Salva Fattura');
+  const info = document.getElementById('nf-rif-info');
+  if (info && !nc) info.textContent = '';
+  aggiornaCalcoloIVA();
+}
+
+/** Scelta la fattura da stornare, propone cliente, imponibile e ritenuta di quella */
+function precompilaDaFatturaStornata() {
+  const rif  = document.getElementById('nf-rif-fattura')?.value?.trim();
+  const info = document.getElementById('nf-rif-info');
+  const f = allFattureData.find(x => x.nFattura === rif && parseFloat(x.totale) > 0);
+  if (!f) {
+    if (info) info.textContent = rif ? 'Fattura non trovata nell\'elenco caricato: controlla il numero (o togli il filtro anno)' : '';
+    return;
+  }
+  document.getElementById('nf-cliente').value = f.nomeCliente || '';
+  if (f.imponibile > 0) document.getElementById('nf-imponibile').value = f.imponibile.toFixed(2);
+  const rit = document.getElementById('nf-ritenuta');
+  if (rit) rit.checked = f.ritenuta > 0;
+  if (info) info.textContent = f.imponibile > 0
+    ? `${f.nomeCliente} · ${f.dataFattura} · totale € ${formatFattureNum(f.totale)} — importi proposti per lo storno totale, modificabili`
+    : `${f.nomeCliente} · ${f.dataFattura} · totale € ${formatFattureNum(f.totale)} — fattura storica senza imponibile: scrivilo a mano`;
+  aggiornaCalcoloIVA();
+}
+
 function aggiornaCalcoloIVA() {
-  const imp    = parseFloat(document.getElementById('nf-imponibile')?.value) || 0;
+  const segno  = document.getElementById('nf-nota-credito')?.checked ? -1 : 1;
+  const imp    = segno * (parseFloat(document.getElementById('nf-imponibile')?.value) || 0);
   const iva    = Math.round(imp * 0.22 * 100) / 100;
   const tot    = Math.round((imp + iva) * 100) / 100;
   const hasRA  = document.getElementById('nf-ritenuta')?.checked;
   const ra     = hasRA ? Math.round(imp * 0.20 * 100) / 100 : 0;
+  // (con la nota di credito tutto è negativo: la ritenuta si restituisce)
   const netto  = Math.round((tot - ra) * 100) / 100;
 
   if (document.getElementById('nf-iva-display'))
@@ -226,7 +280,7 @@ function aggiornaCalcoloIVA() {
   const ritRow = document.getElementById('nf-ritenuta-row');
   if (ritRow) ritRow.style.display = hasRA ? 'flex' : 'none';
   if (document.getElementById('nf-ra-display'))
-    document.getElementById('nf-ra-display').textContent = '- € ' + formatFattureNum(ra);
+    document.getElementById('nf-ra-display').textContent = (ra < 0 ? '+ € ' : '- € ') + formatFattureNum(Math.abs(ra));
   if (document.getElementById('nf-netto-display'))
     document.getElementById('nf-netto-display').textContent = '€ ' + formatFattureNum(netto);
 }
@@ -237,13 +291,16 @@ async function saveNuovaFattura(event) {
   const dataFattura   = document.getElementById('nf-data')?.value?.trim();
   const cliente       = document.getElementById('nf-cliente')?.value?.trim();
   const imponibile    = document.getElementById('nf-imponibile')?.value?.trim();
-  const descrizione   = document.getElementById('nf-descrizione')?.value?.trim();
   const note          = document.getElementById('nf-note')?.value?.trim();
+  const notaCredito   = document.getElementById('nf-nota-credito')?.checked || false;
+  const rifFattura    = notaCredito ? (document.getElementById('nf-rif-fattura')?.value?.trim() || '') : '';
   const applicaRit    = document.getElementById('nf-ritenuta')?.checked || false;
   if (!nFattura || !cliente || !imponibile) {
     alert('⚠️ Compila i campi obbligatori: Numero fattura, Cliente, Imponibile');
     return;
   }
+  if (notaCredito && !rifFattura &&
+      !confirm('Nota di credito senza fattura stornata: registrarla lo stesso?')) return;
   // Raccogli voci selezionate
   const allItems = [..._nfVociData.timesheet, ..._nfVociData.canoni];
   const tsIds = [], canIds = [];
@@ -263,17 +320,21 @@ async function saveNuovaFattura(event) {
       data_fattura: dataFattura || '',
       cliente,
       imponibile,
-      descrizione: descrizione || '',
       note: note || '',
       applica_ritenuta: applicaRit ? 'true' : 'false'
     });
-    if (tsIds.length)  params.append('timesheet_ids', tsIds.join(','));
-    if (canIds.length) params.append('canoni_ids', canIds.join(','));
+    if (notaCredito) {
+      params.append('nota_credito', 'true');
+      if (rifFattura) params.append('rif_fattura', rifFattura);
+    } else {
+      if (tsIds.length)  params.append('timesheet_ids', tsIds.join(','));
+      if (canIds.length) params.append('canoni_ids', canIds.join(','));
+    }
     const response = await fetch(`${API_URL}?${params.toString()}`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'Errore salvataggio');
     window.markTabDirty && window.markTabDirty('fatture');
-    let msg = '✅ Fattura ' + nFattura + ' inserita con successo!';
+    let msg = '✅ ' + (notaCredito ? 'Nota di credito ' : 'Fattura ') + nFattura + ' inserita con successo!';
     if (result.timesheetMarcati) msg += '\n' + result.timesheetMarcati + ' timesheet marcati.';
     if (result.canoniMarcati) msg += '\n' + result.canoniMarcati + ' canoni marcati.';
     alert(msg);
@@ -282,7 +343,8 @@ async function saveNuovaFattura(event) {
   } catch(error) {
     alert('❌ Errore: ' + error.message);
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Salva Fattura';
+    btn.disabled = false;
+    aggiornaModoNotaCredito();
   }
 }
 
@@ -350,6 +412,11 @@ async function annullaPagamento(nFattura) {
   }
 }
 
+function escapeFattureHtml(t) {
+  return (t == null ? '' : t.toString())
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function formatFattureNum(val) {
   const n = parseFloat(val) || 0;
   return n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -392,6 +459,8 @@ window.resetFattureFilters     = resetFattureFilters;
 window.openNuovaFatturaModal   = openNuovaFatturaModal;
 window.closeNuovaFatturaModal  = closeNuovaFatturaModal;
 window.aggiornaCalcoloIVA      = aggiornaCalcoloIVA;
+window.aggiornaModoNotaCredito = aggiornaModoNotaCredito;
+window.precompilaDaFatturaStornata = precompilaDaFatturaStornata;
 window.saveNuovaFattura        = saveNuovaFattura;
 window.openPagamentoModal      = openPagamentoModal;
 window.closePagamentoModal     = closePagamentoModal;

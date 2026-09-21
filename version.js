@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.36.3';
+export const VERSION = '4.37.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.37.0",
+    date: "21/09/2026",
+    type: "feature",
+    changes: [
+      "Fatture: si possono inserire le NOTE DI CREDITO dalla finestra Nuova Fattura Diretta (casella «Nota di credito»). Scegliendo la fattura stornata si precompilano cliente, imponibile e ritenuta; imponibile, IVA, ritenuta e totale si registrano col segno meno e vengono sottratti dai totali",
+      "Nelle note di credito il pulsante di stato dice «Da regolare / Regolata»; nel pannello cliente compaiono come «Nota di credito»",
+      "Campo «Descrizione / Causale» tolto: il testo veniva scartato. Ora c'è solo Note, mostrate anche nella scheda della fattura. La colonna Descrizione del foglio è svuotata (le 7 scritte «Nota di credito» spostate nelle Note) e rinominata «(non usata)»"
+    ]
+  },
   {
     version: "4.36.3",
     date: "21/09/2026",

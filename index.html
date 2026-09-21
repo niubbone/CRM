@@ -833,8 +833,22 @@
   <div id="nuova-fattura-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:12px;padding:24px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="margin:0;"><i class="fas fa-plus"></i> Nuova Fattura Diretta</h3>
+        <h3 style="margin:0;" id="nf-titolo"><i class="fas fa-plus"></i> Nuova Fattura Diretta</h3>
         <button onclick="closeNuovaFatturaModal()" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
+      </div>
+      <div style="margin-bottom:14px;background:#fdecea;border-radius:6px;padding:10px;">
+        <label style="font-size:13px;font-weight:600;display:block;cursor:pointer;">
+          <input type="checkbox" id="nf-nota-credito" onchange="aggiornaModoNotaCredito()" style="margin-right:6px;">
+          Nota di credito (storno)
+        </label>
+        <div id="nf-rif-row" style="display:none;margin-top:8px;">
+          <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px;">Fattura stornata (compila cliente e importi)</label>
+          <input id="nf-rif-fattura" type="text" list="nf-rif-list" placeholder="es. 26/A-2026"
+            oninput="precompilaDaFatturaStornata()"
+            style="width:100%;padding:9px 12px;border:1px solid #ced4da;border-radius:6px;font-size:14px;box-sizing:border-box;" />
+          <datalist id="nf-rif-list"></datalist>
+          <div id="nf-rif-info" style="font-size:12px;color:#6c757d;margin-top:4px;"></div>
+        </div>
       </div>
       <div style="margin-bottom:14px;">
         <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px;">Numero Fattura *</label>
@@ -883,13 +897,9 @@
     <span>Netto da pagare: <strong id="nf-netto-display" style="color:#1976D2;">€ 0,00</strong></span>
   </div>
 </div>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px;">Descrizione / Causale</label>
-        <input id="nf-descrizione" type="text" placeholder="es. Consulenza informatica" style="width:100%;padding:9px 12px;border:1px solid #ced4da;border-radius:6px;font-size:14px;box-sizing:border-box;" />
-      </div>
       <div style="margin-bottom:20px;">
         <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px;">Note</label>
-        <textarea id="nf-note" rows="2" style="width:100%;padding:9px 12px;border:1px solid #ced4da;border-radius:6px;font-size:14px;box-sizing:border-box;resize:vertical;"></textarea>
+        <textarea id="nf-note" rows="2" placeholder="es. Consulenza informatica" style="width:100%;padding:9px 12px;border:1px solid #ced4da;border-radius:6px;font-size:14px;box-sizing:border-box;resize:vertical;"></textarea>
       </div>
       <div style="display:flex;gap:10px;">
         <button onclick="closeNuovaFatturaModal()" style="flex:1;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;">Annulla</button>
