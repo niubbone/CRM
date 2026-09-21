@@ -23,7 +23,7 @@ async function loadFattureList() {
     allFattureData = result.data || [];
     renderFattureList(allFattureData);
     renderFattureTotali(result.totali || {});
-    populateFattureAnnoFilter();
+    populateFattureAnnoFilter(result.anni);
     console.log('✅ Fatture caricate:', allFattureData.length);
   } catch (error) {
     container.innerHTML = buildFattureErrorHTML('Errore caricamento', error.message, 'loadFattureList()');
@@ -120,10 +120,12 @@ function renderFattureTotali(totali) {
     </div>`;
 }
 
-function populateFattureAnnoFilter() {
+function populateFattureAnnoFilter(anniServer) {
   const select = document.getElementById('fatture-filter-anno');
-  if (!select || !allFattureData.length) return;
-  const anniSet = new Set();
+  if (!select) return;
+  // Il server manda tutti gli anni del foglio (anche con il filtro anno attivo);
+  // in mancanza si ricavano dalle fatture caricate
+  const anniSet = new Set((anniServer || []).map(String));
   allFattureData.forEach(f => {
     if (f.dataFattura && f.dataFattura.includes('/')) {
       const anno = f.dataFattura.split('/')[2];

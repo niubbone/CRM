@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.37.0';
+export const VERSION = '4.37.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.37.1",
+    date: "21/09/2026",
+    type: "fix",
+    changes: [
+      "Fatture: il menu Anno mostra tutti gli anni presenti (2019-2026), non solo quello selezionato; il server manda l'elenco completo anche con il filtro attivo"
+    ]
+  },
   {
     version: "4.37.0",
     date: "21/09/2026",
