@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.37.1';
+export const VERSION = '4.38.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.38.0",
+    date: "22/09/2026",
+    type: "feature",
+    changes: [
+      "Fatture: nuovo pulsante Statistiche. Andamento per anno (grafico a colonne, differenza e variazione sull'anno prima; l'anno in corso confrontato con lo stesso periodo dell'anno precedente)",
+      "Confronto per mesi tra due anni a scelta: colonne affiancate e tabella con differenza, variazione e progressivo da gennaio; i mesi non ancora trascorsi restano fuori dal confronto",
+      "Valori = Totale fatturato, lo stesso del riquadro in alto, con le note di credito sottratte. Grafici disegnati senza librerie esterne (funzionano anche offline)"
+    ]
+  },
   {
     version: "4.37.1",
     date: "21/09/2026",

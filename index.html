@@ -800,6 +800,27 @@
     <div class="info-box"><p>Fatture emesse con filtri per cliente, anno e stato.</p></div>
   </div>
   <div id="fatture-totali" style="margin-bottom:16px;"></div>
+  <style>
+    #fatture-stats-panel { margin-bottom:16px; }
+    .stats-box { background:#fff;border:1px solid #e9ecef;border-radius:8px;padding:16px;margin-bottom:12px; }
+    .stats-titolo { font-weight:700;font-size:16px;color:#212529; }
+    .stats-sotto { font-size:12px;color:#6c757d; }
+    .stats-tile { background:#f8f9fa;border-radius:8px;padding:10px 16px;min-width:150px; }
+    .stats-tile-val { font-size:18px;font-weight:700;color:#212529; }
+    .stats-legenda { display:inline-flex;align-items:center;gap:6px;font-size:14px; }
+    .stats-legenda select { padding:5px 8px;border:1px solid #ced4da;border-radius:6px;font-size:14px; }
+    .stats-chip { display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle; }
+    .stats-grafico { position:relative;margin:8px 0; }
+    .stats-tooltip { display:none;position:absolute;top:0;background:#fff;border:1px solid #dee2e6;border-radius:6px;
+      padding:8px 10px;font-size:12px;color:#212529;box-shadow:0 2px 8px rgba(0,0,0,0.12);pointer-events:none;white-space:nowrap;z-index:5; }
+    .stats-tabella { width:100%;border-collapse:collapse;font-size:13px;margin-top:8px; }
+    .stats-tabella th, .stats-tabella td { padding:6px 8px;border-bottom:1px solid #f0f0f0;text-align:left; }
+    .stats-tabella th { color:#6c757d;font-weight:600;font-size:12px; }
+    .stats-tabella tfoot td { font-weight:700;border-top:2px solid #dee2e6; }
+    .stats-tabella .num { text-align:right;font-variant-numeric:tabular-nums; }
+    @media (max-width:600px) { .stats-cum, .stats-diff { display:none; } .stats-box { padding:12px; } .stats-tabella { font-size:12px; } .stats-tabella th, .stats-tabella td { padding:5px 4px; } .stats-tile { min-width:0;flex:1 1 40%; } }
+  </style>
+  <div id="fatture-stats-panel" style="display:none;"></div>
   <div style="background:#f8f9fa;border-radius:8px;padding:14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
     <div>
       <label style="font-size:12px;color:#6c757d;display:block;margin-bottom:4px;">Cliente</label>
@@ -1987,6 +2008,7 @@
 <script src="js/vendite.js"></script>
 <script src="js/qodnet-riscontro.js"></script>
 <script src="js/fatture.js"></script>
+<script src="js/fatture-stats.js"></script>
 <script type="module" src="js/clienti.js"></script>
 <script src="js/proforma-list.js"></script>
 <script src="js/home.js"></script>

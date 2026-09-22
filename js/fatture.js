@@ -116,7 +116,10 @@ function renderFattureTotali(totali) {
           <div style="font-size:12px;color:#6c757d;">Ritenute d'acconto</div>
         </div>` : ''}
       </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button id="fatture-stats-btn" onclick="toggleStatisticheFatture()" style="background:#fff;color:#1976D2;border:1px solid #1976D2;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-chart-column"></i> ${document.getElementById('fatture-stats-panel')?.style.display === 'block' ? 'Chiudi statistiche' : 'Statistiche'}</button>
       <button onclick="openNuovaFatturaModal()" style="background:#1976D2;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Nuova Fattura Diretta</button>
+      </div>
     </div>`;
 }
 
