@@ -7,6 +7,8 @@ export const CONFIG = {
   // I TODO della Home non stanno più su Apps Script ma sull'hosting di
   // studio-smart.it (PHP + SQLite, ~100 ms): sorgente in Hosting/api/crm-todo.php
   TODO_API_URL: "https://www.studio-smart.it/api/crm-todo.php",
+  // Idem per i monti ore Startup Kleos (Hosting/api/crm-startup.php)
+  STARTUP_API_URL: "https://www.studio-smart.it/api/crm-startup.php",
   APP_NAME: "Studio Smart Timesheet",
   VERSION: "2.0.0"
 };

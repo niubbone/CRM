@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.39.0';
+export const VERSION = '4.40.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.40.0",
+    date: "26/09/2026",
+    type: "feature",
+    changes: [
+      "Home: anche i monti ore Startup Kleos si spostano sull'hosting di studio-smart.it (PHP + SQLite): elenco, movimenti e scritture in ~100 ms invece di 5-50 secondi",
+      "Nuovo monte ore, registra ore, elimina movimento e archivia rileggono solo i monti ore, non tutta la Home; si rileggono anche a ogni ritorno sulla Home"
+    ]
+  },
   {
     version: "4.39.0",
     date: "26/09/2026",

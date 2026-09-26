@@ -3,15 +3,16 @@
 // =======================================================================
 // Schermata di apertura dell'app. Tre blocchi:
 //   1. Pendenze  → contatori cliccabili che portano alle sezioni esistenti
-//   2. TODO      → promemoria scritti a mano (foglio Todo)
-//   3. Startup Kleos → monti ore informali non fatturati (foglio Startup_Kleos)
+//   2. TODO      → promemoria scritti a mano (hosting, crm-todo.php)
+//   3. Startup Kleos → monti ore informali non fatturati (hosting, crm-startup.php)
 //
-// Pendenze, controlli e Startup arrivano da una sola chiamata `get_home`: la
-// latenza GAS è alta e questa è la prima schermata che si apre, quindi si
-// paga un round-trip solo. I TODO invece (dal 26/09/2026) stanno sull'hosting
-// di studio-smart.it e si chiedono a parte: rispondono in ~100 ms, quindi si
-// rileggono a ogni apertura della Home e dopo ogni modifica, senza cache da
-// tenere allineata fra dispositivi e senza rifare get_home.
+// Pendenze e controlli arrivano da una sola chiamata `get_home`: la latenza
+// GAS è alta e questa è la prima schermata che si apre, quindi si paga un
+// round-trip solo. I TODO e i monti ore Startup Kleos invece (dal 26/09/2026)
+// stanno sull'hosting di studio-smart.it e si chiedono a parte: rispondono in
+// ~100 ms, quindi si rileggono a ogni apertura della Home e dopo ogni
+// modifica, senza cache da tenere allineata fra dispositivi e senza rifare
+// get_home.
 // =======================================================================
 
 // NB: nome diverso da getAPIUrl() di vendite.js — sono entrambi script non
@@ -33,8 +34,15 @@ const _todoApiUrl = () => {
     throw new Error('URL dei TODO non configurato (CONFIG.TODO_API_URL mancante)');
 };
 
+const _startupApiUrl = () => {
+    const c = (typeof window !== 'undefined' && window.CONFIG) || (typeof CONFIG !== 'undefined' ? CONFIG : null);
+    if (c && c.STARTUP_API_URL) return c.STARTUP_API_URL;
+    throw new Error('URL Startup Kleos non configurato (CONFIG.STARTUP_API_URL mancante)');
+};
+
 let homeData = null;
 let todoDati = null;               // { todos, daFare, scaduti } dall'hosting
+let startupDati = null;            // { startup, attivi, oreResidueTotali } dall'hosting
 let startupDettaglioAperti = {};   // idStartup -> true quando il dettaglio è espanso
 let todoById = {};                 // idTodo -> record, serve alla modifica inline
 let homeAggiornatoIl = null;       // timestamp (ms) dei dati attualmente a schermo
@@ -135,9 +143,10 @@ function _indicizzaTodo(lista) {
 function initHome() {
     const cache = _leggiCacheHome();
 
-    // I TODO si rileggono sempre: costano poco e così ogni dispositivo vede
-    // quelli scritti dagli altri appena torna sulla Home.
+    // TODO e Startup si rileggono sempre: costano poco e così ogni
+    // dispositivo vede le modifiche degli altri appena torna sulla Home.
     caricaTodo();
+    caricaStartup();
 
     if (!cache) {
         loadHome();
@@ -254,12 +263,9 @@ function renderHome() {
         renderPendenze(homeData.pendenze || {}, homeData.controlli || [], homeData.qodnet) +
         renderTodoSezione(todoDati) +
         renderControlliSezione(homeData.controlli || []) +
-        renderStartupSezione(homeData.startup || {});
+        renderStartupSezione(startupDati);
 
-    // Ripristina i dettagli che erano aperti prima del refresh
-    Object.keys(startupDettaglioAperti).forEach(id => {
-        if (startupDettaglioAperti[id]) caricaMovimenti(id);
-    });
+    _riapriMovimenti();
 
     // Alimenta il badge "ore extra" (in cima) col dettaglio già calcolato da
     // get_home: evita una seconda scansione integrale del Timesheet all'avvio.
@@ -528,7 +534,10 @@ function _disegnaTodo() {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
     const c = document.getElementById('homeContainer');
-    if (c && c.offsetParent !== null) caricaTodo();
+    if (c && c.offsetParent !== null) {
+        caricaTodo();
+        caricaStartup();
+    }
 });
 
 function renderTodoItem(t) {
@@ -920,23 +929,31 @@ async function toggleTodoFatti() {
 // === BLOCCO 3 — STARTUP KLEOS ===
 // =======================================================================
 
-function renderStartupSezione(s) {
+/** Schede dei monti ore; null = non ancora arrivati dall'hosting. */
+function renderStartupLista(s) {
+    if (!s) return '<div class="loading-scadenze">Caricamento...</div>';
     const lista = s.startup || [];
-
-    const cards = lista.length
+    return lista.length
         ? lista.map(renderStartupCard).join('')
         : `<div class="empty-state" style="padding:20px;">
                <div class="empty-state-icon">📦</div>
                <div>Nessun monte ore attivo.</div>
            </div>`;
+}
 
+function renderStartupConteggi(s) {
+    if (!s) return '';
+    return (s.attivi ? `<span class="home-count">${s.attivi} attivi</span>` : '') +
+        (s.oreResidueTotali ? `<span class="home-count">${_fmtOre(s.oreResidueTotali)}h residue</span>` : '');
+}
+
+function renderStartupSezione(s) {
     return `
     <div class="home-section">
         <div class="home-section-header">
             <div class="home-section-title">
                 <i class="fas fa-graduation-cap"></i> Startup Kleos
-                ${s.attivi ? `<span class="home-count">${s.attivi} attivi</span>` : ''}
-                ${s.oreResidueTotali ? `<span class="home-count">${_fmtOre(s.oreResidueTotali)}h residue</span>` : ''}
+                <span id="startup-conteggi">${renderStartupConteggi(s)}</span>
             </div>
             <button class="home-btn piccolo" onclick="toggleNuovoStartup()">
                 <i class="fas fa-plus"></i> Nuovo monte ore
@@ -960,8 +977,56 @@ function renderStartupSezione(s) {
             <button class="home-btn secondario" onclick="toggleNuovoStartup()">Annulla</button>
         </div>
 
-        <div id="startupLista" style="margin-top:12px;">${cards}</div>
+        <div id="startupLista" style="margin-top:12px;">${renderStartupLista(s)}</div>
     </div>`;
+}
+
+// --- Caricamento dei monti ore dall'hosting ------------------------------
+let _startupRichiesta = 0;   // numero dell'ultima lettura partita: vince la più recente
+
+/**
+ * Rilegge i monti ore e ridisegna SOLO le loro schede (il form "Nuovo monte
+ * ore" sta fuori dall'elenco e non si tocca). Se in una scheda si stanno
+ * registrando ore, il disegno si rimanda: il testo sparirebbe sotto le dita.
+ */
+async function caricaStartup() {
+    const mia = ++_startupRichiesta;
+    try {
+        const res = await fetch(`${_startupApiUrl()}?action=get_startup_list`, { noSpinner: true });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        if (mia !== _startupRichiesta) return;
+        startupDati = result;
+        _disegnaStartup();
+    } catch (e) {
+        console.error('Errore caricamento Startup Kleos:', e);
+        if (mia !== _startupRichiesta) return;
+        const lista = document.getElementById('startupLista');
+        if (lista && !startupDati) {
+            lista.innerHTML = `<div class="empty-state"><div>Errore: ${_escHome(e.message)}</div>
+                <button class="home-btn" style="margin-top:12px;" onclick="caricaStartup()">Riprova</button></div>`;
+        }
+    }
+}
+
+function _disegnaStartup() {
+    const lista = document.getElementById('startupLista');
+    if (!lista) return;   // la Home non è ancora disegnata: ci penserà renderHome
+    const inCorso = Array.from(lista.querySelectorAll('[id^="registra-ore-"]')).some(box =>
+        box.style.display !== 'none' &&
+        Array.from(box.querySelectorAll('input[type="number"], textarea')).some(el => el.value.trim() !== ''));
+    if (inCorso) return;
+    lista.innerHTML = renderStartupLista(startupDati);
+    const conteggi = document.getElementById('startup-conteggi');
+    if (conteggi) conteggi.innerHTML = renderStartupConteggi(startupDati);
+    _riapriMovimenti();
+}
+
+/** Dopo un ridisegno riapre i movimenti che erano aperti. */
+function _riapriMovimenti() {
+    Object.keys(startupDettaglioAperti).forEach(id => {
+        if (startupDettaglioAperti[id]) caricaMovimenti(id);
+    });
 }
 
 function renderStartupCard(s) {
@@ -1063,10 +1128,13 @@ async function creaStartup() {
     });
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?${params.toString()}`);
+        const res = await fetch(`${_startupApiUrl()}?${params.toString()}`);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
-        await loadHome();
+        ['startup-cliente', 'startup-ore', 'startup-agente', 'startup-riferimento', 'startup-note']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        toggleNuovoStartup();
+        await caricaStartup();
     } catch (e) {
         alert('Errore creazione monte ore: ' + e.message);
     }
@@ -1095,14 +1163,17 @@ async function salvaOre(idStartup) {
     });
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?${params.toString()}`);
+        const res = await fetch(`${_startupApiUrl()}?${params.toString()}`);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
 
         if (result.sforato) alert(result.message);
 
         startupDettaglioAperti[idStartup] = true;   // dopo il refresh mostra i movimenti
-        await loadHome();
+        // Il form è salvato: si chiude, altrimenti il ridisegno aspetterebbe
+        const box = document.getElementById(`registra-ore-${idStartup}`);
+        if (box) box.style.display = 'none';
+        await caricaStartup();
 
     } catch (e) {
         alert('Errore registrazione ore: ' + e.message);
@@ -1132,7 +1203,7 @@ async function caricaMovimenti(idStartup) {
     box.innerHTML = '<div style="font-size:12px;color:#888;">⏳ Caricamento movimenti...</div>';
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?action=get_startup_movimenti&id_startup=${encodeURIComponent(idStartup)}`, { noSpinner: true });
+        const res = await fetch(`${_startupApiUrl()}?action=get_startup_movimenti&id_startup=${encodeURIComponent(idStartup)}`, { noSpinner: true });
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
 
@@ -1165,12 +1236,12 @@ async function eliminaMovimento(idMovimento, idStartup) {
     if (!confirm('Eliminare questo movimento? Le ore torneranno disponibili.')) return;
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?action=delete_movimento_startup&id_movimento=${encodeURIComponent(idMovimento)}`);
+        const res = await fetch(`${_startupApiUrl()}?action=delete_movimento_startup&id_movimento=${encodeURIComponent(idMovimento)}`);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
 
         startupDettaglioAperti[idStartup] = true;
-        await loadHome();
+        await caricaStartup();
 
     } catch (e) {
         alert('Errore eliminazione movimento: ' + e.message);
@@ -1181,12 +1252,12 @@ async function archiviaStartupUI(idStartup) {
     if (!confirm('Archiviare questo monte ore? Sparisce dalla Home ma resta consultabile.')) return;
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?action=archivia_startup&id_startup=${encodeURIComponent(idStartup)}&archivia=true`);
+        const res = await fetch(`${_startupApiUrl()}?action=archivia_startup&id_startup=${encodeURIComponent(idStartup)}&archivia=true`);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
 
         delete startupDettaglioAperti[idStartup];
-        await loadHome();
+        await caricaStartup();
 
     } catch (e) {
         alert('Errore archiviazione: ' + e.message);
@@ -1219,3 +1290,5 @@ window.salvaOre = salvaOre;
 window.toggleMovimenti = toggleMovimenti;
 window.eliminaMovimento = eliminaMovimento;
 window.archiviaStartupUI = archiviaStartupUI;
+window.caricaStartup = caricaStartup;
+window.caricaTodo = caricaTodo;
