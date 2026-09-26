@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.38.0';
+export const VERSION = '4.39.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.39.0",
+    date: "26/09/2026",
+    type: "feature",
+    changes: [
+      "Home: i TODO non stanno più su Apps Script ma sull'hosting di studio-smart.it (PHP + SQLite): lettura e scritture in ~100 ms invece di 5-50 secondi",
+      "Dopo aggiunta, spunta, modifica o eliminazione si rilegge solo l'elenco dei TODO, non tutta la Home; i TODO si rileggono anche a ogni ritorno sulla Home, quindi i dispositivi restano allineati",
+      "Tolta la card ToDo dalle pendenze (al suo posto la card Controlli)"
+    ]
+  },
   {
     version: "4.38.0",
     date: "22/09/2026",

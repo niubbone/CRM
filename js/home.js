@@ -6,8 +6,12 @@
 //   2. TODO      → promemoria scritti a mano (foglio Todo)
 //   3. Startup Kleos → monti ore informali non fatturati (foglio Startup_Kleos)
 //
-// Tutto arriva da una sola chiamata `get_home`: la latenza GAS è alta e
-// questa è la prima schermata che si apre, quindi si paga un round-trip solo.
+// Pendenze, controlli e Startup arrivano da una sola chiamata `get_home`: la
+// latenza GAS è alta e questa è la prima schermata che si apre, quindi si
+// paga un round-trip solo. I TODO invece (dal 26/09/2026) stanno sull'hosting
+// di studio-smart.it e si chiedono a parte: rispondono in ~100 ms, quindi si
+// rileggono a ogni apertura della Home e dopo ogni modifica, senza cache da
+// tenere allineata fra dispositivi e senza rifare get_home.
 // =======================================================================
 
 // NB: nome diverso da getAPIUrl() di vendite.js — sono entrambi script non
@@ -23,7 +27,14 @@ const _homeApiUrl = () => {
     throw new Error('URL backend non configurato (CONFIG.APPS_SCRIPT_URL mancante)');
 };
 
+const _todoApiUrl = () => {
+    const c = (typeof window !== 'undefined' && window.CONFIG) || (typeof CONFIG !== 'undefined' ? CONFIG : null);
+    if (c && c.TODO_API_URL) return c.TODO_API_URL;
+    throw new Error('URL dei TODO non configurato (CONFIG.TODO_API_URL mancante)');
+};
+
 let homeData = null;
+let todoDati = null;               // { todos, daFare, scaduti } dall'hosting
 let startupDettaglioAperti = {};   // idStartup -> true quando il dettaglio è espanso
 let todoById = {};                 // idTodo -> record, serve alla modifica inline
 let homeAggiornatoIl = null;       // timestamp (ms) dei dati attualmente a schermo
@@ -123,6 +134,10 @@ function _indicizzaTodo(lista) {
  */
 function initHome() {
     const cache = _leggiCacheHome();
+
+    // I TODO si rileggono sempre: costano poco e così ogni dispositivo vede
+    // quelli scritti dagli altri appena torna sulla Home.
+    caricaTodo();
 
     if (!cache) {
         loadHome();
@@ -236,8 +251,8 @@ function renderHome() {
 
     container.innerHTML =
         renderBarraAggiornamento() +
-        renderPendenze(homeData.pendenze || {}, homeData.todos || {}, homeData.controlli || [], homeData.qodnet) +
-        renderTodoSezione(homeData.todos || {}) +
+        renderPendenze(homeData.pendenze || {}, homeData.controlli || [], homeData.qodnet) +
+        renderTodoSezione(todoDati) +
         renderControlliSezione(homeData.controlli || []) +
         renderStartupSezione(homeData.startup || {});
 
@@ -276,7 +291,7 @@ function renderBarraAggiornamento() {
 // === BLOCCO 1 — PENDENZE ===
 // =======================================================================
 
-function renderPendenze(p, todos, controlli, qodnet) {
+function renderPendenze(p, controlli, qodnet) {
     const card = (numero, label, icona, colore, onclick, extra) => `
         <div class="home-pendenza-card ${numero > 0 ? '' : 'vuota'}" onclick="${onclick}">
             <div class="home-pendenza-icon ${colore}"><i class="fas ${icona}"></i></div>
@@ -291,15 +306,12 @@ function renderPendenze(p, todos, controlli, qodnet) {
         ? '€ ' + p.importoNonPagato.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : '';
 
-    // La card ToDo rappresenta TUTTO ciò che incombe qui sulla Home:
-    // i promemoria scritti a mano più i controlli periodici in sospeso.
-    // Contarne solo una parte darebbe un numero che non corrisponde a
-    // quello che si vede scorrendo la pagina.
-    const daFareTotale = ((todos || {}).daFare || 0) + (controlli || []).length;
-
+    // Niente card per i promemoria (tolta il 26/09/2026, non serviva): la
+    // sezione "Da fare" ha già il suo conteggio. Qui restano i controlli
+    // periodici in sospeso, che la card porta a vedere più sotto.
     return `
     <div class="home-pendenze">
-        ${card(daFareTotale, 'ToDo', 'fa-clipboard-check', 'arancio', "vaiA('dafare')")}
+        ${card((controlli || []).length, 'Controlli', 'fa-clipboard-check', 'arancio', "vaiA('controlli-home')")}
         ${card(p.scadenzeTotale || 0, 'Scadenze 90gg', 'fa-calendar-day', (p.scadenzeCritiche > 0 ? 'rosso' : 'blu'), "vaiA('scadenze')")}
         ${card(p.oreExtra || 0, 'Ore extra sospese', 'fa-hourglass-half', 'rosso', "vaiA('oreextra')")}
         ${card(p.proformaDaFatturare || 0, 'Proforma da fatturare', 'fa-file-invoice', 'verde', "vaiA('proforma')")}
@@ -337,6 +349,10 @@ function vaiA(dove) {
         // cambiare tab, porto lo schermo sulla sezione.
         case 'dafare':
             document.getElementById('sezione-dafare')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            break;
+        case 'controlli-home':
+            document.getElementById('sezione-controlli')
                 ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             break;
         case 'controlli': vaiVendite('canoni', 'controlli'); break;
@@ -420,26 +436,34 @@ function apriFattureNonPagate() {
 // === BLOCCO 2 — TODO ===
 // =======================================================================
 
-function renderTodoSezione(t) {
+/** Elenco dei TODO; null = non ancora arrivati dall'hosting. */
+function renderTodoLista(t) {
+    if (!t) return '<div class="loading-scadenze">Caricamento...</div>';
     const todos = _indicizzaTodo(t.todos || []);
-
-    const lista = todos.length
+    return todos.length
         ? todos.map(renderTodoItem).join('')
         : `<div class="empty-state" style="padding:20px;">
                <div class="empty-state-icon">✅</div>
-               <div>Nessun promemoria. Tutto sotto controllo.</div>
+               <div>${todoMostraFatti ? 'Nessun promemoria.' : 'Nessun promemoria. Tutto sotto controllo.'}</div>
            </div>`;
+}
 
+function renderTodoConteggi(t) {
+    if (!t) return '';
+    return (t.daFare ? `<span class="home-count">${t.daFare}</span>` : '') +
+        (t.scaduti ? `<span class="home-count" style="background:#f8d7da;color:#721c24;">${t.scaduti} scaduti</span>` : '');
+}
+
+function renderTodoSezione(t) {
     return `
     <div class="home-section" id="sezione-dafare">
         <div class="home-section-header">
             <div class="home-section-title">
                 <i class="fas fa-list-check"></i> Da fare
-                ${t.daFare ? `<span class="home-count">${t.daFare}</span>` : ''}
-                ${t.scaduti ? `<span class="home-count" style="background:#f8d7da;color:#721c24;">${t.scaduti} scaduti</span>` : ''}
+                <span id="todo-conteggi">${renderTodoConteggi(t)}</span>
             </div>
             <button class="home-btn piccolo secondario" onclick="toggleTodoFatti()">
-                <i class="fas fa-clock-rotate-left"></i> <span id="todo-toggle-label">Mostra completati</span>
+                <i class="fas fa-clock-rotate-left"></i> <span id="todo-toggle-label">${todoMostraFatti ? 'Nascondi completati' : 'Mostra completati'}</span>
             </button>
         </div>
 
@@ -457,9 +481,55 @@ function renderTodoSezione(t) {
             </div>
         </div>
 
-        <div id="todoLista">${lista}</div>
+        <div id="todoLista">${renderTodoLista(t)}</div>
     </div>`;
 }
+
+// --- Caricamento dei TODO dall'hosting ----------------------------------
+let _todoRichiesta = 0;   // numero dell'ultima lettura partita: vince la più recente
+
+/**
+ * Rilegge i TODO e ridisegna SOLO la loro sezione: il resto della Home e il
+ * testo che si sta scrivendo nel form "nuovo promemoria" non si toccano.
+ * Una riga aperta in modifica non viene travolta: si rimanda il disegno.
+ */
+async function caricaTodo() {
+    const mia = ++_todoRichiesta;
+    try {
+        const res = await fetch(`${_todoApiUrl()}?action=get_todos&includi_fatti=${todoMostraFatti}`, { noSpinner: true });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        if (mia !== _todoRichiesta) return;   // nel frattempo ne è partita un'altra
+        todoDati = result;
+        _disegnaTodo();
+    } catch (e) {
+        console.error('Errore caricamento TODO:', e);
+        if (mia !== _todoRichiesta) return;
+        const lista = document.getElementById('todoLista');
+        if (lista && !todoDati) {
+            lista.innerHTML = `<div class="empty-state"><div>Errore: ${_escHome(e.message)}</div>
+                <button class="home-btn" style="margin-top:12px;" onclick="caricaTodo()">Riprova</button></div>`;
+        }
+    }
+}
+
+function _disegnaTodo() {
+    const lista = document.getElementById('todoLista');
+    if (!lista) return;   // la Home non è ancora disegnata: ci penserà renderHome
+    if (lista.querySelector('.in-modifica')) return;
+    lista.innerHTML = renderTodoLista(todoDati);
+    const conteggi = document.getElementById('todo-conteggi');
+    if (conteggi) conteggi.innerHTML = renderTodoConteggi(todoDati);
+}
+
+// Tornando sull'app (cambio finestra, telefono riacceso) i TODO potrebbero
+// essere stati cambiati da un altro dispositivo: se la Home è a schermo si
+// rileggono. Costa una chiamata da ~100 ms.
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    const c = document.getElementById('homeContainer');
+    if (c && c.offsetParent !== null) caricaTodo();
+});
 
 function renderTodoItem(t) {
     const classePriorita = 'priorita-' + (t.priorita || 'Media').toLowerCase();
@@ -523,7 +593,7 @@ function renderControlliSezione(controlli) {
     const incoerenti  = ctrl.filter(c => c.oltreScadenzaCanone).length;
 
     return `
-    <div class="home-section">
+    <div class="home-section" id="sezione-controlli">
         <div class="home-section-header">
             <div class="home-section-title">
                 <i class="fas fa-clipboard-check"></i> Controlli
@@ -743,20 +813,23 @@ async function salvaModificaTodo(idTodo) {
     });
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?${params.toString()}`);
+        const res = await fetch(`${_todoApiUrl()}?${params.toString()}`);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
 
-        // Ricarico tutto: cambiando priorità o scadenza cambia anche l'ordine
-        await loadHome();
+        // Si rilegge l'elenco: cambiando priorità o scadenza cambia l'ordine.
+        // La riga in modifica va chiusa prima, altrimenti _disegnaTodo aspetta.
+        document.getElementById(`todo-item-${idTodo}`)?.classList.remove('in-modifica');
+        await caricaTodo();
 
     } catch (e) {
         alert('Errore modifica TODO: ' + e.message);
     }
 }
 
-// Il server può metterci decine di secondi: finché non ha risposto il pulsante
-// resta bloccato, altrimenti si preme di nuovo e nascono tre promemoria uguali.
+// Finché il server non ha risposto il pulsante resta bloccato, altrimenti si
+// preme di nuovo e nascono promemoria uguali (con Apps Script succedeva: ci
+// metteva decine di secondi; l'hosting risponde subito, la guardia resta).
 let _todoInCorso = false;
 
 async function aggiungiTodo() {
@@ -772,7 +845,7 @@ async function aggiungiTodo() {
     const priorita = document.getElementById('todo-nuova-priorita')?.value || 'Media';
     const scadenza = document.getElementById('todo-nuova-scadenza')?.value || '';
 
-    let url = `${_homeApiUrl()}?action=insert_todo&testo=${encodeURIComponent(testo)}&priorita=${encodeURIComponent(priorita)}`;
+    let url = `${_todoApiUrl()}?action=insert_todo&testo=${encodeURIComponent(testo)}&priorita=${encodeURIComponent(priorita)}`;
     if (scadenza) url += `&data_scadenza=${encodeURIComponent(scadenza)}`;
 
     const btn = document.getElementById('todo-aggiungi-btn');
@@ -789,7 +862,7 @@ async function aggiungiTodo() {
         inputTesto.value = '';
         document.getElementById('todo-nuova-scadenza').value = '';
         if (result.duplicato) alert('Questo promemoria era già stato aggiunto poco fa: non l\'ho ripetuto.');
-        await loadHome();
+        await caricaTodo();
         document.getElementById('todo-nuovo-testo')?.focus();
 
     } catch (e) {
@@ -805,13 +878,13 @@ async function aggiungiTodo() {
 
 async function segnaTodo(idTodo, fatto) {
     try {
-        const res = await fetch(`${_homeApiUrl()}?action=toggle_todo&id_todo=${encodeURIComponent(idTodo)}&fatto=${fatto}`);
+        const res = await fetch(`${_todoApiUrl()}?action=toggle_todo&id_todo=${encodeURIComponent(idTodo)}&fatto=${fatto}`);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
-        await loadHome();
+        await caricaTodo();
     } catch (e) {
         alert('Errore aggiornamento TODO: ' + e.message);
-        await loadHome();
+        await caricaTodo();
     }
 }
 
@@ -819,10 +892,10 @@ async function eliminaTodo(idTodo) {
     if (!confirm('Eliminare definitivamente questo promemoria?')) return;
 
     try {
-        const res = await fetch(`${_homeApiUrl()}?action=delete_todo&id_todo=${encodeURIComponent(idTodo)}`);
+        const res = await fetch(`${_todoApiUrl()}?action=delete_todo&id_todo=${encodeURIComponent(idTodo)}`);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
-        await loadHome();
+        await caricaTodo();
     } catch (e) {
         alert('Errore eliminazione TODO: ' + e.message);
     }
@@ -840,18 +913,7 @@ async function toggleTodoFatti() {
     lista.innerHTML = '<div class="loading-scadenze">Caricamento...</div>';
     if (label) label.textContent = todoMostraFatti ? 'Nascondi completati' : 'Mostra completati';
 
-    try {
-        const res = await fetch(`${_homeApiUrl()}?action=get_todos&includi_fatti=${todoMostraFatti}`);
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error || 'Errore');
-
-        lista.innerHTML = (result.todos || []).length
-            ? _indicizzaTodo(result.todos).map(renderTodoItem).join('')
-            : `<div class="empty-state" style="padding:20px;"><div class="empty-state-icon">✅</div><div>Nessun promemoria.</div></div>`;
-
-    } catch (e) {
-        lista.innerHTML = `<div class="empty-state"><div>Errore: ${_escHome(e.message)}</div></div>`;
-    }
+    await caricaTodo();
 }
 
 // =======================================================================

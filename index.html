@@ -410,7 +410,9 @@
     const _fetch = window.fetch;
     window.fetch = function(...args) {
         const { action, backend } = _analizza(args[0]);
-        const scrittura = _scrittura(action);
+        // Solo le scritture su Apps Script rendono vecchia la Home: i TODO
+        // (hosting studio-smart.it) si rileggono da soli, subito.
+        const scrittura = backend && _scrittura(action);
         if (scrittura) _marcaScrittura();
 
         // Scrittura identica già in volo: si riusa quella, senza rimandarla

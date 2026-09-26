@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.38.0';
+const SW_BUILD = '4.39.0';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -134,6 +134,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // TODO sull'hosting studio-smart.it: sempre e solo rete. Anche le scritture
+  // sono GET, e la cache "runtime" qui sotto le conserverebbe: offline si
+  // vedrebbe rispondere "fatto" a una modifica mai arrivata al server.
+  if (url.hostname === 'www.studio-smart.it' && url.pathname.startsWith('/api/')) {
+    return;
+  }
+
   // API REQUESTS - Network first, fallback to cache
   if (url.origin === new URL(API_BASE_URL).origin) {
     event.respondWith(handleApiRequest(request));
