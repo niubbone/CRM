@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.40.0';
+const SW_BUILD = '4.40.1';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -123,6 +123,29 @@ self.addEventListener('activate', (event) => {
 });
 
 /**
+ * I file dell'app si chiedono sempre "freschi" al server.
+ *
+ * Un fetch(request) semplice passa dalla cache HTTP del browser, e GitHub
+ * Pages serve tutto con max-age=600: per ~10 minuti dopo un deploy tornavano
+ * file VECCHI accanto a quelli nuovi (visto: timesheet-list.js vecchio con
+ * index.html nuovo, e home.js vecchio al rilascio v4.40). Peggio, il
+ * rinfresco in sottofondo di handleStaticRequest rimetteva in cache la copia
+ * vecchia sopra quella appena scaricata dall'install.
+ *
+ * cache:'no-cache' obbliga il browser a chiedere al server se il file è
+ * cambiato (con ETag: se è uguale risponde 304, pochi byte).
+ * Solo per lo stesso sito: i CDN esterni (font, icone) restano come sono.
+ *
+ * Le navigazioni (index.html) non accettano un Request riscritto a piacere:
+ * new Request(request, init) le trasforma in 'same-origin' ma ne conserva
+ * redirect:'manual', che serve al redirect /CRM → /CRM/ di GitHub Pages.
+ */
+function richiestaFresca(request) {
+  if (new URL(request.url).origin !== self.location.origin) return request;
+  return new Request(request, { cache: 'no-cache' });
+}
+
+/**
  * FETCH - Intercept network requests
  */
 self.addEventListener('fetch', (event) => {
@@ -150,9 +173,12 @@ self.addEventListener('fetch', (event) => {
   // INDEX.HTML - Network first (così gli aggiornamenti HTML sono sempre immediati)
   if (url.pathname === BASE_PATH || url.pathname.endsWith('/index.html') || url.pathname === BASE_PATH.slice(0, -1)) {
     event.respondWith(
-      fetch(request).then(response => {
-        const clone = response.clone();
-        caches.open(STATIC_CACHE).then(cache => cache.put(request, clone));
+      fetch(richiestaFresca(request)).then(response => {
+        // Un redirect (opaqueredirect, status 0) non si mette in cache
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(STATIC_CACHE).then(cache => cache.put(request, clone));
+        }
         return response;
       }).catch(() => caches.match(request))
     );
@@ -273,7 +299,7 @@ async function handleStaticRequest(request) {
 
   if (cachedResponse) {
     // Update cache in background (stale-while-revalidate)
-    fetch(request).then((networkResponse) => {
+    fetch(richiestaFresca(request)).then((networkResponse) => {
       if (networkResponse.ok) {
         cache.put(request, networkResponse);
       }
@@ -284,7 +310,7 @@ async function handleStaticRequest(request) {
   
   // Cache miss - fetch from network
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(richiestaFresca(request));
     
     if (networkResponse.ok) {
       const cache = await caches.open(STATIC_CACHE);
@@ -305,7 +331,7 @@ async function handleStaticRequest(request) {
  */
 async function handleRuntimeRequest(request) {
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(richiestaFresca(request));
     
     // Cache successful responses
     if (networkResponse.ok) {

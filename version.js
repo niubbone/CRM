@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.40.0';
+export const VERSION = '4.40.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.40.1",
+    date: "26/09/2026",
+    type: "fix",
+    changes: [
+      "Service worker: i file dell'app si chiedono sempre aggiornati al server (cache:'no-cache'). Per ~10 minuti dopo un aggiornamento potevano arrivare file vecchi mescolati ai nuovi, e il rinfresco in sottofondo rimetteva in cache la copia vecchia"
+    ]
+  },
   {
     version: "4.40.0",
     date: "26/09/2026",
