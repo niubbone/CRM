@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.40.1';
+export const VERSION = '4.41.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -73,6 +73,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.41.0",
+    date: "04/10/2026",
+    type: "feature",
+    changes: [
+      "Home, Da fare: i promemoria si ordinano a mano trascinandoli dalla maniglia a sinistra (mouse o dito); l'ordine resta salvato e vale su tutti i dispositivi",
+      "Home, Da fare: doppio tap (o doppio clic) sul testo, oppure il fulmine, segna un promemoria come urgente: va in cima, evidenziato in rosso. Gli urgenti si riordinano fra loro",
+      "I promemoria nuovi, dopo il primo riordino, entrano in cima all'elenco"
+    ]
+  },
   {
     version: "4.40.1",
     date: "26/09/2026",

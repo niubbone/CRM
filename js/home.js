@@ -522,7 +522,7 @@ async function caricaTodo() {
 function _disegnaTodo() {
     const lista = document.getElementById('todoLista');
     if (!lista) return;   // la Home non è ancora disegnata: ci penserà renderHome
-    if (lista.querySelector('.in-modifica')) return;
+    if (lista.querySelector('.in-modifica, .trascinato')) return;
     lista.innerHTML = renderTodoLista(todoDati);
     const conteggi = document.getElementById('todo-conteggi');
     if (conteggi) conteggi.innerHTML = renderTodoConteggi(todoDati);
@@ -562,23 +562,157 @@ function renderTodoItem(t) {
         scadenzaHtml = `<span class="home-todo-scadenza ${cls}"><i class="fas fa-calendar"></i> ${_escHome(testo)}</span>`;
     }
 
+    // Solo i da fare si spostano e si segnano urgenti: i completati stanno
+    // in fondo, dal più recente.
+    const urgente = !t.fatto && t.urgente;
     return `
-    <div class="home-todo-item ${classePriorita} ${t.fatto ? 'fatto' : ''}" id="todo-item-${t.idTodo}">
+    <div class="home-todo-item ${classePriorita} ${t.fatto ? 'fatto' : 'trascinabile'} ${urgente ? 'urgente' : ''}"
+         id="todo-item-${t.idTodo}" data-id="${t.idTodo}">
+        ${t.fatto ? '' : `<span class="home-todo-maniglia" title="Trascina per spostare"
+              onpointerdown="iniziaTrascinamentoTodo(event, '${t.idTodo}')"><i class="fas fa-grip-vertical"></i></span>`}
         <input type="checkbox" class="home-todo-check" ${t.fatto ? 'checked' : ''}
                onchange="segnaTodo('${t.idTodo}', this.checked)">
-        <div class="home-todo-corpo">
+        <div class="home-todo-corpo" ${t.fatto ? '' : `onpointerup="tapTodo(event, '${t.idTodo}')"`}>
             <div class="home-todo-testo">${_escHome(t.testo)}</div>
             <div class="home-todo-meta">
+                ${urgente ? '<span class="home-chip-urgente"><i class="fas fa-bolt"></i> Urgente</span>' : ''}
                 <span>${_escHome(t.priorita)}</span>
                 ${scadenzaHtml}
                 ${t.fatto && t.dataCompletamento ? `<span>fatto il ${_escHome(t.dataCompletamento)}</span>` : ''}
             </div>
         </div>
         <div class="home-todo-azioni">
+            ${t.fatto ? '' : `<button title="${urgente ? 'Togli urgente' : 'Segna urgente (o doppio tap sul testo)'}" class="urgente ${urgente ? 'attivo' : ''}"
+                    onclick="segnaUrgenteTodo('${t.idTodo}')"><i class="fas fa-bolt"></i></button>`}
             <button title="Modifica" class="modifica" onclick="modificaTodo('${t.idTodo}')"><i class="fas fa-pen"></i></button>
             <button title="Elimina" onclick="eliminaTodo('${t.idTodo}')"><i class="fas fa-trash"></i></button>
         </div>
     </div>`;
+}
+
+// --- Urgente: doppio tap sul testo (o il fulmine) ------------------------
+// Gli urgenti stanno sempre in cima ai da fare, evidenziati in rosso.
+let _ultimoTap = { id: null, t: 0 };
+
+function tapTodo(e, idTodo) {
+    if (e.button > 0) return;
+    const ora = Date.now();
+    if (_ultimoTap.id === idTodo && ora - _ultimoTap.t < 400) {
+        _ultimoTap = { id: null, t: 0 };
+        window.getSelection?.().removeAllRanges();   // il doppio clic seleziona il testo
+        segnaUrgenteTodo(idTodo);
+        return;
+    }
+    _ultimoTap = { id: idTodo, t: ora };
+}
+
+async function segnaUrgenteTodo(idTodo) {
+    const t = todoById[idTodo];
+    if (!t || t.fatto) return;
+    const urgente = !t.urgente;
+    // Subito a video, poi il server: risponde in ~100 ms e si rilegge l'ordine.
+    t.urgente = urgente;
+    const item = document.getElementById(`todo-item-${idTodo}`);
+    if (item) item.outerHTML = renderTodoItem(t);
+    try {
+        const res = await fetch(`${_todoApiUrl()}?action=urgente_todo&id_todo=${encodeURIComponent(idTodo)}&urgente=${urgente}`, { noSpinner: true });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+    } catch (e) {
+        alert('Errore aggiornamento TODO: ' + e.message);
+    }
+    await caricaTodo();
+}
+
+// --- Ordine a mano: si trascina dalla maniglia a sinistra -----------------
+// Pointer events, così funziona uguale con mouse e dito. La maniglia ha
+// touch-action:none: il resto della riga scorre la pagina come sempre.
+// Gli urgenti si spostano fra loro, gli altri fra loro.
+let _trascina = null;
+
+function iniziaTrascinamentoTodo(e, idTodo) {
+    if (e.button > 0 || _trascina) return;
+    const item = document.getElementById(`todo-item-${idTodo}`);
+    const lista = document.getElementById('todoLista');
+    if (!item || !lista) return;
+    e.preventDefault();
+    const urgente = item.classList.contains('urgente');
+    const gruppo = () => [...lista.querySelectorAll('.home-todo-item.trascinabile')]
+        .filter(x => x.classList.contains('urgente') === urgente);
+    _trascina = {
+        item, lista, gruppo,
+        presa: e.clientY - item.getBoundingClientRect().top,
+        prima: _ordineVisibileTodo(lista).join(','),
+        y: e.clientY
+    };
+    item.classList.add('trascinato');
+    document.addEventListener('pointermove', _muoviTrascinamento);
+    document.addEventListener('pointerup', _fineTrascinamento);
+    document.addEventListener('pointercancel', _fineTrascinamento);
+}
+
+function _ordineVisibileTodo(lista) {
+    return [...lista.querySelectorAll('.home-todo-item.trascinabile')].map(x => x.dataset.id);
+}
+
+function _muoviTrascinamento(e) {
+    const d = _trascina;
+    if (!d) return;
+    d.y = e.clientY;
+    const altri = d.gruppo().filter(x => x !== d.item);
+    if (altri.length) {
+        const sotto = altri.find(x => {
+            const r = x.getBoundingClientRect();
+            return d.y < r.top + r.height / 2;
+        });
+        if (sotto) {
+            if (sotto.previousElementSibling !== d.item) d.lista.insertBefore(d.item, sotto);
+        } else {
+            const ultimo = altri[altri.length - 1];
+            if (ultimo.nextElementSibling !== d.item) d.lista.insertBefore(d.item, ultimo.nextSibling);
+        }
+    }
+    _posizionaTrascinato();
+    // Vicino ai bordi dello schermo la pagina scorre da sola.
+    if (d.y < 70) window.scrollBy(0, -12);
+    else if (d.y > window.innerHeight - 70) window.scrollBy(0, 12);
+}
+
+/** La riga segue il puntatore: spostamento rispetto al suo posto nell'elenco. */
+function _posizionaTrascinato() {
+    const d = _trascina;
+    d.item.style.transform = '';
+    const naturale = d.item.getBoundingClientRect().top;
+    d.item.style.transform = `translateY(${d.y - d.presa - naturale}px)`;
+}
+
+async function _fineTrascinamento() {
+    const d = _trascina;
+    if (!d) return;
+    _trascina = null;
+    document.removeEventListener('pointermove', _muoviTrascinamento);
+    document.removeEventListener('pointerup', _fineTrascinamento);
+    document.removeEventListener('pointercancel', _fineTrascinamento);
+    d.item.style.transform = '';
+    d.item.classList.remove('trascinato');
+
+    const ids = _ordineVisibileTodo(d.lista);
+    if (ids.join(',') === d.prima) return;
+
+    // Anche in memoria, così una rilettura arrivata nel frattempo non rimescola.
+    if (todoDati && todoDati.todos) {
+        const pos = new Map(ids.map((id, i) => [id, i]));
+        const p = t => pos.has(t.idTodo) ? pos.get(t.idTodo) : 1e9;
+        todoDati.todos.sort((a, b) => p(a) - p(b));
+    }
+    try {
+        const res = await fetch(`${_todoApiUrl()}?action=riordina_todo&ids=${encodeURIComponent(ids.join(','))}`, { noSpinner: true });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+    } catch (e) {
+        alert('Errore salvataggio ordine: ' + e.message);
+        await caricaTodo();
+    }
 }
 
 // =======================================================================

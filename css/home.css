@@ -343,6 +343,52 @@
 }
 .home-todo-azioni button:hover { color: #dc3545; background: #f8d7da; }
 .home-todo-azioni button.modifica:hover { color: #0c63e4; background: #e8f4fd; }
+.home-todo-azioni button.urgente:hover { color: #dc3545; background: #fdecee; }
+.home-todo-azioni button.urgente.attivo { color: #dc3545; }
+
+/* Maniglia per trascinare: solo lei blocca lo scorrimento col dito,
+   il resto della riga lascia scorrere la pagina. */
+.home-todo-maniglia {
+    flex-shrink: 0;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    margin-left: -6px;
+    color: #b0b8c1;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.home-todo-maniglia:hover { color: #6c757d; }
+.home-todo-item.trascinato {
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    cursor: grabbing;
+    transition: none;
+}
+.home-todo-item.trascinato .home-todo-maniglia { cursor: grabbing; color: #1a73e8; }
+
+/* Doppio tap sul testo = urgente: niente zoom del browser al doppio tocco. */
+.home-todo-item.trascinabile .home-todo-corpo { touch-action: manipulation; }
+
+.home-todo-item.urgente {
+    background: #fff5f5;
+    border-color: #f1aeb5;
+    border-left-color: #dc3545;
+}
+.home-chip-urgente {
+    background: #dc3545;
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 1px 7px;
+    border-radius: 10px;
+}
 
 /* Riga TODO in modifica inline */
 .home-todo-item.in-modifica {
