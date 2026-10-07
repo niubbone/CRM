@@ -408,6 +408,12 @@ function openVenditaModal(tipo) {
     const controlliCheck = document.getElementById('venditaControlliCheck');
     const controlliDettagli = document.getElementById('venditaControlliDettagli');
 
+    // Reset ISA e importo a ogni apertura (l'importo lo calcola ISA da listino e sconti)
+    const isaGroup = document.getElementById('venditaIsaGroup');
+    const importoGroup = document.getElementById('venditaImportoGroup');
+    if (isaGroup) isaGroup.style.display = 'none';
+    if (importoGroup) importoGroup.style.display = 'block';
+
     // Reset stato controlli periodici a ogni apertura
     if (controlliCheck) controlliCheck.checked = false;
     if (controlliDettagli) controlliDettagli.style.display = 'none';
@@ -434,6 +440,19 @@ function openVenditaModal(tipo) {
         if (descrizioneLabel) descrizioneLabel.textContent = 'Descrizione';
         if (noteGroup) noteGroup.style.display = 'none';
         if (controlliGroup) controlliGroup.style.display = 'block';
+    } else if (tipo === 'isa') {
+        if (modalTitle) modalTitle.textContent = '⚖️ ISA Studio Legale';
+        if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'none';
+        if (oreGroup) oreGroup.style.display = 'none';
+        if (oreInput) oreInput.required = false;
+        if (durataGroup) durataGroup.style.display = 'none';
+        if (durataInput) durataInput.value = 1;
+        if (descrizioneGroup) descrizioneGroup.style.display = 'block';
+        if (descrizioneLabel) descrizioneLabel.textContent = 'Descrizione (vuota = scritta in automatico, con canone, avvio e sconti)';
+        if (noteGroup) noteGroup.style.display = 'none';
+        if (isaGroup) isaGroup.style.display = 'block';
+        if (importoGroup) importoGroup.style.display = 'none';
+        aggiornaTotaleIsa();
     } else if (tipo === 'firma') {
         if (modalTitle) modalTitle.textContent = '✍️ Nuova Firma Digitale';
         if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'block';
@@ -447,6 +466,32 @@ function openVenditaModal(tipo) {
     }
     
     modal.classList.add('active');
+}
+
+// ISA: totale del primo anno = (canone − sconto) + (avvio − sconto avvio); al rinnovo solo il canone
+function letturaIsa() {
+    const v = id => parseFloat((document.getElementById(id)?.value || '0').replace(',', '.')) || 0;
+    const r = { listino: v('venditaIsaListino'), sconto: v('venditaIsaSconto'),
+                avvio: v('venditaIsaAvvio'), scontoAvvio: v('venditaIsaScontoAvvio') };
+    r.canone = r.listino - r.sconto;
+    r.avvioNetto = r.avvio - r.scontoAvvio;
+    r.totale = r.canone + r.avvioNetto;
+    return r;
+}
+
+function aggiornaTotaleIsa() {
+    const r = letturaIsa();
+    const euro = n => '€ ' + n.toFixed(2).replace('.', ',');
+    const box = document.getElementById('venditaIsaRiepilogo');
+    const importo = document.getElementById('venditaImporto');
+    if (importo) importo.value = r.totale > 0 ? r.totale.toFixed(2) : '';
+    if (!box) return;
+    const errore = r.sconto > r.listino || r.scontoAvvio > r.avvio || r.sconto < 0 || r.scontoAvvio < 0;
+    box.innerHTML = errore
+        ? '<span style="color:#dc3545;">Uno sconto è più alto del prezzo.</span>'
+        : `Primo anno: canone <strong>${euro(r.canone)}</strong>`
+          + (r.avvio > 0 ? ` + avvio <strong>${euro(r.avvioNetto)}</strong>` : '')
+          + ` = <strong>${euro(r.totale)}</strong> + IVA<br>Dal rinnovo: <strong>${euro(r.canone)}</strong> l'anno + IVA`;
 }
 
 function closeVenditaModal() {
@@ -507,6 +552,16 @@ async function submitVendita(e) {
                     params += `&etichette=${encodeURIComponent(etichette)}`;
                 }
             }
+        } else if (tipo === 'isa') {
+            action = 'insert_canone';
+            const r = letturaIsa();
+            if (r.sconto > r.listino || r.scontoAvvio > r.avvio || r.sconto < 0 || r.scontoAvvio < 0) {
+                throw new Error('Uno sconto è più alto del prezzo');
+            }
+            const codiceWki = (document.getElementById('venditaIsaCodiceWki')?.value || '').trim();
+            params += `&tipo=ISA&durata_anni=1&descrizione=${encodeURIComponent(descrizione)}`
+                + `&listino=${r.listino}&sconto=${r.sconto}&avvio=${r.avvio}&sconto_avvio=${r.scontoAvvio}`
+                + `&codice_wki=${encodeURIComponent(codiceWki)}`;
         } else if (tipo === 'firma') {
             action = 'insert_firma';
             const tipoFirma = document.getElementById('venditaTipoFirma').value;
@@ -756,7 +811,8 @@ function openRinnovoModal(id, tipo) {
         const c = canoniData.find(x => x.idCanone === id);
         if (c) prodotto = {
             idCanone: c.idCanone, nomeCliente: c.nomeCliente, descrizione: c.descrizione,
-            importo: c.importo, dataScadenza: c.dataScadenza, tipoProdotto: 'CANONE'
+            importo: c.importo, dataScadenza: c.dataScadenza, tipoProdotto: 'CANONE',
+            tipo: c.tipo, isa: c.isa
         };
     }
     if (!prodotto && tipo !== 'CANONE' && Array.isArray(firmeData)) {
@@ -796,8 +852,13 @@ function openRinnovoModal(id, tipo) {
     }
     let dettagliText = `${tipo === 'CANONE' ? 'Canone' : 'Firma'} • Scadenza: ${dataScadenza}`;
     
+    // ISA: al rinnovo niente avvio (si propone canone − sconto) e la descrizione si
+    // riscrive col periodo nuovo se la lasci vuota
+    const isIsa = tipo === 'CANONE' && (prodotto.tipo || '').toUpperCase() === 'ISA';
+    if (descrizione) descrizione.placeholder = isIsa ? 'Vuota = scritta in automatico per il nuovo anno' : '';
+
     if (tipo === 'CANONE') {
-        if (descrizione) descrizione.value = prodotto.descrizione || '';
+        if (descrizione) descrizione.value = isIsa ? '' : (prodotto.descrizione || '');
         if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'none';
         if (noteGroup) noteGroup.style.display = 'none';
         if (prodotto.descrizione) dettagliText += ` • ${prodotto.descrizione}`;
@@ -809,7 +870,8 @@ function openRinnovoModal(id, tipo) {
     }
     
     if (dettagli) dettagli.textContent = dettagliText;
-    if (importo) importo.value = prodotto.importo || '';
+    if (importo) importo.value = (isIsa && prodotto.isa) ? prodotto.isa.importoRinnovo : (prodotto.importo || '');
+    if (isIsa && dettagli) dettagli.textContent += ' • ISA: rinnovo senza avvio';
     
     modal.classList.add('active');
 }
@@ -1197,15 +1259,20 @@ function renderCanoni(canoni) {
             }
 
             const isControlli = (c.tipo || '').toUpperCase() === 'CONTROLLI';
+            const isIsa = (c.tipo || '').toUpperCase() === 'ISA';
 
             const fattBadge = c.fatturazione ? `<span class="storico-badge" style="background:#e8f4fd;color:#0c63e4;margin-left:6px;">${c.fatturazione}</span>` : '';
             const statoBadge = isRinnovato
                 ? `<span class="storico-badge" style="background:#e2e3f3;color:#4b3fae;">Rinnovato</span>`
                 : `<span class="storico-badge ${statoClass}">${c.stato}</span>`;
             // Distinzione grafica per i canoni-controlli: bordo sinistro arancio + chip
-            const cardStyle = isControlli ? ' style="border-left:4px solid #fd7e14;"' : '';
+            const cardStyle = isControlli ? ' style="border-left:4px solid #fd7e14;"'
+                            : isIsa ? ' style="border-left:4px solid #1c3557;"' : '';
             const controlliChip = isControlli
                 ? `<span class="storico-badge" style="background:#fff3cd;color:#856404;margin-left:6px;"><i class="fas fa-clipboard-check"></i> Controlli</span>`
+                : isIsa
+                ? `<span class="storico-badge" style="background:#dbe7f5;color:#1c3557;margin-left:6px;"><i class="fas fa-balance-scale"></i> ISA</span>`
+                  + (c.isa && c.isa.codiceWki ? `<span class="storico-badge" style="background:#f1f3f5;color:#495057;margin-left:6px;" title="Codice cliente WKI (contratto Kleos in KSALES)">WKI ${c.isa.codiceWki}</span>` : '')
                 : '';
 
             const mostraAzioni = isAttivo || c.idPrecedente || isControlli;
@@ -2808,6 +2875,7 @@ async function eliminaRigaQodnet() {
 if (typeof window !== 'undefined') {
     window.initVenditeTab = initVenditeTab;
     window.openVenditaModal = openVenditaModal;
+    window.aggiornaTotaleIsa = aggiornaTotaleIsa;
     window.closeVenditaModal = closeVenditaModal;
     window.submitVendita = submitVendita;
     window.openRinnovoModal = openRinnovoModal;

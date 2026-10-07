@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.41.0';
+export const VERSION = '4.42.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -35,6 +35,7 @@ export const VERSION_INFO = {
 
   // Changelog corrente versione
   changelog: [
+    'Vendite → Canoni: nuova vendita «ISA Studio Legale» (listino 250 €, avvio 150 € il primo anno, sconti, codice cliente WKI); al rinnovo niente avvio',
     'Perf: apertura più veloce — lo spreadsheet viene aperto una volta sola per richiesta (era 7-15 volte)',
     'Perf: eliminata la doppia scansione del foglio Timesheet all\'avvio (il badge ore extra ora legge il dato dalla Home)',
     'Fix: ricerca clienti — ritenta automaticamente gli errori transitori del backend invece di fallire subito',
