@@ -1073,6 +1073,15 @@
                             <option value="TUTTI">Tutti</option>
                         </select>
                     </div>
+                    <div class="storico-filtro-group">
+                        <select id="canoni-filter-tipo" onchange="filterCanoni()">
+                            <option value="">Tutti i tipi</option>
+                            <option value="hypercare">Hypercare</option>
+                            <option value="isa">ISA Studio Legale</option>
+                            <option value="controlli">Controlli periodici</option>
+                            <option value="altro">Altri canoni</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="canoniContainer">
                     <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-calendar"></i></div><div>Caricamento...</div></div>
@@ -1882,6 +1891,18 @@
                         class="form-control" 
                         placeholder="Codice SDI per fatturazione elettronica"
                         maxlength="7"
+                    >
+                </div>
+
+                <!-- Codice cliente WKI: lega il cliente al contratto Kleos in KSALES -->
+                <div class="form-group">
+                    <label for="edit-codice-wki">Codice cliente WKI (Kleos)</label>
+                    <input
+                        type="text"
+                        id="edit-codice-wki"
+                        class="form-control"
+                        placeholder="Solo per i clienti Kleos, es. 1695653"
+                        inputmode="numeric"
                     >
                 </div>
                 

@@ -1217,9 +1217,27 @@ function filterCanoniDebounced() {
     canoniFilterTimer = setTimeout(filterCanoni, 300);
 }
 
+// Categoria di un canone per colore, etichetta e filtro. ISA e CONTROLLI sono tipi del foglio;
+// Hypercare è un canone STANDARD riconosciuto dalla descrizione; il resto è «Altro».
+const CATEGORIE_CANONE = {
+    hypercare: { etichetta: 'Hypercare',          icona: 'fa-life-ring',       colore: '#0f766e', sfondo: '#ecfdf9' },
+    isa:       { etichetta: 'ISA Studio Legale',  icona: 'fa-balance-scale',   colore: '#1c3557', sfondo: '#eef3fa' },
+    controlli: { etichetta: 'Controlli periodici', icona: 'fa-clipboard-check', colore: '#c2410c', sfondo: '#fff5ec' },
+    altro:     { etichetta: 'Canone',             icona: 'fa-calendar',        colore: '#6b7280', sfondo: '#f8f9fa' }
+};
+
+function categoriaCanone(c) {
+    const tipo = (c.tipo || '').toUpperCase();
+    if (tipo === 'ISA') return 'isa';
+    if (tipo === 'CONTROLLI') return 'controlli';
+    if (/hypercare/i.test(c.descrizione || '')) return 'hypercare';
+    return 'altro';
+}
+
 function filterCanoni() {
     const filtroCliente = (document.getElementById('canoni-filter-cliente')?.value || '').trim().toLowerCase();
     const filtroStato   = (document.getElementById('canoni-filter-stato')?.value || '').toUpperCase();
+    const filtroTipo    = document.getElementById('canoni-filter-tipo')?.value || '';
 
     const filtered = (canoniData || []).filter(c => {
         const matchCliente = !filtroCliente || c.nomeCliente.toLowerCase().includes(filtroCliente);
@@ -1230,7 +1248,9 @@ function filterCanoni() {
         else if (filtroStato === 'TUTTI') matchStato = true;
         else                              matchStato = stU === filtroStato;
 
-        return matchCliente && matchStato;
+        const matchTipo = !filtroTipo || categoriaCanone(c) === filtroTipo;
+
+        return matchCliente && matchStato && matchTipo;
     });
     renderCanoni(filtered);
 }
@@ -1282,20 +1302,25 @@ function renderCanoni(canoni) {
             const statoBadge = isRinnovato
                 ? `<span class="storico-badge" style="background:#e2e3f3;color:#4b3fae;">Rinnovato</span>`
                 : `<span class="storico-badge ${statoClass}">${c.stato}</span>`;
-            // Distinzione grafica per i canoni-controlli: bordo sinistro arancio + chip
-            const cardStyle = isControlli ? ' style="border-left:4px solid #fd7e14;"'
-                            : isIsa ? ' style="border-left:4px solid #1c3557;"' : '';
-            const controlliChip = isControlli
-                ? `<span class="storico-badge" style="background:#fff3cd;color:#856404;margin-left:6px;"><i class="fas fa-clipboard-check"></i> Controlli</span>`
-                : isIsa
-                ? `<span class="storico-badge" style="background:#dbe7f5;color:#1c3557;margin-left:6px;"><i class="fas fa-balance-scale"></i> ISA</span>`
-                  + (c.isa && c.isa.codiceWki ? `<span class="storico-badge" style="background:#f1f3f5;color:#495057;margin-left:6px;" title="Codice cliente WKI (contratto Kleos in KSALES)">WKI ${c.isa.codiceWki}</span>` : '')
+            // Categoria ben visibile: banda colorata in testa, fondo tinto e bordo spesso
+            const cat = CATEGORIE_CANONE[categoriaCanone(c)];
+            const cardStyle = ` style="border-left:8px solid ${cat.colore}; background:${cat.sfondo}; padding-top:0; overflow:hidden;"`;
+            const bandaCategoria = `
+                <div style="margin:0 -16px 10px -16px; padding:6px 16px; background:${cat.colore}; color:#fff;
+                            font-weight:700; letter-spacing:.04em; text-transform:uppercase; font-size:.8em;
+                            display:flex; align-items:center; gap:8px;">
+                    <i class="fas ${cat.icona}"></i> ${cat.etichetta}
+                    ${isIsa && c.isa && c.isa.gratuito ? `<span style="margin-left:auto; background:#fff; color:${cat.colore}; border-radius:4px; padding:1px 6px;">Primo periodo gratuito</span>` : ''}
+                </div>`;
+            const controlliChip = isIsa && c.isa && c.isa.codiceWki
+                ? `<span class="storico-badge" style="background:#fff;color:#1c3557;border:1px solid #1c3557;margin-left:6px;" title="Codice cliente WKI (contratto Kleos in KSALES)">WKI ${c.isa.codiceWki}</span>`
                 : '';
 
             const mostraAzioni = isAttivo || c.idPrecedente || isControlli;
 
             html += `
             <div class="storico-card"${cardStyle}>
+                ${bandaCategoria}
                 <div class="storico-card-header">
                     <span class="storico-id">${c.idCanone}${controlliChip}${fattBadge}</span>
                     ${statoBadge}

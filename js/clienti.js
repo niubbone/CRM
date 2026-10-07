@@ -239,6 +239,8 @@ function showClienteDetail(cliente) {
     document.getElementById('edit-piva').value = cliente.piva || '';
     document.getElementById('edit-cf').value = cliente.cf || '';
     document.getElementById('edit-sdi').value = cliente.sdi || '';
+    const codiceWkiEl = document.getElementById('edit-codice-wki');
+    if (codiceWkiEl) codiceWkiEl.value = cliente.codiceWki || '';
     document.getElementById('edit-email').value = cliente.email || '';
     document.getElementById('edit-referente').value = cliente.referente || '';
     document.getElementById('edit-cellulare').value = cliente.cellulare || '';
@@ -339,6 +341,7 @@ async function saveClienteChanges(event) {
         piva: document.getElementById('edit-piva').value,
         cf: document.getElementById('edit-cf').value,
         sdi: document.getElementById('edit-sdi').value,
+        codiceWki: (document.getElementById('edit-codice-wki')?.value || '').trim(),
         email: document.getElementById('edit-email').value,
         referente: document.getElementById('edit-referente').value,
         cellulare: document.getElementById('edit-cellulare').value,
