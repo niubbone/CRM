@@ -473,25 +473,41 @@ function letturaIsa() {
     const v = id => parseFloat((document.getElementById(id)?.value || '0').replace(',', '.')) || 0;
     const r = { listino: v('venditaIsaListino'), sconto: v('venditaIsaSconto'),
                 avvio: v('venditaIsaAvvio'), scontoAvvio: v('venditaIsaScontoAvvio') };
+    r.gratuito = !!document.getElementById('venditaIsaGratuito')?.checked;
     r.canone = r.listino - r.sconto;
     r.avvioNetto = r.avvio - r.scontoAvvio;
-    r.totale = r.canone + r.avvioNetto;
+    r.totale = r.gratuito ? 0 : r.canone + r.avvioNetto;
     return r;
 }
 
+// Stessa regola del backend (scadenzaIsa_): il primo 30/09 dopo la data di inizio
+function scadenzaIsa(dataIso) {
+    const d = dataIso ? new Date(dataIso + 'T00:00:00') : new Date();
+    const s = new Date(d.getFullYear(), 8, 30);
+    if (s <= d) s.setFullYear(s.getFullYear() + 1);
+    return s;
+}
+
 function aggiornaTotaleIsa() {
+    if (document.getElementById('tipoVendita')?.value !== 'isa') return;   // non toccare gli altri moduli
     const r = letturaIsa();
     const euro = n => '€ ' + n.toFixed(2).replace('.', ',');
     const box = document.getElementById('venditaIsaRiepilogo');
     const importo = document.getElementById('venditaImporto');
-    if (importo) importo.value = r.totale > 0 ? r.totale.toFixed(2) : '';
+    // il campo è required: per un periodo gratuito ci va comunque un valore (il backend mette 0)
+    if (importo) importo.value = r.gratuito ? '0.01' : (r.totale > 0 ? r.totale.toFixed(2) : '');
     if (!box) return;
+    const scad = scadenzaIsa(document.getElementById('venditaDataInizio')?.value)
+        .toLocaleDateString('it-IT');
     const errore = r.sconto > r.listino || r.scontoAvvio > r.avvio || r.sconto < 0 || r.scontoAvvio < 0;
     box.innerHTML = errore
         ? '<span style="color:#dc3545;">Uno sconto è più alto del prezzo.</span>'
-        : `Primo anno: canone <strong>${euro(r.canone)}</strong>`
-          + (r.avvio > 0 ? ` + avvio <strong>${euro(r.avvioNetto)}</strong>` : '')
-          + ` = <strong>${euro(r.totale)}</strong> + IVA<br>Dal rinnovo: <strong>${euro(r.canone)}</strong> l'anno + IVA`;
+        : (r.gratuito
+            ? `Primo periodo, fino al ${scad}: <strong>gratuito</strong>`
+            : `Primo periodo, fino al ${scad}: canone <strong>${euro(r.canone)}</strong>`
+              + (r.avvio > 0 ? ` + avvio <strong>${euro(r.avvioNetto)}</strong>` : '')
+              + ` = <strong>${euro(r.totale)}</strong> + IVA`)
+          + `<br>Dal rinnovo (01/10 – 30/09): <strong>${euro(r.canone)}</strong> l'anno + IVA`;
 }
 
 function closeVenditaModal() {
@@ -561,7 +577,8 @@ async function submitVendita(e) {
             const codiceWki = (document.getElementById('venditaIsaCodiceWki')?.value || '').trim();
             params += `&tipo=ISA&durata_anni=1&descrizione=${encodeURIComponent(descrizione)}`
                 + `&listino=${r.listino}&sconto=${r.sconto}&avvio=${r.avvio}&sconto_avvio=${r.scontoAvvio}`
-                + `&codice_wki=${encodeURIComponent(codiceWki)}`;
+                + `&codice_wki=${encodeURIComponent(codiceWki)}`
+                + (r.gratuito ? '&gratuito=1' : '');
         } else if (tipo === 'firma') {
             action = 'insert_firma';
             const tipoFirma = document.getElementById('venditaTipoFirma').value;
