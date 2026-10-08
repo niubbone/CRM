@@ -1208,7 +1208,7 @@ function renderStartupCard(s) {
             <button class="btn-small btn-storico-detail" onclick="toggleRegistraOre('${s.idStartup}')">
                 <i class="fas fa-stopwatch"></i> Registra ore
             </button>
-            <button class="btn-small" onclick="toggleMovimenti('${s.idStartup}')">
+            <button class="btn-small" onclick="toggleMovimentiStartup('${s.idStartup}')">
                 <i class="fas fa-clock-rotate-left"></i> Movimenti
             </button>
             <button class="btn-small" onclick="toggleModificaStartup('${s.idStartup}')">
@@ -1334,7 +1334,8 @@ async function salvaOre(idStartup) {
     }
 }
 
-function toggleMovimenti(idStartup) {
+// Nome proprio: clienti.js definisce un altro window.toggleMovimenti (scheda cliente) che lo coprirebbe
+function toggleMovimentiStartup(idStartup) {
     const box = document.getElementById(`movimenti-${idStartup}`);
     if (!box) return;
 
@@ -1478,7 +1479,7 @@ window.toggleNuovoStartup = toggleNuovoStartup;
 window.creaStartup = creaStartup;
 window.toggleRegistraOre = toggleRegistraOre;
 window.salvaOre = salvaOre;
-window.toggleMovimenti = toggleMovimenti;
+window.toggleMovimentiStartup = toggleMovimentiStartup;
 window.eliminaMovimento = eliminaMovimento;
 window.archiviaStartupUI = archiviaStartupUI;
 window.toggleModificaStartup = toggleModificaStartup;
