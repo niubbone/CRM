@@ -1840,6 +1840,9 @@ function renderStorico(pacchetti) {
                         onclick="openPacchettoDettaglio('${p.idPacchetto}', '${(p.descrizione || p.idPacchetto).replace(/'/g,"\\'")}', {nomeCliente:'${p.nomeCliente.replace(/'/g,"\\'")}',oreAcquistate:${p.oreAcquistate},dataAcquisto:'${p.dataAcquisto}',dataScadenza:'${p.dataScadenza}'})">
                         <i class="fas fa-list"></i> Dettaglio interventi
                     </button>
+                    <button class="btn-small btn-storico-detail" onclick="openModificaPacchetto('${p.idPacchetto}')">
+                        <i class="fas fa-pen"></i> Modifica
+                    </button>
                 </div>
             </div>`;
         });
@@ -1847,6 +1850,74 @@ function renderStorico(pacchetti) {
     });
 
     container.innerHTML = html;
+}
+
+// =======================================================================
+// === MODIFICA PACCHETTO ===
+// =======================================================================
+// Corregge ore acquistate, importo, descrizione e data di un pacchetto già inserito.
+// Scadenza, residue e stato sono formule del foglio: si ricalcolano da sole.
+
+function openModificaPacchetto(idPacchetto) {
+    const p = storicoData.find(x => x.idPacchetto === idPacchetto);
+    if (!p) return;
+    const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const d = (p.dataAcquisto || '').split('/');
+    const dataIso = d.length === 3 ? `${d[2]}-${d[1].padStart(2, '0')}-${d[0].padStart(2, '0')}` : '';
+
+    document.getElementById('modificaPacchettoModal')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+        <div id="modificaPacchettoModal" class="modal active">
+            <div class="modal-content" style="max-width: 460px;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-pen"></i> Modifica ${esc(p.idPacchetto)}</h2>
+                    <button class="close-btn" onclick="closeModificaPacchetto()">✕</button>
+                </div>
+                <div class="modal-body" style="display:grid; gap:12px;">
+                    <div style="color:#6c757d;">${esc(p.nomeCliente)} · utilizzate ${p.oreUtilizzate}h</div>
+                    <label>Ore acquistate
+                        <input type="number" id="modPacchettoOre" step="0.5" min="0.5" value="${p.oreAcquistate}"></label>
+                    <label>Importo (€)
+                        <input type="number" id="modPacchettoImporto" step="0.01" min="0.01" value="${p.importo}"></label>
+                    <label>Data acquisto
+                        <input type="date" id="modPacchettoData" value="${dataIso}"></label>
+                    <label>Descrizione
+                        <input type="text" id="modPacchettoDescrizione" value="${esc(p.descrizione)}"></label>
+                    <div style="font-size:0.85em; color:#6c757d;">Scadenza, ore residue e stato si ricalcolano da soli. Una proforma già emessa non cambia.</div>
+                    <div style="display:flex; gap:10px; justify-content:flex-end;">
+                        <button class="btn-secondary" onclick="closeModificaPacchetto()">Annulla</button>
+                        <button class="btn-primary" id="modPacchettoSalva" onclick="salvaModificaPacchetto('${esc(p.idPacchetto)}')"><i class="fas fa-save"></i> Salva</button>
+                    </div>
+                </div>
+            </div>
+        </div>`);
+}
+
+function closeModificaPacchetto() {
+    document.getElementById('modificaPacchettoModal')?.remove();
+}
+
+async function salvaModificaPacchetto(idPacchetto) {
+    const btn = document.getElementById('modPacchettoSalva');
+    const params = new URLSearchParams({
+        action: 'modifica_pacchetto',
+        id_pacchetto: idPacchetto,
+        ore_acquistate: document.getElementById('modPacchettoOre').value,
+        importo: document.getElementById('modPacchettoImporto').value,
+        data_acquisto: document.getElementById('modPacchettoData').value,
+        descrizione: document.getElementById('modPacchettoDescrizione').value
+    });
+    try {
+        if (btn) { btn.disabled = true; btn.textContent = 'Salvataggio...'; }
+        const response = await fetch(`${getAPIUrl()}?${params}`);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+        closeModificaPacchetto();
+        loadStoricoPackages({ forzato: true });
+    } catch (error) {
+        alert('❌ Errore: ' + error.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Salva'; }
+    }
 }
 
 // =======================================================================
