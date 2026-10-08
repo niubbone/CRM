@@ -1148,7 +1148,8 @@ function _disegnaStartup() {
     if (!lista) return;   // la Home non è ancora disegnata: ci penserà renderHome
     const inCorso = Array.from(lista.querySelectorAll('[id^="registra-ore-"]')).some(box =>
         box.style.display !== 'none' &&
-        Array.from(box.querySelectorAll('input[type="number"], textarea')).some(el => el.value.trim() !== ''));
+        Array.from(box.querySelectorAll('input[type="number"], textarea')).some(el => el.value.trim() !== ''))
+        || Array.from(lista.querySelectorAll('[id^="modifica-startup-"]')).some(box => box.style.display !== 'none');
     if (inCorso) return;
     lista.innerHTML = renderStartupLista(startupDati);
     const conteggi = document.getElementById('startup-conteggi');
@@ -1210,9 +1211,28 @@ function renderStartupCard(s) {
             <button class="btn-small" onclick="toggleMovimenti('${s.idStartup}')">
                 <i class="fas fa-clock-rotate-left"></i> Movimenti
             </button>
+            <button class="btn-small" onclick="toggleModificaStartup('${s.idStartup}')">
+                <i class="fas fa-pen"></i> Modifica
+            </button>
             <button class="btn-small" onclick="archiviaStartupUI('${s.idStartup}')">
                 <i class="fas fa-box-archive"></i> Archivia
             </button>
+        </div>
+
+        <div id="modifica-startup-${s.idStartup}" class="home-inline-form" style="display:none;">
+            <div class="riga">
+                <input type="text" id="mod-cliente-${s.idStartup}" value="${_escHome(s.cliente)}" placeholder="Cliente" style="flex:1 1 220px;">
+                <input type="number" id="mod-ore-${s.idStartup}" value="${s.oreTotali}" placeholder="Ore totali" step="0.5" min="0.5" style="width:120px;" title="Ore totali">
+            </div>
+            <div class="riga">
+                <input type="text" id="mod-agente-${s.idStartup}" value="${_escHome(s.agente)}" placeholder="Agente Kleos" style="flex:1 1 180px;">
+                <input type="text" id="mod-riferimento-${s.idStartup}" value="${_escHome(s.riferimento)}" placeholder="Riferimento vendita" style="flex:1 1 180px;">
+            </div>
+            <div class="riga">
+                <input type="text" id="mod-note-${s.idStartup}" value="${_escHome(s.note)}" placeholder="Note (facoltative)" style="flex:1 1 100%;">
+            </div>
+            <button class="home-btn" onclick="salvaModificaStartup('${s.idStartup}')"><i class="fas fa-check"></i> Salva</button>
+            <button class="home-btn secondario" onclick="toggleModificaStartup('${s.idStartup}')">Annulla</button>
         </div>
 
         <div id="registra-ore-${s.idStartup}" class="home-inline-form" style="display:none;">
@@ -1382,6 +1402,43 @@ async function eliminaMovimento(idMovimento, idStartup) {
     }
 }
 
+function toggleModificaStartup(idStartup) {
+    const box = document.getElementById(`modifica-startup-${idStartup}`);
+    if (!box) return;
+    const aperto = box.style.display !== 'none';
+    box.style.display = aperto ? 'none' : 'block';
+    if (aperto) _disegnaStartup();   // annullato: rimette i valori salvati
+    else document.getElementById(`mod-ore-${idStartup}`)?.focus();
+}
+
+/** Corregge la testata (cliente, ore totali, agente, riferimento, note): i movimenti restano. */
+async function salvaModificaStartup(idStartup) {
+    const val = campo => (document.getElementById(`mod-${campo}-${idStartup}`)?.value || '').trim();
+    if (!val('cliente')) { alert('Il nome del cliente è obbligatorio'); return; }
+    if (!val('ore') || parseFloat(val('ore').replace(',', '.')) <= 0) { alert('Indica le ore totali'); return; }
+
+    const params = new URLSearchParams({
+        action: 'update_startup',
+        id_startup: idStartup,
+        cliente: val('cliente'),
+        ore_totali: val('ore'),
+        agente: val('agente'),
+        riferimento: val('riferimento'),
+        note: val('note')
+    });
+
+    try {
+        const res = await fetch(`${_startupApiUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        const box = document.getElementById(`modifica-startup-${idStartup}`);
+        if (box) box.style.display = 'none';
+        await caricaStartup();
+    } catch (e) {
+        alert('Errore modifica monte ore: ' + e.message);
+    }
+}
+
 async function archiviaStartupUI(idStartup) {
     if (!confirm('Archiviare questo monte ore? Sparisce dalla Home ma resta consultabile.')) return;
 
@@ -1424,5 +1481,7 @@ window.salvaOre = salvaOre;
 window.toggleMovimenti = toggleMovimenti;
 window.eliminaMovimento = eliminaMovimento;
 window.archiviaStartupUI = archiviaStartupUI;
+window.toggleModificaStartup = toggleModificaStartup;
+window.salvaModificaStartup = salvaModificaStartup;
 window.caricaStartup = caricaStartup;
 window.caricaTodo = caricaTodo;
