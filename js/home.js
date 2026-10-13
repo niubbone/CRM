@@ -260,7 +260,7 @@ function renderHome() {
 
     container.innerHTML =
         renderBarraAggiornamento() +
-        renderPendenze(homeData.pendenze || {}, homeData.controlli || [], homeData.qodnet) +
+        renderPendenze(homeData.pendenze || {}, homeData.controlli || [], homeData.qodnet, homeData.ferrari) +
         renderTodoSezione(todoDati) +
         renderControlliSezione(homeData.controlli || []) +
         renderStartupSezione(startupDati);
@@ -297,7 +297,7 @@ function renderBarraAggiornamento() {
 // === BLOCCO 1 — PENDENZE ===
 // =======================================================================
 
-function renderPendenze(p, controlli, qodnet) {
+function renderPendenze(p, controlli, qodnet, ferrari) {
     const card = (numero, label, icona, colore, onclick, extra) => `
         <div class="home-pendenza-card ${numero > 0 ? '' : 'vuota'}" onclick="${onclick}">
             <div class="home-pendenza-icon ${colore}"><i class="fas ${icona}"></i></div>
@@ -323,6 +323,7 @@ function renderPendenze(p, controlli, qodnet) {
         ${card(p.proformaDaFatturare || 0, 'Proforma da fatturare', 'fa-file-invoice', 'verde', "vaiA('proforma')")}
         ${card(p.fattureNonPagate || 0, 'Fatture non pagate', 'fa-money-bill-wave', 'rosso', "vaiA('fatture')", importo)}
         ${qodnet ? card(qodnet.attenzione || 0, 'QODNET', 'fa-globe', 'blu', "vaiA('qodnet')", _extraQodnet(qodnet)) : ''}
+        ${ferrari ? card(ferrari.daFatturare || 0, 'Ferrari da fatturare', 'fa-desktop', 'verde', "vaiA('ferrari')", _extraFerrari(ferrari)) : ''}
     </div>`;
 }
 
@@ -336,6 +337,14 @@ function _extraQodnet(q) {
     if (q.nonPagatiVecchi) pezzi.push(`${q.nonPagatiVecchi} non pagat${q.nonPagatiVecchi === 1 ? 'o' : 'i'}`);
     if (q.daConfermareVecchie) pezzi.push(`${q.daConfermareVecchie} da confermare`);
     if (q.daFatturare) pezzi.push('€ ' + q.daFatturare.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '');
+    return pezzi.join(' · ');
+}
+
+/** Riga sotto il numero della card Ferrari: provvigioni già note e quante mancano */
+function _extraFerrari(f) {
+    const pezzi = [];
+    if (f.importo) pezzi.push('€ ' + f.importo.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    if (f.senzaProvvigione) pezzi.push(`${f.senzaProvvigione} senza provvigione`);
     return pezzi.join(' · ');
 }
 
@@ -371,6 +380,7 @@ function vaiA(dove) {
         // vista arriva già filtrata sullo stesso criterio del contatore.
         case 'proforma':  apriProformaDaFatturare();  break;
         case 'fatture':   apriFattureNonPagate();     break;
+        case 'ferrari': vaiVendite('ferrari'); break;
         case 'qodnet': {
             // Servizi scoperti → vista Servizi filtrata; altrimenti Provvigioni
             const q = (homeData && homeData.qodnet) || {};

@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.45.1';
+const SW_BUILD = '4.46.0';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -60,7 +60,8 @@ const STATIC_FILES = [
   `${BASE_PATH}js/utilities.js`,
   `${BASE_PATH}js/utils.js`,
   `${BASE_PATH}js/vendite.js`,
-  `${BASE_PATH}js/qodnet-riscontro.js`
+  `${BASE_PATH}js/qodnet-riscontro.js`,
+  `${BASE_PATH}js/ferrari.js`
 ];
 
 // API endpoint da cachare (per offline fallback)

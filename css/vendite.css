@@ -656,6 +656,8 @@
 .qodnet-icona { background: none; border: none; color: #6c757d; cursor: pointer; padding: 4px 6px; }
 .qodnet-icona:hover { color: #1a73e8; }
 .qodnet-fatturate { margin-top: 18px; }
+.qodnet-saldo.ferrari-saldo { grid-template-columns: 2fr 1fr; }
+.qodnet-fattura-voce input.ferrari-fattura-provv { width: 100px; height: auto; padding: 4px 6px; flex-shrink: 0; }
 
 @media (max-width: 600px) {
     .qodnet-saldo { grid-template-columns: 1fr; }

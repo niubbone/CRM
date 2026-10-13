@@ -984,6 +984,10 @@
                 <span class="vendite-nav-icon"><i class="fas fa-globe"></i></span>
                 <span class="vendite-nav-label">QODNET</span>
             </div>
+            <div class="vendite-nav-card" id="vnav-ferrari" onclick="switchVenditeSection('ferrari')">
+                <span class="vendite-nav-icon"><i class="fas fa-desktop"></i></span>
+                <span class="vendite-nav-label">Ferrari</span>
+            </div>
         </div>
 
         <!-- ===== SEZIONE PACCHETTI ===== -->
@@ -1219,6 +1223,22 @@
             </div>
         </div>
 
+        <!-- ===== SEZIONE FERRARI COMPUTERS ===== -->
+        <div id="vendite-section-ferrari" class="vendite-section" style="display:none;">
+            <div id="vsub-ferrari-riepilogo-content" class="vendite-subtab-content">
+                <div class="vendite-action-card" onclick="openFerrariForm()">
+                    <span class="vendite-action-icon"><i class="fas fa-desktop"></i></span>
+                    <div>
+                        <div class="vendite-action-title">Registra vendita Ferrari</div>
+                        <div class="vendite-action-desc">Cliente, data e cosa hai venduto. Importo e provvigione puoi scriverli anche dopo, quando fatturi</div>
+                    </div>
+                </div>
+                <div id="ferrariContainer">
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-desktop"></i></div><div>Caricamento...</div></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== SEZIONE SCADENZE ===== -->
         <div id="vendite-section-scadenze" class="vendite-section" style="display:none;">
             <div class="info-banner" style="margin-bottom:16px;">
@@ -1407,6 +1427,84 @@
     </div>
 </div>
 
+<!-- Modal Ferrari - Registra / modifica vendita -->
+<div id="ferrariModal" class="modal-vendite">
+    <div class="modal-content-vendite">
+        <div class="modal-header-vendite">
+            <span id="ferrariTitolo">Registra vendita Ferrari</span>
+            <button class="modal-close-vendite" onclick="closeFerrariModal()">&times;</button>
+        </div>
+        <form id="ferrariForm" onsubmit="submitFerrari(event)">
+            <input type="hidden" id="ferrariId">
+            <div class="form-group">
+                <label>Cliente *</label>
+                <input type="text" id="ferrariCliente" list="ferrari-client-list" required placeholder="Cerca o seleziona cliente..." autocomplete="off">
+                <datalist id="ferrari-client-list"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Cosa hai venduto *</label>
+                <input type="text" id="ferrariDescrizione" required placeholder="es. 2 PC Dell Optiplex + monitor" autocomplete="off">
+            </div>
+            <div class="qodnet-griglia-doc">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="ferrariData" required>
+                </div>
+                <div class="form-group">
+                    <label>Importo vendita (€)</label>
+                    <input type="number" id="ferrariImporto" step="0.01" min="0" placeholder="facoltativo">
+                </div>
+                <div class="form-group">
+                    <label>Provvigione (€)</label>
+                    <input type="number" id="ferrariProvvigione" step="0.01" min="0" placeholder="anche dopo">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Note</label>
+                <textarea id="ferrariNote" rows="2" placeholder="es. n. ordine Ferrari, percentuale concordata..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary" id="ferrariSubmitBtn">Salva</button>
+            <button type="button" class="btn-small qodnet-btn-elimina" id="ferrariBtnElimina" onclick="eliminaVenditaFerrari()">
+                <i class="fas fa-trash"></i> Elimina vendita
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ferrari - Fattura provvigioni -->
+<div id="ferrariFatturaModal" class="modal-vendite">
+    <div class="modal-content-vendite qodnet-modal-largo">
+        <div class="modal-header-vendite">
+            <span>Fattura provvigioni a Ferrari</span>
+            <button class="modal-close-vendite" onclick="closeFerrariFatturaModal()">&times;</button>
+        </div>
+        <form onsubmit="submitFerrariFattura(event)">
+            <div class="qodnet-fattura-voci" id="ferrariFatturaVoci"></div>
+            <div class="info-banner" id="ferrariFatturaRiepilogo" style="margin:12px 0;"></div>
+            <div class="qodnet-griglia-doc">
+                <div class="form-group">
+                    <label>Imponibile fatturato (€) *</label>
+                    <input type="number" id="ferrariFatturaImponibile" step="0.01" min="0.01" required oninput="aggiornaTotaliFatturaFerrari(true)">
+                </div>
+                <div class="form-group">
+                    <label>N. fattura *</label>
+                    <input type="text" id="ferrariFatturaNumero" required placeholder="es. 18/A-2026" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Data *</label>
+                    <input type="date" id="ferrariFatturaData" required>
+                </div>
+            </div>
+            <p style="font-size:12px;color:#6c757d;margin:0 0 12px;">
+                Scrivi la provvigione delle vendite che non ce l'hanno; togli la spunta a quelle che fatturerai più avanti.
+                Viene registrata nel tab Fatture intestata a Ferrari (IVA 22%, ritenuta 20%) e le vendite spuntate si chiudono.
+                Se il numero è già nel tab Fatture, le vendite vengono collegate a quella fattura.
+            </p>
+            <button type="submit" class="btn-primary" id="ferrariFatturaSubmitBtn">Registra fattura</button>
+        </form>
+    </div>
+</div>
+
 <!-- Modal QODNET - Fattura provvigioni -->
 <div id="qodnetFatturaModal" class="modal-vendite">
     <div class="modal-content-vendite">
@@ -1433,7 +1531,7 @@
             </div>
             <p style="font-size:12px;color:#6c757d;margin:0 0 12px;">
                 Togli la spunta alle voci che QODNET pagherà più avanti: restano da fatturare. L'imponibile si propone uguale alla somma delle voci ma puoi cambiarlo.
-                Viene registrata nel tab Fatture intestata a QODNET SRL (IVA 22%, senza ritenuta) e le voci spuntate diventano «fatturate».
+                Viene registrata nel tab Fatture intestata a QODNET SRL (IVA 22%, ritenuta 20%) e le voci spuntate diventano «fatturate».
                 Se il numero è già nel tab Fatture, le voci vengono collegate a quella fattura.
             </p>
             <button type="submit" class="btn-primary" id="qodnetFatturaSubmitBtn">Registra fattura</button>
@@ -2060,6 +2158,7 @@
 <script type="module" src="js/main.js"></script>
 <script src="js/vendite.js"></script>
 <script src="js/qodnet-riscontro.js"></script>
+<script src="js/ferrari.js"></script>
 <script src="js/fatture.js"></script>
 <script src="js/fatture-stats.js"></script>
 <script type="module" src="js/clienti.js"></script>

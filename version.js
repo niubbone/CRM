@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.45.1';
+export const VERSION = '4.46.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.46.0",
+    date: "13/10/2026",
+    type: "feature",
+    changes: [
+      "Vendite → Ferrari: registri al volo le vendite hardware Ferrari Computers (cliente, data, cosa; importo e provvigione facoltativi)",
+      "«Fattura a Ferrari…»: scegli le vendite, scrivi le provvigioni mancanti, numero e data → fattura diretta nel tab Fatture (IVA 22%, ritenuta 20%) e vendite chiuse; «Annulla» le riapre",
+      "Home: card «Ferrari da fatturare» con le vendite ancora aperte"
+    ]
+  },
   {
     version: "4.41.0",
     date: "04/10/2026",
