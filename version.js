@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.48.0';
+export const VERSION = '4.49.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.49.0",
+    date: "13/10/2026",
+    type: "fix",
+    changes: [
+      "Timesheet chiusi con fattura diretta: ora risultano Fatturato con il numero (prima restavano Proformato)",
+      "Riallineati 25 timesheet rimasti Proformato anche se la loro proforma era già fatturata (conversioni fino a giugno 2026)",
+      "Pulizia: tolti codice e finestre mai usati (copia della lista proforma, finestra Emetti Fattura) e le azioni del backend rimaste senza uso"
+    ]
+  },
   {
     version: "4.48.0",
     date: "13/10/2026",
