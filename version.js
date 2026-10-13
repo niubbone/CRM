@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.47.0';
+export const VERSION = '4.48.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.48.0",
+    date: "13/10/2026",
+    type: "feature",
+    changes: [
+      "Scadenze, canone da fatturare: «Proforma» apre la proforma vera del cliente con il canone già spuntato (si possono aggiungere i suoi timesheet); «Fattura» apre la fattura diretta allo stesso modo",
+      "Tolte le vecchie finestre che segnavano Proformato/Fatturato a mano senza creare proforma o fattura"
+    ]
+  },
   {
     version: "4.47.0",
     date: "13/10/2026",

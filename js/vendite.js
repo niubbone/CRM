@@ -354,24 +354,21 @@ function createScadenzaCard(prodotto, isCanoneScaduto = false) {
         fatturazioneBadge = `<span class="badge ${f.classe}" title="${f.titolo}">${f.testo}</span>`;
     }
     
-    // 🆕 Pulsanti azione fatturazione
+    // Pulsanti fatturazione: portano alla proforma o alla fattura diretta vere,
+    // dove il canone si può mettere insieme ai timesheet dello stesso cliente.
+    // Un canone in proforma diventa Fatturato quando converti la proforma.
     let actionButtons = '';
-    if (prodotto.tipoProdotto === 'CANONE') {
-        if (prodotto.fatturazione === CANONE_FATTURAZIONE.DA_FATTURARE) {
-            actionButtons = `
-                <button class="btn-small btn-proforma" onclick="openProformaCanoneModal('${id}')">
-                    <i class="fas fa-file"></i> Proforma
-                </button>
-            `;
-        } else if (prodotto.fatturazione === CANONE_FATTURAZIONE.PROFORMATO) {
-            actionButtons = `
-                <button class="btn-small btn-fattura" onclick="openFatturaCanoneModal('${id}')">
-                    <i class="fas fa-receipt"></i> Fattura
-                </button>
-            `;
-        }
+    if (prodotto.tipoProdotto === 'CANONE' && prodotto.fatturazione === CANONE_FATTURAZIONE.DA_FATTURARE) {
+        actionButtons = `
+            <button class="btn-small btn-proforma" onclick="proformaDaCanone('${id}')" title="Apre la proforma del cliente con il canone già spuntato">
+                <i class="fas fa-file"></i> Proforma
+            </button>
+            <button class="btn-small btn-fattura" onclick="fatturaDaCanone('${id}')" title="Apre la fattura diretta del cliente con il canone già spuntato">
+                <i class="fas fa-receipt"></i> Fattura
+            </button>
+        `;
     }
-    
+
     card.innerHTML = `
         <div class="scadenza-info">
             <div class="scadenza-id">
@@ -633,187 +630,47 @@ async function submitVendita(e) {
 }
 
 // =======================================================================
-// === 🆕 MODAL PROFORMA CANONE ===
+// === FATTURAZIONE CANONE DALLA CARD SCADENZE ===
 // =======================================================================
 
-function openProformaCanoneModal(canoneId) {
+/** Aspetta che compaia la checkbox del canone e la spunta */
+async function spuntaCanone_(selettore, trova, aggiorna) {
+    for (let t = 0; t < 60; t++) {
+        const cb = [...document.querySelectorAll(selettore)].find(trova);
+        if (cb) { cb.checked = true; aggiorna(); cb.scrollIntoView({ block: 'center' }); return true; }
+        await new Promise(r => setTimeout(r, 250));
+    }
+    return false;
+}
+
+/** Tab Proforma con il cliente del canone e il canone già spuntato */
+async function proformaDaCanone(canoneId) {
     const canone = scadenzeData?.tutti?.find(p => p.idCanone === canoneId);
-    
-    if (!canone) {
-        alert('⚠️ Canone non trovato');
-        return;
-    }
-    
-    const modalHTML = `
-        <div id="proformaCanoneModal" class="modal-vendite active">
-            <div class="modal-content-vendite" style="max-width: 500px;">
-                <div class="modal-header-vendite">
-                    <span><i class="fas fa-file"></i> Emetti Proforma Canone</span>
-                    <button class="modal-close-vendite" onclick="closeProformaCanoneModal()">✕</button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="proforma-canone-id" value="${canoneId}">
-                    
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <div><strong>ID:</strong> ${canoneId}</div>
-                        <div><strong>Cliente:</strong> ${canone.nomeCliente}</div>
-                        <div><strong>Importo:</strong> € ${parseFloat(canone.importo).toFixed(2)}</div>
-                    </div>
-                    
-                    <p style="color: #666; font-size: 14px;">
-                        Cliccando "Genera Proforma" il canone verrà marcato come <strong>Proformato</strong>.
-                    </p>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                        <button class="btn-secondary" onclick="closeProformaCanoneModal()">Annulla</button>
-                        <button class="btn-primary" id="proforma-canone-submit" onclick="submitProformaCanone()"><i class="fas fa-file"></i> Genera Proforma</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const existingModal = document.getElementById('proformaCanoneModal');
-    if (existingModal) existingModal.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    if (!canone) return alert('⚠️ Canone non trovato');
+    window.switchTab && window.switchTab('proforma');
+    document.getElementById('proforma_client_select').value = canone.nomeCliente;
+    await window.loadTimesheetForClient();
+    const ok = await spuntaCanone_('.timesheet-checkbox', cb => {
+        const item = [...(window.currentTimesheetData || []), ...(window.currentCanoniData || [])][parseInt(cb.dataset.index)];
+        return item && item.idCanone === canoneId;
+    }, () => window.updateSelection());
+    if (!ok) alert(`⚠️ Il canone ${canoneId} non è tra le voci da fatturare di ${canone.nomeCliente}`);
 }
 
-function closeProformaCanoneModal() {
-    const modal = document.getElementById('proformaCanoneModal');
-    if (modal) modal.remove();
-}
-
-async function submitProformaCanone() {
-    const canoneId = document.getElementById('proforma-canone-id').value;
-    const submitBtn = document.getElementById('proforma-canone-submit');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Elaborazione...';
-
-    try {
-        const url = `${getAPIUrl()}?action=update_fatturazione_canone&canone_id=${encodeURIComponent(canoneId)}&fatturazione=${encodeURIComponent(CANONE_FATTURAZIONE.PROFORMATO)}`;
-        
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'Errore aggiornamento');
-        }
-        
-        alert(`✅ Canone ${canoneId} marcato come Proformato`);
-        closeProformaCanoneModal();
-        loadScadenze();
-        
-    } catch (error) {
-        console.error('Errore submitProformaCanone:', error);
-        alert('❌ Errore: ' + error.message);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-file"></i> Genera Proforma';
-    }
-}
-
-// =======================================================================
-// === 🆕 MODAL FATTURA CANONE ===
-// =======================================================================
-
-function openFatturaCanoneModal(canoneId) {
+/** Fattura diretta con il cliente del canone e il canone già spuntato */
+async function fatturaDaCanone(canoneId) {
     const canone = scadenzeData?.tutti?.find(p => p.idCanone === canoneId);
-    
-    if (!canone) {
-        alert('⚠️ Canone non trovato');
-        return;
-    }
-    
-    const oggi = new Date().toISOString().split('T')[0];
-    
-    const modalHTML = `
-        <div id="fatturaCanoneModal" class="modal-vendite active">
-            <div class="modal-content-vendite" style="max-width: 450px;">
-                <div class="modal-header-vendite">
-                    <span><i class="fas fa-receipt"></i> Registra Fattura Canone</span>
-                    <button class="modal-close-vendite" onclick="closeFatturaCanoneModal()">✕</button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="fattura-canone-id" value="${canoneId}">
-                    
-                    <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-                        <strong>${canoneId}</strong> - ${canone.nomeCliente}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Numero Fattura *</label>
-                        <input type="text" id="fattura-canone-numero" placeholder="Es. N.23/A" 
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                        <small style="color: #888;">Inserisci il numero fattura (es. N.23/A, 2026/001)</small>
-                    </div>
-                    
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label>Data Fattura</label>
-                        <input type="date" id="fattura-canone-data" value="${oggi}"
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                        <button class="btn-secondary" onclick="closeFatturaCanoneModal()">Annulla</button>
-                        <button class="btn-primary" id="fattura-canone-submit" onclick="submitFatturaCanone()"><i class="fas fa-receipt"></i> Salva Fattura</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const existingModal = document.getElementById('fatturaCanoneModal');
-    if (existingModal) existingModal.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
-
-function closeFatturaCanoneModal() {
-    const modal = document.getElementById('fatturaCanoneModal');
-    if (modal) modal.remove();
-}
-
-async function submitFatturaCanone() {
-    const canoneId = document.getElementById('fattura-canone-id').value;
-    const numeroFattura = document.getElementById('fattura-canone-numero').value.trim();
-    const dataFattura = document.getElementById('fattura-canone-data').value;
-    
-    if (!numeroFattura) {
-        alert('⚠️ Inserisci il numero fattura');
-        return;
-    }
-    
-    const submitBtn = document.getElementById('fattura-canone-submit');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvataggio...';
-    
-    try {
-        // Formatta: "N.23/A del 15/01/2026"
-        const dataFormatted = new Date(dataFattura).toLocaleDateString('it-IT');
-        const nFatturaCompleto = `${numeroFattura} del ${dataFormatted}`;
-        
-        const url = `${getAPIUrl()}?action=set_canone_fatturato&canone_id=${encodeURIComponent(canoneId)}&n_fattura=${encodeURIComponent(nFatturaCompleto)}`;
-        
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'Errore salvataggio');
-        }
-        
-        alert(`✅ Fattura "${nFatturaCompleto}" registrata per canone ${canoneId}`);
-        closeFatturaCanoneModal();
-        loadScadenze();
-        
-    } catch (error) {
-        console.error('Errore submitFatturaCanone:', error);
-        alert('❌ Errore: ' + error.message);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-receipt"></i> Salva Fattura';
-    }
+    if (!canone) return alert('⚠️ Canone non trovato');
+    window.switchTab && window.switchTab('fatture');
+    window.openNuovaFatturaModal();
+    document.getElementById('nf-cliente').value = canone.nomeCliente;
+    await caricaVociFatturaDiretta();
+    const ok = await spuntaCanone_('.nf-voce-cb', cb => {
+        const item = [..._nfVociData.timesheet, ..._nfVociData.canoni][parseInt(cb.dataset.index)];
+        return item && item.idCanone === canoneId;
+    }, () => aggiornaSelezioneVoci());
+    if (!ok) alert(`⚠️ Il canone ${canoneId} non è tra le voci da fatturare di ${canone.nomeCliente}`);
+    document.getElementById('nf-numero')?.focus();
 }
 
 // =======================================================================
@@ -3013,12 +2870,8 @@ if (typeof window !== 'undefined') {
     window.closeRinnovoModal = closeRinnovoModal;
     window.submitRinnovo = submitRinnovo;
     window.loadScadenze = loadScadenze;
-    window.openProformaCanoneModal = openProformaCanoneModal;
-    window.closeProformaCanoneModal = closeProformaCanoneModal;
-    window.submitProformaCanone = submitProformaCanone;
-    window.openFatturaCanoneModal = openFatturaCanoneModal;
-    window.closeFatturaCanoneModal = closeFatturaCanoneModal;
-    window.submitFatturaCanone = submitFatturaCanone;
+    window.proformaDaCanone = proformaDaCanone;
+    window.fatturaDaCanone = fatturaDaCanone;
     window.closeProformaFromPacchettoModal = closeProformaFromPacchettoModal;
     window.generateProformaFromPacchetto = generateProformaFromPacchetto;
     window.loadStoricoPackages = loadStoricoPackages;
