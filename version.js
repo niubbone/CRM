@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.46.0';
+export const VERSION = '4.47.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.47.0",
+    date: "13/10/2026",
+    type: "fix",
+    changes: [
+      "Canoni (anche controlli e ISA): quando converti in fattura la proforma che li contiene diventano Fatturato con il numero; con la fattura diretta diventano Fatturato (prima restavano Proformato)",
+      "Scadenze e riepilogo canoni: l'etichetta mostra numero e pagamento della fattura (pagata / non pagata, dal tab Fatture): non pagata = da disdire invece che rinnovare"
+    ]
+  },
   {
     version: "4.46.0",
     date: "13/10/2026",

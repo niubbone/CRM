@@ -297,6 +297,24 @@ function renderScadenze(data) {
     }
 }
 
+/**
+ * Etichetta di fatturazione di un canone (standard, controlli, ISA):
+ * Da fatturare → Proforma N → Fatturato N, pagata / non pagata (dal tab Fatture).
+ * «non pagata» è il segnale per disdire invece di rinnovare.
+ */
+function fatturazioneCanone(c) {
+    const numero = (c.nFattura || '').split(' del ')[0].trim();
+    if (c.fatturazione === CANONE_FATTURAZIONE.FATTURATO) {
+        if (c.pagato === false) return { testo: `Fattura ${numero} non pagata`, classe: 'badge-danger', titolo: 'Fattura non ancora incassata' };
+        if (c.pagato === true)  return { testo: `Fattura ${numero} pagata`, classe: 'badge-success', titolo: 'Fattura incassata' };
+        return { testo: numero ? `Fatturato ${numero}` : 'Fatturato', classe: 'badge-success', titolo: 'Fattura non trovata nel tab Fatture' };
+    }
+    if (c.fatturazione === CANONE_FATTURAZIONE.PROFORMATO) {
+        return { testo: c.nProforma ? `Proforma ${c.nProforma}` : 'Proformato', classe: 'badge-info', titolo: 'Diventa «Fatturato» quando converti la proforma in fattura' };
+    }
+    return { testo: c.fatturazione || 'Da fatturare', classe: 'badge-warning', titolo: '' };
+}
+
 function createScadenzaCard(prodotto, isCanoneScaduto = false) {
     const card = document.createElement('div');
     
@@ -329,13 +347,11 @@ function createScadenzaCard(prodotto, isCanoneScaduto = false) {
         giorniText = `${prodotto.giorniMancanti} giorni`;
     }
     
-    // 🆕 Badge fatturazione per canoni
+    // Badge fatturazione per canoni (con numero e pagamento)
     let fatturazioneBadge = '';
     if (prodotto.tipoProdotto === 'CANONE' && prodotto.fatturazione) {
-        const badgeClass = prodotto.fatturazione === CANONE_FATTURAZIONE.FATTURATO ? 'badge-success' :
-                          prodotto.fatturazione === CANONE_FATTURAZIONE.PROFORMATO ? 'badge-info' :
-                          'badge-warning';
-        fatturazioneBadge = `<span class="badge ${badgeClass}">${prodotto.fatturazione}</span>`;
+        const f = fatturazioneCanone(prodotto);
+        fatturazioneBadge = `<span class="badge ${f.classe}" title="${f.titolo}">${f.testo}</span>`;
     }
     
     // 🆕 Pulsanti azione fatturazione
@@ -1299,7 +1315,8 @@ function renderCanoni(canoni) {
             const isControlli = (c.tipo || '').toUpperCase() === 'CONTROLLI';
             const isIsa = (c.tipo || '').toUpperCase() === 'ISA';
 
-            const fattBadge = c.fatturazione ? `<span class="storico-badge" style="background:#e8f4fd;color:#0c63e4;margin-left:6px;">${c.fatturazione}</span>` : '';
+            const fattInfo = c.fatturazione ? fatturazioneCanone(c) : null;
+            const fattBadge = fattInfo ? `<span class="badge ${fattInfo.classe}" title="${fattInfo.titolo}" style="margin-left:6px;">${fattInfo.testo}</span>` : '';
             const statoBadge = isRinnovato
                 ? `<span class="storico-badge" style="background:#e2e3f3;color:#4b3fae;">Rinnovato</span>`
                 : `<span class="storico-badge ${statoClass}">${c.stato}</span>`;

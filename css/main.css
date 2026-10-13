@@ -234,6 +234,11 @@ button:disabled {
   color: #388e3c;
 }
 
+.badge-danger {
+  background: #fdecea;
+  color: #c62828;
+}
+
 /* Body card */
 .proforma-body {
   display: flex;
