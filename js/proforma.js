@@ -174,7 +174,17 @@ function displayTimesheetTable(items) {
     `;
     tbody.appendChild(tr);
   });
-  
+
+  // Arrivando da «Crea Proforma» della scheda cliente: timesheet già spuntati
+  if (window._proformaPreseleziona) {
+    window._proformaPreseleziona = false;
+    items.forEach((row, index) => {
+      if (row.tipo === 'CANONE' || row.idCanone) return;
+      const cb = tbody.querySelector(`.timesheet-checkbox[data-index="${index}"]`);
+      if (cb) cb.checked = true;
+    });
+  }
+
   updateSelection();
 }
 

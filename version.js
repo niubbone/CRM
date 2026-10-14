@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.50.0';
+export const VERSION = '4.50.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.50.1",
+    date: "14/10/2026",
+    type: "fix",
+    changes: [
+      "«Crea Proforma» dalla scheda cliente apre la proforma già sul cliente, con i suoi timesheet da fatturare spuntati"
+    ]
+  },
   {
     version: "4.50.0",
     date: "14/10/2026",

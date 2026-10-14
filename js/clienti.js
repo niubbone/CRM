@@ -1511,23 +1511,23 @@ END:VCARD`;
 }
 
 /**
- * Apre il tab Proforma con il cliente corrente già selezionato.
- * Se il dropdown è già popolato (tab già visitata), imposta subito il valore e carica.
- * Altrimenti memorizza il cliente in _pendingProformaCliente per essere applicato
- * da populateClientDropdown in proforma.js dopo il caricamento.
+ * Apre il tab Proforma direttamente al passo 2: cliente già impostato e
+ * timesheet da fatturare già spuntati (i canoni no), da togliere se serve.
+ * Alla prima visita del tab il cliente lo applica populateClientDropdown
+ * (proforma.js) tramite _pendingProformaCliente; se non lo ha fatto (tab già
+ * visitata o lista clienti non ancora caricata) lo si applica qui.
  */
 function creaProformaPerCliente(nomeCliente) {
     if (!nomeCliente) { alert('Nessun cliente selezionato'); return; }
     window._pendingProformaCliente = nomeCliente;
+    window._proformaPreseleziona = true;
     window.switchTab('proforma');
-    // Se il dropdown è già popolato (tab già visitata in questa sessione), applica subito
-    const select = document.getElementById('proforma_client_select');
-    if (select && select.options.length > 1) {
-        select.value = nomeCliente;
-        window._pendingProformaCliente = null;
-        if (typeof window.loadTimesheetForClient === 'function') {
-            window.loadTimesheetForClient();
-        }
+    if (!window._pendingProformaCliente) return;   // già applicato da populateClientDropdown
+    window._pendingProformaCliente = null;
+    const input = document.getElementById('proforma_client_select');
+    if (input) input.value = nomeCliente;
+    if (typeof window.loadTimesheetForClient === 'function') {
+        window.loadTimesheetForClient();
     }
 }
 window.creaProformaPerCliente = creaProformaPerCliente;
