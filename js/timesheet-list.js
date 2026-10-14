@@ -339,7 +339,7 @@ async function deleteTimesheetFromList(idIntervento, rowIndex) {
     if (!confirm) return;
     
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=delete_timesheet&row=${rowIndex}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=delete_timesheet&id_intervento=${encodeURIComponent(idIntervento || rowIndex)}`;
         const response = await fetch(url);
         const data = await response.json();
         

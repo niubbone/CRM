@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.49.0';
+export const VERSION = '4.50.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,17 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.50.0",
+    date: "14/10/2026",
+    type: "fix",
+    changes: [
+      "Proforma, fattura diretta, modifica/eliminazione timesheet e azioni sulle ore extra indicano le voci col loro ID: se nel frattempo una riga si sposta non si tocca più la voce sbagliata",
+      "Un solo calcolo fiscale (quota 4%, IVA, ritenuta) per backend e anteprime",
+      "Fattura da proforma per cliente forfettario: registrata senza ritenuta (prima la applicava)",
+      "Email della proforma per cliente forfettario con quota 4%: il riepilogo non si rompe più"
+    ]
+  },
   {
     version: "4.49.0",
     date: "13/10/2026",

@@ -290,12 +290,10 @@ export function updateProformaTotals() {
   });
   
   const applicaQuota = document.getElementById('applica_quota').checked;
-  const quotaIntegrativa = applicaQuota ? subtotale * 0.04 : 0;
-  const imponibile = subtotale + quotaIntegrativa;
-  const ritenuta = imponibile * 0.20;
-  const iva = imponibile * 0.22;
-  const lordo = imponibile + iva;
-  const netto = lordo - ritenuta;
+  // calcolo unico (js/fiscale.js), uguale al backend
+  const f = window.calcolaFiscale(subtotale, { quota: applicaQuota });
+  const quotaIntegrativa = f.quota;
+  const { imponibile, ritenuta, iva, lordo, netto } = f;
   
   document.getElementById('totale-subtotale').textContent = formatCurrency(subtotale);
   document.getElementById('totale-quota-row').style.display = applicaQuota ? 'flex' : 'none';
@@ -334,13 +332,17 @@ export async function generateProformaFinal() {
   proformaInfoBox.innerHTML = '<p>⏳ Generazione proforma in corso...</p>';
   
   try {
-    // 🆕 Passa sia timesheet che canoni
+    // Al backend vanno gli ID (stabili), non i numeri di riga
+    const rif = (voci, righe) => (righe || []).map(r => {
+      const v = voci.find(x => x.rowIndex === r);
+      return (v && (v.idIntervento || v.idCanone)) || r;
+    });
     const data = await generateProforma(
       clientName, 
-      window.selectedTimesheet || [], 
+      rif(window.currentTimesheetData || [], window.selectedTimesheet), 
       causale, 
       applicaQuota,
-      window.selectedCanoni || []
+      rif(window.currentCanoniData || [], window.selectedCanoni)
     );
     
     proformaInfoBox.innerHTML = `
@@ -426,11 +428,9 @@ function aggiornaTotaleProformaDiretta() {
     document.getElementById('pd-riepilogo').style.display = 'none';
     return;
   }
-  const quotaAmt    = quota ? importo * 0.04 : 0;
-  const imponibile  = importo + quotaAmt;
-  const iva         = imponibile * 0.22;
-  const ritenuta    = imponibile * 0.20;
-  const netto       = imponibile + iva - ritenuta;
+  const f = window.calcolaFiscale(importo, { quota });
+  const quotaAmt = f.quota;
+  const { iva, ritenuta, netto } = f;
 
   const fmt = v => '€ ' + v.toFixed(2).replace('.', ',');
   document.getElementById('pd-tot-imponibile').textContent = fmt(importo);

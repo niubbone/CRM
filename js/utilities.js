@@ -517,7 +517,7 @@ function displayIntegrityResults(data) {
                         <td style="padding:6px 8px;white-space:nowrap;">
                             <input id="orfana-input-${r.rowIndex}" type="text" placeholder="ID Pacchetto"
                                 style="width:110px;padding:3px 6px;border:1px solid #ced4da;border-radius:3px;font-size:12px;">
-                            <button onclick="assegnaRigaOrfana(${r.rowIndex})"
+                            <button onclick="assegnaRigaOrfana(${r.rowIndex}, '${r.idIntervento || ''}')"
                                 style="margin-left:4px;padding:3px 8px;background:#1976D2;color:#fff;border:none;border-radius:3px;font-size:12px;cursor:pointer;">
                                 Assegna
                             </button>
@@ -726,7 +726,7 @@ window.riagganciaApplicaDaIntegrity = async function() {
 /**
  * Assegna un pacchetto a una singola riga orfana (chiamata dal bottone Assegna inline)
  */
-window.assegnaRigaOrfana = async function(rowIndex) {
+window.assegnaRigaOrfana = async function(rowIndex, idIntervento) {
     const input  = document.getElementById(`orfana-input-${rowIndex}`);
     const status = document.getElementById(`orfana-status-${rowIndex}`);
     const row    = document.getElementById(`orfana-row-${rowIndex}`);
@@ -736,7 +736,7 @@ window.assegnaRigaOrfana = async function(rowIndex) {
 
     if (status) status.textContent = '⏳';
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=assegna_singola_riga&row_index=${rowIndex}&id_pacchetto=${encodeURIComponent(idPacchetto)}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=assegna_singola_riga&id_intervento=${encodeURIComponent(idIntervento || rowIndex)}&id_pacchetto=${encodeURIComponent(idPacchetto)}`;
         const res  = await fetch(url);
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Errore');

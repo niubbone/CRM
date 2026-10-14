@@ -277,9 +277,7 @@ function aggiornaTotaliFatturaFerrari(daImponibile) {
     if (!imp.dataset.manuale) imp.value = somma ? somma.toFixed(2) : '';
 
     const fatturato = parseFloat(imp.value) || 0;
-    const iva = Math.round(fatturato * 22) / 100;
-    const ritenuta = Math.round(fatturato * 20) / 100;
-    const netto = Math.round((fatturato + iva - ritenuta) * 100) / 100;
+    const { iva, ritenuta, netto } = window.calcolaFiscale(fatturato);
     const diff = Math.round((fatturato - somma) * 100) / 100;
     document.getElementById('ferrariFatturaRiepilogo').innerHTML =
         `<strong>${voci.length} vendite</strong> per ${euroQodnet(somma)} di provvigioni` +

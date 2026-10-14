@@ -270,12 +270,13 @@ function precompilaDaFatturaStornata() {
 function aggiornaCalcoloIVA() {
   const segno  = document.getElementById('nf-nota-credito')?.checked ? -1 : 1;
   const imp    = segno * (parseFloat(document.getElementById('nf-imponibile')?.value) || 0);
-  const iva    = Math.round(imp * 0.22 * 100) / 100;
-  const tot    = Math.round((imp + iva) * 100) / 100;
   const hasRA  = document.getElementById('nf-ritenuta')?.checked;
-  const ra     = hasRA ? Math.round(imp * 0.20 * 100) / 100 : 0;
-  // (con la nota di credito tutto è negativo: la ritenuta si restituisce)
-  const netto  = Math.round((tot - ra) * 100) / 100;
+  // calcolo unico (js/fiscale.js); con la nota di credito tutto è negativo: la ritenuta si restituisce
+  const f      = window.calcolaFiscale(imp, { ritenuta: !!hasRA });
+  const iva    = f.iva;
+  const tot    = f.lordo;
+  const ra     = f.ritenuta;
+  const netto  = f.netto;
 
   if (document.getElementById('nf-iva-display'))
     document.getElementById('nf-iva-display').textContent = '€ ' + formatFattureNum(iva);
@@ -312,8 +313,8 @@ async function saveNuovaFattura(event) {
   document.querySelectorAll('.nf-voce-cb:checked').forEach(cb => {
     const item = allItems[parseInt(cb.dataset.index)];
     if (!item) return;
-    if (item.tipo === 'CANONE' || item.idCanone) canIds.push(item.rowIndex);
-    else tsIds.push(item.rowIndex);
+    if (item.tipo === 'CANONE' || item.idCanone) canIds.push(item.idCanone || item.rowIndex);
+    else tsIds.push(item.idIntervento || item.rowIndex);
   });
   const btn = document.getElementById('nf-submit-btn');
   btn.disabled = true; btn.textContent = '⏳ Salvataggio...';

@@ -894,16 +894,16 @@ function displayClienteTimesheet(timesheet) {
                     <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')"><i class="fas fa-pen"></i></button>
                     ${(isErrore || hasExtra) ? `
                       <button class="timesheet-edit-btn" style="background:#28a745;color:#fff;margin-left:4px;"
-                        onclick="${isErrore ? `convertiDaFatturare(${ts.rowIndex})` : `convertiExtraDaFatturare(${ts.rowIndex},${ts.oreExtra})`}"
+                        onclick="${isErrore ? `convertiDaFatturare('${ts.id || ts.rowIndex}')` : `convertiExtraDaFatturare('${ts.id || ts.rowIndex}',${ts.oreExtra})`}"
                         title="Converti in Da fatturare"><i class="fas fa-euro-sign"></i></button>
                       <button class="timesheet-edit-btn" style="background:#1976D2;color:#fff;margin-left:4px;"
-                        onclick="apriScalaInPacchetto(${ts.rowIndex},${oreActionabili})"
+                        onclick="apriScalaInPacchetto('${ts.id || ts.rowIndex}',${oreActionabili})"
                         title="Scala in un pacchetto esistente"><i class="fas fa-box"></i></button>
                       ${hasExtra ? `<button class="timesheet-edit-btn" style="background:#6f42c1;color:#fff;margin-left:4px;"
-                        onclick="abbuonaOreExtra(${ts.rowIndex},${ts.oreExtra},'${ts.idPacchetto || ''}')"
+                        onclick="abbuonaOreExtra('${ts.id || ts.rowIndex}',${ts.oreExtra},'${ts.idPacchetto || ''}')"
                         title="Ore extra in omaggio"><i class="fas fa-gift"></i></button>` : ''}` : `
                       <button class="timesheet-edit-btn" style="background:#fd7e14;color:#fff;margin-left:4px;"
-                        onclick="segnaPagatoContanti(${ts.rowIndex})"
+                        onclick="segnaPagatoContanti('${ts.id || ts.rowIndex}')"
                         title="Segna come pagato in contanti"><i class="fas fa-money-bill-wave"></i></button>`}
                 </td>
             </tr>
@@ -1244,7 +1244,7 @@ let currentTimesheetData = null;
 async function editTimesheet(rowIndex, idIntervento) {
     try {
         // Carica i dati completi del timesheet
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_timesheet_detail&row=${rowIndex}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_timesheet_detail&id_intervento=${encodeURIComponent(idIntervento || rowIndex)}`;
         const response = await fetch(url);
         const data = await response.json();
         
@@ -1339,6 +1339,7 @@ async function saveTimesheetChanges(event) {
     try {
         const mode     = document.getElementById('ts-extra-mode').value;
         const rowIndex = document.getElementById('ts-row-index').value;
+        const idIntervento = document.getElementById('ts-id-intervento').value || rowIndex;
         const oreExtra = parseFloat(document.getElementById('ts-ore-extra-orig').value) || 0;
 
         const formData = {
@@ -1358,6 +1359,7 @@ async function saveTimesheetChanges(event) {
             body = new URLSearchParams({
                 action: 'crea_entry_da_fatturare',
                 row_index: rowIndex,
+                id_intervento: idIntervento,
                 ore_extra: oreExtra,
                 data_override: formData.data,
                 descrizione_override: formData.descrizione,
@@ -1371,6 +1373,7 @@ async function saveTimesheetChanges(event) {
             body = new URLSearchParams({
                 action: 'update_timesheet',
                 rowIndex,
+                id_intervento: idIntervento,
                 modAddebito: 'Da fatturare',
                 ...formData
             });
@@ -1380,6 +1383,7 @@ async function saveTimesheetChanges(event) {
             body = new URLSearchParams({
                 action: 'update_timesheet',
                 rowIndex,
+                id_intervento: idIntervento,
                 ...formData
             });
             successMsg = '✅ Timesheet aggiornato con successo';
@@ -1651,7 +1655,7 @@ function exportPacchettoDettaglio() {
 async function convertiDaFatturare(rowIndex) {
     if (!confirm('Convertire questa riga in "Da fatturare"? Sarà inclusa nella prossima proforma.')) return;
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=converti_da_fatturare&row_index=${rowIndex}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=converti_da_fatturare&id_intervento=${encodeURIComponent(rowIndex)}`;
         const response = await fetch(url);
         const data = await response.json();
         if (!data.success) throw new Error(data.error);
@@ -1665,7 +1669,7 @@ async function convertiDaFatturare(rowIndex) {
 async function convertiExtraDaFatturare(rowIndex, oreExtra) {
     if (!confirm(`Creare una nuova riga "Da fatturare" per ${oreExtra}h extra?`)) return;
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=crea_entry_da_fatturare&row_index=${rowIndex}&ore_extra=${oreExtra}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=crea_entry_da_fatturare&id_intervento=${encodeURIComponent(rowIndex)}&ore_extra=${oreExtra}`;
         const response = await fetch(url);
         const data = await response.json();
         if (!data.success) throw new Error(data.error);
@@ -1704,7 +1708,7 @@ function apriScalaInPacchetto(rowIndex, oreActionabili) {
 
 async function eseguiScalaExtra() {
     const modal = document.getElementById('scala-extra-modal');
-    const rowIndex      = parseInt(modal.dataset.rowIndex);
+    const rowIndex      = modal.dataset.rowIndex; // ID dell'intervento
     const oreActionabili = parseFloat(modal.dataset.oreActionabili);
     const idPacchetto   = document.getElementById('scala-extra-select').value;
     if (!idPacchetto) { alert('Seleziona un pacchetto'); return; }
@@ -1712,7 +1716,7 @@ async function eseguiScalaExtra() {
     const btn = document.getElementById('scala-extra-confirm');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=scala_extra_in_pacchetto&row_index=${rowIndex}&id_pacchetto=${encodeURIComponent(idPacchetto)}&ore_extra=${oreActionabili}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=scala_extra_in_pacchetto&id_intervento=${encodeURIComponent(rowIndex)}&id_pacchetto=${encodeURIComponent(idPacchetto)}&ore_extra=${oreActionabili}`;
         const response = await fetch(url);
         const data = await response.json();
         if (!data.success) throw new Error(data.error);
@@ -1744,7 +1748,7 @@ async function abbuonaOreExtra(rowIndex, oreExtra, idPacchetto) {
     if (!confirm(`Abbuonare ${oreExtra}h extra come omaggio al cliente? L'operazione è irreversibile.`)) return;
 
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=abbuona_ore_extra&row_index=${rowIndex}&id_pacchetto=${encodeURIComponent(idPacchetto || '')}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=abbuona_ore_extra&id_intervento=${encodeURIComponent(rowIndex)}&id_pacchetto=${encodeURIComponent(idPacchetto || '')}`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -1768,7 +1772,7 @@ async function abbuonaOreExtra(rowIndex, oreExtra, idPacchetto) {
 async function segnaPagatoContanti(rowIndex) {
     if (!confirm('Segnare questa riga come pagata in contanti? La riga non verrà inclusa nelle prossime proforma.')) return;
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=segna_pagato&row_index=${rowIndex}`;
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=segna_pagato&id_intervento=${encodeURIComponent(rowIndex)}`;
         const response = await fetch(url);
         const data = await response.json();
         if (data.success) {

@@ -674,7 +674,7 @@ window.openAggiungiVociModal = async function(nProforma, cliente, causale, forfe
           ${items.map(t => `
             <tr style="border-bottom:1px solid #f0f0f0;" class="aggiorna-voce-row">
               <td style="padding:8px;text-align:center;">
-                <input type="checkbox" class="aggiorna-voce-cb" data-rowindex="${t.rowIndex}" data-costo="${t.costo||0}" onchange="aggiornaVociSelezione()">
+                <input type="checkbox" class="aggiorna-voce-cb" data-rowindex="${t.idIntervento || t.rowIndex}" data-costo="${t.costo||0}" onchange="aggiornaVociSelezione()">
               </td>
               <td style="padding:8px;white-space:nowrap;">${t.dataItaliana||t.data||'—'}</td>
               <td style="padding:8px;">${t.descrizione||'—'}</td>
@@ -703,7 +703,7 @@ window.aggiornaVociSelezione = function() {
 
 window.confermAAggiungiVoci = async function() {
   const checked      = Array.from(document.querySelectorAll('.aggiorna-voce-cb:checked'));
-  const rowIndexes   = checked.map(cb => cb.dataset.rowindex).join(',');
+  const rowIndexes   = checked.map(cb => encodeURIComponent(cb.dataset.rowindex)).join(',');
   const sendEmail    = document.getElementById('aggiorna-send-email').checked;
   const forfettario  = document.getElementById('aggiorna-forfettario').checked;
   const causale      = document.getElementById('aggiorna-causale').value.trim();
