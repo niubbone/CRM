@@ -488,6 +488,7 @@ async function submitProformaDiretta(event) {
     const data = await res.json();
 
     if (!data.success) throw new Error(data.error || 'Errore generazione proforma');
+    if (data.avviso) alert(data.avviso);
 
     infoEl.innerHTML = `<div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:6px;padding:12px;color:#155724;">
       ✅ <strong>Proforma ${data.proforma_number}</strong> generata e inviata per email.<br>

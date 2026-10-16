@@ -96,6 +96,7 @@ export async function generateProforma(clientName, timesheetIds, causale, applic
   if (!data.success) {
     throw new Error(data.error || 'Errore durante la generazione della proforma');
   }
+  if (data.avviso) alert(data.avviso);
   
   return data;
 }

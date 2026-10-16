@@ -889,7 +889,7 @@ async function generateProformaFromPacchetto(idPacchetto) {
         const result = await response.json();
         
         if (result.success) {
-            alert(`✅ Proforma ${result.n_proforma} generata con successo!`);
+            alert(result.avviso || `✅ Proforma ${result.n_proforma} generata con successo!`);
             closeProformaFromPacchettoModal();
         } else {
             throw new Error(result.error || 'Errore generazione proforma');

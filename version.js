@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.50.2';
+export const VERSION = '4.50.3';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.50.3",
+    date: "16/10/2026",
+    type: "fix",
+    changes: [
+      "Generazione proforma: se la riga non viene scritta nel foglio Proforma compare un avviso (prima falliva in silenzio: così erano sparite 18, 19, 22 e 23/2025, ora recuperate da Drive)"
+    ]
+  },
   {
     version: "4.50.2",
     date: "16/10/2026",
