@@ -423,9 +423,13 @@ function applyLocalFilters(proformeList) {
 
   let filtered = proformeList;
 
-  // Filtra per cliente: basta una parte del nome, maiuscole indifferenti
+  // Filtra per cliente: basta una parte del nome, maiuscole indifferenti.
+  // Vale anche il nome attuale in anagrafica (clienteAttuale), così le
+  // proforma emesse prima che il cliente fosse rinominato non spariscono.
   if (clienteCercato) {
-    filtered = filtered.filter(p => (p.cliente || '').toLowerCase().includes(clienteCercato));
+    filtered = filtered.filter(p =>
+      (p.cliente || '').toLowerCase().includes(clienteCercato) ||
+      (p.clienteAttuale || '').toLowerCase().includes(clienteCercato));
   }
 
   // Filtra per anno

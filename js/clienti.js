@@ -573,8 +573,10 @@ function _renderProdottoItem(prodotto) {
                 })() : ''}
                 ${prodotto.importo ? `
                 <div class="prodotto-info-item">
-                    <span class="prodotto-info-label">Importo</span>
-                    <span class="prodotto-info-value">€ ${prodotto.importo}</span>
+                    <span class="prodotto-info-label">${prodotto.tipo === 'Pacchetto' ? 'Prezzo' : 'Importo'}</span>
+                    <span class="prodotto-info-value">€ ${typeof prodotto.importo === 'number'
+                        ? prodotto.importo.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : prodotto.importo}</span>
                 </div>` : ''}
             </div>
             ${prodotto.tipo === 'Canone' && prodotto.tipoCanone === 'CONTROLLI' ? `

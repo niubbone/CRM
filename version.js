@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.50.1';
+export const VERSION = '4.50.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.50.2",
+    date: "16/10/2026",
+    type: "fix",
+    changes: [
+      "Proforma: il filtro per cliente trova anche le proforma emesse prima che il cliente fosse rinominato",
+      "Scheda cliente: il pacchetto ore mostra il prezzo"
+    ]
+  },
   {
     version: "4.50.1",
     date: "14/10/2026",
