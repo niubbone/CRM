@@ -14,6 +14,48 @@ export async function initTimesheet() {
   setTodayDate();
   setupSelectFocus();
   setupClientValidation();
+  // Sul telefono l'app resta aperta per giorni: quando torna in primo piano con clienti vecchi
+  // di oltre 5 minuti li rilegge in sottofondo, con la lettura normale (veloce, dalla cache).
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - clientiCaricatiIl > CLIENTI_MAX_ETA_MS) {
+      aggiornaClienti({ silenzioso: true });
+    }
+  });
+}
+
+const CLIENTI_MAX_ETA_MS = 5 * 60 * 1000;
+let clientiCaricatiIl = 0;
+
+/**
+ * Rilegge clienti e configurazioni e aggiorna gli elenchi senza toccare quello che è già
+ * scritto nel form. Dal pulsante ↻ accanto al cliente salta tutte le cache (~1 s in più);
+ * in sottofondo (silenzioso) usa la lettura normale.
+ */
+export async function aggiornaClienti({ silenzioso = false } = {}) {
+  const btn = document.getElementById('aggiorna-clienti-btn');
+  if (btn && !silenzioso) { btn.disabled = true; btn.classList.add('in-corso'); }
+  try {
+    const data = await getClientsAndConfig(!silenzioso);
+    window.clients = data.clients;
+    window.config = data.config;
+    clientiCaricatiIl = Date.now();
+    const clientDatalist = document.getElementById('client_list');
+    if (clientDatalist) {
+      clientDatalist.innerHTML = '';
+      window.clients.forEach(client => {
+        const option = document.createElement('option');
+        option.value = client.name;
+        clientDatalist.appendChild(option);
+      });
+    }
+    populateProformaClients();
+    if (!silenzioso) showNotification('info-box', `✅ Clienti aggiornati (${window.clients.length})`, 'success');
+  } catch (error) {
+    console.error('Errore aggiornamento clienti:', error);
+    if (!silenzioso) showNotification('info-box', '❌ Clienti non aggiornati: ' + error.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.classList.remove('in-corso'); }
+  }
 }
 
 /**
@@ -32,7 +74,8 @@ async function loadFormData() {
     
     window.clients = data.clients;
     window.config = data.config;
-    
+    clientiCaricatiIl = Date.now();
+
     // IMPORTANTE: Cancella la cache del browser per il campo cliente
     const clientInput = document.getElementById('client');
     if (clientInput) {

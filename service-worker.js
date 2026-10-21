@@ -10,7 +10,7 @@
 import { VERSION } from './version.js';
 
 // ⚠️ Aggiorna questo numero ad ogni release — forza il browser a rilevare il nuovo SW
-const SW_BUILD = '4.51.0';
+const SW_BUILD = '4.52.0';
 
 const CACHE_VERSION = `crm-v${SW_BUILD}`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -240,8 +240,8 @@ function isCacheFresh(cachedResponse, ttlMs) {
 async function handleApiRequest(request) {
   const action = getApiAction(request.url);
 
-  // Write actions: sempre rete, niente cache
-  if (!CACHEABLE_ACTIONS.has(action)) {
+  // Write actions, e letture chieste «fresche» (pulsante ↻ dei clienti): sempre rete, niente cache
+  if (!CACHEABLE_ACTIONS.has(action) || new URL(request.url).searchParams.get('fresco') === '1') {
     try {
       return await fetch(request);
     } catch {

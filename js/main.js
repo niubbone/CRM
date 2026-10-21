@@ -2,7 +2,7 @@
 // === MAIN - INIZIALIZZAZIONE APPLICAZIONE ===
 // =======================================================================
 import { initGlobalState } from './config.js';
-import { initTimesheet, openAddClientModal, closeAddClientModal, saveNewClient } from './timesheet.js';
+import { initTimesheet, openAddClientModal, closeAddClientModal, saveNewClient, aggiornaClienti } from './timesheet.js';
 import {
   initProforma,
   showProformaStep,
@@ -164,6 +164,7 @@ function setupTabs() {
 function exposeGlobalFunctions() {
   // Timesheet
   window.openAddClientModal = openAddClientModal;
+  window.aggiornaClienti = aggiornaClienti;
   window.closeAddClientModal = closeAddClientModal;
   window.saveNewClient = saveNewClient;
 

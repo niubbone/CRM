@@ -112,6 +112,9 @@ textarea {
     transition: background-color 0.3s ease;
 }
 
+.add-client-btn.in-corso { opacity: .5; animation: gira-clienti 1s linear infinite; }
+@keyframes gira-clienti { to { transform: rotate(360deg); } }
+
 .add-client-btn:hover {
     background-color: var(--primary-dark);
 }

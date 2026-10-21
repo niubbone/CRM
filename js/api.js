@@ -6,8 +6,9 @@ import { CONFIG } from './config.js';
 /**
  * Carica clienti e configurazioni dal backend
  */
-export async function getClientsAndConfig() {
-  const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_data`;
+export async function getClientsAndConfig(fresco = false) {
+  // fresco: salta le cache (service worker e server), per un cliente appena rinominato
+  const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_data` + (fresco ? `&fresco=1&_t=${Date.now()}` : '');
   
   const response = await fetch(url, {
     method: 'GET',

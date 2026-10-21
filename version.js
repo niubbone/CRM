@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.51.0';
+export const VERSION = '4.52.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.52.0",
+    date: "21/10/2026",
+    type: "fix",
+    changes: [
+      "Timesheet: pulsante ↻ accanto al cliente per rileggere i clienti dal foglio (un cliente rinominato restava col nome vecchio)",
+      "I clienti si rileggono in sottofondo quando l'app torna in primo piano dopo più di 5 minuti (lettura normale, senza rallentare)"
+    ]
+  },
   {
     version: "4.51.0",
     date: "21/10/2026",
