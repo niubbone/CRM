@@ -1191,6 +1191,8 @@ function renderCanoni(canoni) {
                 ? `<span class="storico-badge" style="background:#fff;color:#1c3557;border:1px solid #1c3557;margin-left:6px;" title="Codice cliente WKI (contratto Kleos in KSALES)">WKI ${c.isa.codiceWki}</span>`
                 : '';
 
+            // Licenza K-Tools: sui canoni ISA e su quelli che in descrizione dicono «K-Tools»
+            const conLicenza = isAttivo && (isIsa || /k-?tools/i.test(c.descrizione || ''));
             const mostraAzioni = isAttivo || c.idPrecedente || isControlli;
 
             html += `
@@ -1231,7 +1233,12 @@ function renderCanoni(canoni) {
                         onclick="toggleStoricoCanone('${c.idCanone}')">
                         <i class="fas fa-clock-rotate-left"></i> Storico
                     </button>` : ''}
+                    ${conLicenza ? `<button class="btn-small"
+                        onclick="toggleLicenzaCanone('${c.idCanone}', '${c.dataScadenza || ''}')">
+                        <i class="fas fa-key"></i> Licenza K-Tools
+                    </button>` : ''}
                 </div>
+                <div id="canone-licenza-${c.idCanone}" style="display:none;margin-top:8px;"></div>
                 <div id="canone-controlli-${c.idCanone}" style="display:none;margin-top:8px;"></div>
                 <div id="storico-canone-${c.idCanone}" style="display:none;margin-top:8px;"></div>` : ''}
             </div>`;
@@ -1318,6 +1325,105 @@ function renderStoricoRinnovi(catena) {
 }
 
 // --- Controlli periodici sulla card canone (storico completo: fatti + da fare) ---
+// ===== LICENZE K-TOOLS (Licenze.js nel backend) =====
+
+const LICENZA_STRUMENTI = [
+    ['udienze', "Fogli d'udienza"], ['parcelle', 'Parcelle da incassare'],
+    ['allegati', 'Atto e allegati'], ['isa', 'ISA Studio Legale']
+];
+
+async function toggleLicenzaCanone(idCanone, scadenza) {
+    const box = document.getElementById(`canone-licenza-${idCanone}`);
+    if (!box) return;
+    if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+        await loadLicenzaCanone(idCanone, scadenza);
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+async function loadLicenzaCanone(idCanone, scadenza) {
+    const box = document.getElementById(`canone-licenza-${idCanone}`);
+    if (!box) return;
+    box.innerHTML = '<div style="font-size:12px;color:#888;">⏳ Caricamento licenze...</div>';
+    try {
+        const res = await fetch(`${getAPIUrl()}?action=get_licenze&canone_id=${encodeURIComponent(idCanone)}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        box.innerHTML = renderLicenzaCanone(idCanone, scadenza, result.licenze || []);
+    } catch (e) {
+        box.innerHTML = `<div style="font-size:12px;color:#dc3545;">Errore licenze: ${_escControllo(e.message)}</div>`;
+    }
+}
+
+function renderLicenzaCanone(idCanone, scadenza, licenze) {
+    const iso = (scadenza || '').includes('/') ? scadenza.split('/').reverse().join('-') : (scadenza || '');
+    const emesse = licenze.map(l => `
+        <div style="border:1px solid #e9ecef;border-radius:6px;padding:8px;margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+                <div style="font-size:12px;">
+                    <strong style="font-size:13px;">${_escControllo(l.id)}</strong> · emessa il ${_escControllo(l.emessaIl)}<br>
+                    ${_escControllo(l.strumenti.join(', '))} · utenti: ${_escControllo(String(l.utenti))} · fino al ${_escControllo(l.scadenza.split('-').reverse().join('/'))}
+                </div>
+                <button class="btn-small" onclick="copiaLicenza(this, '${_escControllo(l.codice)}')"><i class="fas fa-copy"></i> Copia codice</button>
+            </div>
+        </div>`).join('');
+    const scelte = LICENZA_STRUMENTI.map(([k, nome]) =>
+        `<label style="display:inline-flex;gap:4px;align-items:center;margin-right:10px;font-size:13px;">
+            <input type="checkbox" class="lic-str-${idCanone}" value="${k}" checked> ${nome}</label>`).join('');
+    return `
+        <div style="font-size:12px;color:#888;margin-bottom:4px;">Licenze K-Tools emesse (${licenze.length})</div>
+        ${emesse || '<div style="font-size:12px;color:#888;margin-bottom:6px;">Nessuna licenza ancora.</div>'}
+        <div style="border:1px dashed #b8c4d6;border-radius:6px;padding:8px;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:6px;"><i class="fas fa-key"></i> Emetti una licenza</div>
+            <div style="margin-bottom:6px;">${scelte}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                <label style="font-size:12px;">Utenti attivi (vuoto = senza limite)<br>
+                    <input type="number" min="1" id="lic-utenti-${idCanone}" style="width:110px;"></label>
+                <label style="font-size:12px;">Scadenza<br>
+                    <input type="date" id="lic-scad-${idCanone}" value="${iso}"></label>
+            </div>
+            <input type="text" id="lic-note-${idCanone}" placeholder="Note (facoltative)" style="width:100%;margin-bottom:6px;">
+            <button class="btn-small btn-storico-detail" onclick="emettiLicenzaCanone('${idCanone}', '${scadenza || ''}')"><i class="fas fa-stamp"></i> Emetti licenza</button>
+            <div id="lic-esito-${idCanone}" style="margin-top:8px;"></div>
+        </div>`;
+}
+
+async function emettiLicenzaCanone(idCanone, scadenza) {
+    const strumenti = [...document.querySelectorAll(`.lic-str-${idCanone}:checked`)].map(x => x.value);
+    const esito = document.getElementById(`lic-esito-${idCanone}`);
+    if (!strumenti.length) { esito.innerHTML = '<span style="color:#dc3545;font-size:12px;">Scegli almeno uno strumento.</span>'; return; }
+    esito.innerHTML = '<span style="font-size:12px;color:#888;">⏳ Firma della licenza...</span>';
+    try {
+        const params = new URLSearchParams({
+            action: 'emetti_licenza', canone_id: idCanone, strumenti: strumenti.join(','),
+            utenti: document.getElementById(`lic-utenti-${idCanone}`).value || '',
+            scadenza: document.getElementById(`lic-scad-${idCanone}`).value || '',
+            note: document.getElementById(`lic-note-${idCanone}`).value || ''
+        });
+        const res = await fetch(`${getAPIUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore emissione');
+        await loadLicenzaCanone(idCanone, scadenza);
+        const nuovo = document.getElementById(`lic-esito-${idCanone}`);
+        if (nuovo) nuovo.innerHTML = `
+            <div style="font-size:12px;color:#28a745;font-weight:600;margin-bottom:4px;">✓ Licenza ${_escControllo(result.licenza.id)} emessa: copia il codice e incollalo in K-Tools → Impostazioni → Licenza.</div>
+            <textarea readonly rows="4" style="width:100%;font-family:monospace;font-size:11px;">${_escControllo(result.licenza.codice)}</textarea>`;
+    } catch (e) {
+        esito.innerHTML = `<span style="color:#dc3545;font-size:12px;">Errore: ${_escControllo(e.message)}</span>`;
+    }
+}
+
+async function copiaLicenza(bottone, codice) {
+    try {
+        await navigator.clipboard.writeText(codice);
+        bottone.innerHTML = '<i class="fas fa-check"></i> Copiato';
+    } catch (e) {
+        window.prompt('Copia il codice della licenza:', codice);
+    }
+}
+
 async function toggleControlliCanoneCard(idCanone) {
     const box = document.getElementById(`canone-controlli-${idCanone}`);
     if (!box) return;
@@ -2888,6 +2994,9 @@ if (typeof window !== 'undefined') {
     window.toggleStoricoCanone = toggleStoricoCanone;
     window.toggleStoricoFirma = toggleStoricoFirma;
     window.toggleControlliCanoneCard = toggleControlliCanoneCard;
+    window.toggleLicenzaCanone = toggleLicenzaCanone;
+    window.emettiLicenzaCanone = emettiLicenzaCanone;
+    window.copiaLicenza = copiaLicenza;
     window.toggleVccForm = toggleVccForm;
     window.submitControlloCard = submitControlloCard;
     window.resetControlloCard = resetControlloCard;

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.50.3';
+export const VERSION = '4.51.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.51.0",
+    date: "21/10/2026",
+    type: "feature",
+    changes: [
+      "Canoni ISA o K-Tools: pulsante «Licenza K-Tools» per emettere la licenza firmata (strumenti, utenti, scadenza) e copiarne il codice; registro nel foglio Licenze"
+    ]
+  },
   {
     version: "4.50.3",
     date: "16/10/2026",
