@@ -450,6 +450,7 @@
 .storico-badge.terminato { background: #d4edda; color: #155724; }
 .storico-badge.over      { background: #f8d7da; color: #721c24; }
 .storico-badge.scaduto   { background: #fff3cd; color: #856404; }
+.storico-badge.archiviato { background: #e9ecef; color: #6c757d; }
 
 .storico-descrizione {
     font-size: 13px;

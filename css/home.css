@@ -573,3 +573,6 @@
     .home-todo-edit .riga select,
     .home-todo-edit .riga input[type="date"] { flex: 1 1 0; min-width: 0; }
 }
+
+/* Monte ore archiviato: visibile solo col filtro di stato, attenuato */
+.home-startup-card.archiviato { opacity: .7; }

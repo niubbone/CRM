@@ -1073,15 +1073,116 @@ async function toggleTodoFatti() {
 // === BLOCCO 3 — STARTUP KLEOS ===
 // =======================================================================
 
+// --- Sezione comprimibile e filtri (22/10/2026) ---------------------------
+// I monti ore crescono nel tempo: la sezione si chiude con un clic sul titolo
+// e si filtra per testo, stato e agente. Gli archiviati arrivano sempre
+// dall'hosting (sono pochi) e si mostrano solo con il filtro di stato.
+// Scelte ricordate sul dispositivo; senza localStorage valgono i default.
+const STARTUP_UI_KEY = 'crm_startup_ui_v1';
+const STARTUP_STATI = [
+    ['correnti',   'Correnti (non archiviati)'],
+    ['attivi',     'Attivi con ore'],
+    ['esauriti',   'Esauriti'],
+    ['archiviati', 'Archiviati'],
+    ['tutti',      'Tutti']
+];
+let startupUI = _leggiStartupUI();
+
+function _leggiStartupUI() {
+    const base = { chiusa: false, testo: '', stato: 'correnti', agente: '' };
+    try {
+        const c = JSON.parse(localStorage.getItem(STARTUP_UI_KEY) || '{}');
+        return { ...base, ...c, testo: '' };   // la ricerca libera non si ricorda
+    } catch (e) {
+        return base;
+    }
+}
+
+function _salvaStartupUI() {
+    try {
+        const { chiusa, stato, agente } = startupUI;
+        localStorage.setItem(STARTUP_UI_KEY, JSON.stringify({ chiusa, stato, agente }));
+    } catch (e) { /* senza localStorage la scelta vale fino alla chiusura */ }
+}
+
+function _archiviato(s) { return s.stato === 'Archiviato'; }
+
+function _filtraStartup(lista) {
+    const testo = startupUI.testo.trim().toLowerCase();
+    return lista.filter(s => {
+        const arch = _archiviato(s);
+        switch (startupUI.stato) {
+            case 'correnti':   if (arch) return false; break;
+            case 'attivi':     if (arch || s.oreResidue <= 0) return false; break;
+            case 'esauriti':   if (arch || s.oreResidue > 0) return false; break;
+            case 'archiviati': if (!arch) return false; break;
+        }
+        if (startupUI.agente && (s.agente || '') !== startupUI.agente) return false;
+        if (testo && ![s.cliente, s.agente, s.riferimento, s.note]
+                .some(v => (v || '').toLowerCase().includes(testo))) return false;
+        return true;
+    });
+}
+
+/** Barra dei filtri; le opzioni agente vengono dai monti ore arrivati. */
+function renderStartupFiltri(s) {
+    const tutti = (s && s.startup) || [];
+    const agenti = [...new Set(tutti.map(x => (x.agente || '').trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'it'));
+    if (startupUI.agente && !agenti.includes(startupUI.agente)) agenti.push(startupUI.agente);
+    const opz = (v, t, sel) => `<option value="${_escHome(v)}"${sel ? ' selected' : ''}>${_escHome(t)}</option>`;
+    return `
+        <div class="riga" style="margin-bottom:0;">
+            <input type="search" id="startup-filtro-testo" placeholder="Cerca cliente, agente, riferimento…"
+                   value="${_escHome(startupUI.testo)}" oninput="filtraStartup('testo', this.value)" style="flex:1 1 220px;width:auto;min-width:0;">
+            <select id="startup-filtro-stato" onchange="filtraStartup('stato', this.value)" style="flex:0 1 210px;width:auto;">
+                ${STARTUP_STATI.map(([v, t]) => opz(v, t, startupUI.stato === v)).join('')}
+            </select>
+            <select id="startup-filtro-agente" onchange="filtraStartup('agente', this.value)" style="flex:0 1 170px;width:auto;">
+                ${opz('', 'Tutti gli agenti', !startupUI.agente)}
+                ${agenti.map(a => opz(a, a, startupUI.agente === a)).join('')}
+            </select>
+        </div>
+        <div id="startup-filtro-esito" class="home-startup-sub" style="margin-top:6px;">${_esitoFiltroStartup(s)}</div>`;
+}
+
+function _esitoFiltroStartup(s) {
+    if (!s) return '';
+    const tutti = s.startup || [];
+    const visti = _filtraStartup(tutti).length;
+    const arch = tutti.filter(_archiviato).length;
+    return `${visti} di ${tutti.length} monti ore` + (arch ? ` · ${arch} archiviat${arch === 1 ? 'o' : 'i'}` : '');
+}
+
+function filtraStartup(campo, valore) {
+    startupUI[campo] = valore;
+    if (campo !== 'testo') _salvaStartupUI();
+    const lista = document.getElementById('startupLista');
+    if (lista) lista.innerHTML = renderStartupLista(startupDati);
+    const esito = document.getElementById('startup-filtro-esito');
+    if (esito) esito.innerHTML = _esitoFiltroStartup(startupDati);
+    _riapriMovimenti();
+}
+
+function toggleSezioneStartup(forzaAperta) {
+    startupUI.chiusa = forzaAperta ? false : !startupUI.chiusa;
+    _salvaStartupUI();
+    const corpo = document.getElementById('startupCorpo');
+    const freccia = document.getElementById('startup-freccia');
+    if (corpo) corpo.style.display = startupUI.chiusa ? 'none' : '';
+    if (freccia) freccia.className = 'fas fa-chevron-' + (startupUI.chiusa ? 'right' : 'down');
+}
+
 /** Schede dei monti ore; null = non ancora arrivati dall'hosting. */
 function renderStartupLista(s) {
     if (!s) return '<div class="loading-scadenze">Caricamento...</div>';
-    const lista = s.startup || [];
-    return lista.length
-        ? lista.map(renderStartupCard).join('')
-        : `<div class="empty-state" style="padding:20px;">
+    const tutti = s.startup || [];
+    const lista = _filtraStartup(tutti);
+    if (lista.length) return lista.map(renderStartupCard).join('');
+    const filtrato = tutti.length > 0;
+    return `<div class="empty-state" style="padding:20px;">
                <div class="empty-state-icon">📦</div>
-               <div>Nessun monte ore attivo.</div>
+               <div>${filtrato ? 'Nessun monte ore con questi filtri.' : 'Nessun monte ore attivo.'}</div>
            </div>`;
 }
 
@@ -1095,14 +1196,19 @@ function renderStartupSezione(s) {
     return `
     <div class="home-section">
         <div class="home-section-header">
-            <div class="home-section-title">
+            <div class="home-section-title" onclick="toggleSezioneStartup()" style="cursor:pointer;" title="Apri / chiudi la sezione">
+                <i id="startup-freccia" class="fas fa-chevron-${startupUI.chiusa ? 'right' : 'down'}" style="font-size:12px;width:12px;"></i>
                 <i class="fas fa-graduation-cap"></i> Startup Kleos
                 <span id="startup-conteggi">${renderStartupConteggi(s)}</span>
             </div>
-            <button class="home-btn piccolo" onclick="toggleNuovoStartup()">
+            <button class="home-btn piccolo" onclick="toggleSezioneStartup(true); toggleNuovoStartup()">
                 <i class="fas fa-plus"></i> Nuovo monte ore
             </button>
         </div>
+
+        <div id="startupCorpo" style="${startupUI.chiusa ? 'display:none;' : ''}">
+
+        <div id="startupFiltri" class="home-inline-form" style="margin-top:0;">${renderStartupFiltri(s)}</div>
 
         <div id="nuovoStartupForm" class="home-inline-form" style="display:none;">
             <div class="riga">
@@ -1122,6 +1228,7 @@ function renderStartupSezione(s) {
         </div>
 
         <div id="startupLista" style="margin-top:12px;">${renderStartupLista(s)}</div>
+        </div>
     </div>`;
 }
 
@@ -1136,7 +1243,8 @@ let _startupRichiesta = 0;   // numero dell'ultima lettura partita: vince la pi�
 async function caricaStartup() {
     const mia = ++_startupRichiesta;
     try {
-        const res = await fetch(`${_startupApiUrl()}?action=get_startup_list`, { noSpinner: true });
+        // sempre con gli archiviati: li nasconde il filtro di stato (sono pochi)
+        const res = await fetch(`${_startupApiUrl()}?action=get_startup_list&includi_archiviati=true`, { noSpinner: true });
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
         if (mia !== _startupRichiesta) return;
@@ -1164,6 +1272,10 @@ function _disegnaStartup() {
     lista.innerHTML = renderStartupLista(startupDati);
     const conteggi = document.getElementById('startup-conteggi');
     if (conteggi) conteggi.innerHTML = renderStartupConteggi(startupDati);
+    // la barra dei filtri si ridisegna (opzioni agente) solo se non ci si sta scrivendo
+    const filtri = document.getElementById('startupFiltri');
+    if (filtri && !filtri.contains(document.activeElement)) filtri.innerHTML = renderStartupFiltri(startupDati);
+    else { const e = document.getElementById('startup-filtro-esito'); if (e) e.innerHTML = _esitoFiltroStartup(startupDati); }
     _riapriMovimenti();
 }
 
@@ -1182,15 +1294,17 @@ function renderStartupCard(s) {
     const sub = [s.agente, s.riferimento].filter(Boolean).join(' · ');
 
     const coloreBarra = sforato ? 'over' : (esaurito ? 'terminato' : 'attivo');
+    const archiviato = _archiviato(s);
+    const classeBadge = archiviato ? 'archiviato' : (esaurito ? 'scaduto' : 'attivo');
 
     return `
-    <div class="home-startup-card ${classeCard}">
+    <div class="home-startup-card ${classeCard}${archiviato ? ' archiviato' : ''}">
         <div class="home-startup-header">
             <div>
                 <div class="home-startup-cliente">${_escHome(s.cliente)}</div>
                 ${sub ? `<div class="home-startup-sub">${_escHome(sub)}</div>` : ''}
             </div>
-            <span class="storico-badge ${esaurito ? 'scaduto' : 'attivo'}">${_escHome(s.stato)}</span>
+            <span class="storico-badge ${classeBadge}">${_escHome(s.stato)}</span>
         </div>
 
         <div class="storico-progress-bar">
@@ -1215,18 +1329,20 @@ function renderStartupCard(s) {
         ${s.note ? `<div class="storico-date" style="margin-bottom:6px;">${_escHome(s.note)}</div>` : ''}
 
         <div class="storico-actions">
-            <button class="btn-small btn-storico-detail" onclick="toggleRegistraOre('${s.idStartup}')">
+            ${archiviato ? '' : `<button class="btn-small btn-storico-detail" onclick="toggleRegistraOre('${s.idStartup}')">
                 <i class="fas fa-stopwatch"></i> Registra ore
-            </button>
+            </button>`}
             <button class="btn-small" onclick="toggleMovimentiStartup('${s.idStartup}')">
                 <i class="fas fa-clock-rotate-left"></i> Movimenti
             </button>
-            <button class="btn-small" onclick="toggleModificaStartup('${s.idStartup}')">
+            ${archiviato ? `<button class="btn-small" onclick="riapriStartupUI('${s.idStartup}')">
+                <i class="fas fa-box-open"></i> Riapri
+            </button>` : `<button class="btn-small" onclick="toggleModificaStartup('${s.idStartup}')">
                 <i class="fas fa-pen"></i> Modifica
             </button>
             <button class="btn-small" onclick="archiviaStartupUI('${s.idStartup}')">
                 <i class="fas fa-box-archive"></i> Archivia
-            </button>
+            </button>`}
         </div>
 
         <div id="modifica-startup-${s.idStartup}" class="home-inline-form" style="display:none;">
@@ -1451,7 +1567,7 @@ async function salvaModificaStartup(idStartup) {
 }
 
 async function archiviaStartupUI(idStartup) {
-    if (!confirm('Archiviare questo monte ore? Sparisce dalla Home ma resta consultabile.')) return;
+    if (!confirm("Archiviare questo monte ore? Sparisce dall'elenco: lo ritrovi con il filtro «Archiviati».")) return;
 
     try {
         const res = await fetch(`${_startupApiUrl()}?action=archivia_startup&id_startup=${encodeURIComponent(idStartup)}&archivia=true`);
@@ -1463,6 +1579,17 @@ async function archiviaStartupUI(idStartup) {
 
     } catch (e) {
         alert('Errore archiviazione: ' + e.message);
+    }
+}
+
+async function riapriStartupUI(idStartup) {
+    try {
+        const res = await fetch(`${_startupApiUrl()}?action=archivia_startup&id_startup=${encodeURIComponent(idStartup)}&archivia=false`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        await caricaStartup();
+    } catch (e) {
+        alert('Errore riapertura: ' + e.message);
     }
 }
 
@@ -1495,4 +1622,7 @@ window.archiviaStartupUI = archiviaStartupUI;
 window.toggleModificaStartup = toggleModificaStartup;
 window.salvaModificaStartup = salvaModificaStartup;
 window.caricaStartup = caricaStartup;
+window.riapriStartupUI = riapriStartupUI;
+window.filtraStartup = filtraStartup;
+window.toggleSezioneStartup = toggleSezioneStartup;
 window.caricaTodo = caricaTodo;

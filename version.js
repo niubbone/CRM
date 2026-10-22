@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.53.1';
+export const VERSION = '4.54.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,16 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.54.0",
+    date: "22/10/2026",
+    type: "feature",
+    changes: [
+      "Home, Startup Kleos: la sezione si apre e si chiude con un clic sul titolo (la scelta resta ricordata)",
+      "Filtri sui monti ore: ricerca libera (cliente, agente, riferimento, note), stato (correnti, attivi, esauriti, archiviati, tutti) e agente",
+      "Monti ore archiviati consultabili dal filtro «Archiviati», con il pulsante Riapri"
+    ]
+  },
   {
     version: "4.53.1",
     date: "22/10/2026",
