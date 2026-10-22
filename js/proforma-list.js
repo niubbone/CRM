@@ -344,8 +344,17 @@ async function saveNumeroFattura(event) {
     console.log('✅ Fattura salvata con successo');
     window.markTabDirty && window.markTabDirty('proforma');
     window.markTabDirty && window.markTabDirty('fatture');
-    alert(`✅ Fattura ${numeroFattura} registrata per proforma ${nProforma}${pagato ? ' (Pagata)' : ''}`);
+    let conferma = `✅ Fattura ${numeroFattura} registrata per proforma ${nProforma}${pagato ? ' (Pagata)' : ''}`;
+    if (result.pacchetto) {
+      conferma += `\n📦 Creato il pacchetto ${result.pacchetto.id_pacchetto} (${result.pacchetto.ore_totali} h)`;
+      window.markTabDirty && window.markTabDirty('vendite');
+    }
+    if (result.avviso_pacchetto) conferma += `\n\n⚠️ ${result.avviso_pacchetto}`;
+    alert(conferma);
     closeFatturaModal();
+    if (result.pacchetto && window.proponiTimesheetInAttesa) {
+      await window.proponiTimesheetInAttesa(result.pacchetto);
+    }
     loadProformaList(); // Ricarica lista
     
   } catch (error) {

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.52.0';
+export const VERSION = '4.53.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.53.0",
+    date: "22/10/2026",
+    type: "feature",
+    changes: [
+      "Pacchetti: quando nasce un pacchetto (da Vendite o dalla fattura della proforma) l'app propone di scalare i timesheet «Scala da pacchetto» del cliente rimasti in Errore pacchetto",
+      "Fattura da proforma con pacchetto: il pacchetto si crea anche se il cliente è stato rinominato, e se la creazione fallisce compare un avviso (prima falliva in silenzio)"
+    ]
+  },
   {
     version: "4.52.0",
     date: "21/10/2026",

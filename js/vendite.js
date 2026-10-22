@@ -608,6 +608,7 @@ async function submitVendita(e) {
             if (tipo === 'pacchetto') {
                 closeVenditaModal();
                 document.getElementById('venditaForm').reset();
+                await proponiTimesheetInAttesa(result);
                 showProformaFromPacchettoModal(result);
                 loadScadenze();
             } else {
@@ -880,6 +881,92 @@ function closeProformaFromPacchettoModal() {
     const modal = document.getElementById('proformaFromPacchettoModal');
     if (modal) modal.remove();
 }
+
+// =======================================================================
+// === TIMESHEET IN ATTESA DEL PACCHETTO ===
+// =======================================================================
+// I timesheet «Scala da pacchetto» registrati senza un pacchetto attivo restano in
+// «Errore pacchetto». Quando il pacchetto nasce (da Vendite o dalla fattura della
+// proforma) il backend li elenca e qui si propone di scalarli subito.
+
+/**
+ * Mostra i timesheet in attesa e, su conferma, li scala nel pacchetto.
+ * @param {{id_pacchetto, cliente, ore_totali, timesheet_in_attesa}} pacchetto
+ * @return {Promise<void>} si risolve alla chiusura della finestra
+ */
+function proponiTimesheetInAttesa(pacchetto) {
+    const righe = (pacchetto && pacchetto.timesheet_in_attesa) || [];
+    if (!righe.length) return Promise.resolve();
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const totale = righe.reduce((s, r) => s + (parseFloat(r.ore) || 0), 0);
+
+    return new Promise(resolve => {
+        const vecchio = document.getElementById('timesheetAttesaModal');
+        if (vecchio) vecchio.remove();
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="timesheetAttesaModal" class="modal active">
+                <div class="modal-content" style="max-width: 560px;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-clock"></i> Timesheet in attesa del pacchetto</h2>
+                        <button class="close-btn" data-azione="chiudi">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="info-banner" style="margin-bottom: 15px;">
+                            ${esc(pacchetto.cliente)} ha <strong>${righe.length}</strong> timesheet «Scala da pacchetto»
+                            registrati senza un pacchetto attivo (${totale.toFixed(1)} h).
+                            Vuoi scalarli dal pacchetto <strong>${esc(pacchetto.id_pacchetto)}</strong> (${esc(pacchetto.ore_totali)} h)?
+                        </div>
+                        <div style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+                            ${righe.map(r => `
+                                <label style="display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer;">
+                                    <input type="checkbox" class="ts-attesa-check" value="${esc(r.idIntervento)}" checked style="margin-top: 3px;">
+                                    <span style="flex: 1;">
+                                        <strong>${esc(r.data)}</strong> · ${esc(r.tipo)} · <strong>${(parseFloat(r.ore) || 0).toFixed(1)} h</strong>
+                                        ${r.descrizione ? `<br><small style="color:#666;">${esc(r.descrizione)}</small>` : ''}
+                                    </span>
+                                </label>`).join('')}
+                        </div>
+                        <div id="timesheetAttesaEsito" style="margin-bottom: 10px;"></div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button class="btn-secondary" data-azione="chiudi">Non ora</button>
+                            <button class="btn-primary" data-azione="attribuisci"><i class="fas fa-check"></i> Scala dal pacchetto</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`);
+
+        const modal = document.getElementById('timesheetAttesaModal');
+        const chiudi = () => { modal.remove(); resolve(); };
+        modal.querySelectorAll('[data-azione="chiudi"]').forEach(b => b.addEventListener('click', chiudi));
+        modal.querySelector('[data-azione="attribuisci"]').addEventListener('click', async (ev) => {
+            const btn = ev.currentTarget;
+            const esito = document.getElementById('timesheetAttesaEsito');
+            const ids = [...modal.querySelectorAll('.ts-attesa-check:checked')].map(c => c.value);
+            if (!ids.length) { esito.textContent = '⚠️ Seleziona almeno un timesheet'; return; }
+            btn.disabled = true;
+            btn.textContent = '⏳ Attribuzione...';
+            try {
+                const url = `${getAPIUrl()}?action=attribuisci_timesheet_pacchetto`
+                    + `&id_pacchetto=${encodeURIComponent(pacchetto.id_pacchetto)}`
+                    + `&timesheet_ids=${encodeURIComponent(ids.join(','))}`;
+                const res = await (await fetch(url)).json();
+                if (!res.success) throw new Error(res.error || 'Errore');
+                window.markTabDirty && window.markTabDirty('vendite');
+                const saltati = (res.esiti || []).filter(e => !e.ok);
+                let msg = `✅ ${res.attribuiti} timesheet scalati da ${pacchetto.id_pacchetto}: ${res.oreScalate} h`;
+                if (res.oreExtra) msg += ` (${res.oreExtra} h oltre il pacchetto, segnate come EXTRA)`;
+                if (saltati.length) msg += `\n⚠️ Saltati: ${saltati.map(e => `${e.id} (${e.motivo})`).join(', ')}`;
+                alert(msg);
+                chiudi();
+            } catch (err) {
+                esito.innerHTML = `<span style="color:#dc3545;">❌ ${esc(err.message)}</span>`;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Scala dal pacchetto';
+            }
+        });
+    });
+}
+window.proponiTimesheetInAttesa = proponiTimesheetInAttesa;
 
 async function generateProformaFromPacchetto(idPacchetto) {
     const applicaQuota = document.getElementById('applicaQuotaPacchetto')?.checked || false;
