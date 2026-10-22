@@ -6,8 +6,9 @@ import { CONFIG } from './config.js';
 /**
  * Carica clienti e configurazioni dal backend
  */
-export async function getClientsAndConfig(fresco = false) {
+export async function getClientsAndConfig(fresco = false, silenzioso = false) {
   // fresco: salta le cache (service worker e server), per un cliente appena rinominato
+  // silenzioso: rilettura in sottofondo, senza lo spinner a tutto schermo
   const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_data` + (fresco ? `&fresco=1&_t=${Date.now()}` : '');
   
   const response = await fetch(url, {
@@ -15,7 +16,8 @@ export async function getClientsAndConfig(fresco = false) {
     redirect: 'follow',
     headers: {
       'Accept': 'application/json'
-    }
+    },
+    noSpinner: silenzioso
   });
   
   if (!response.ok) {

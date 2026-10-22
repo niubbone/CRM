@@ -35,7 +35,7 @@ export async function aggiornaClienti({ silenzioso = false } = {}) {
   const btn = document.getElementById('aggiorna-clienti-btn');
   if (btn && !silenzioso) { btn.disabled = true; btn.classList.add('in-corso'); }
   try {
-    const data = await getClientsAndConfig(!silenzioso);
+    const data = await getClientsAndConfig(!silenzioso, silenzioso);
     window.clients = data.clients;
     window.config = data.config;
     clientiCaricatiIl = Date.now();

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.53.0';
+export const VERSION = '4.53.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.53.1",
+    date: "22/10/2026",
+    type: "fix",
+    changes: [
+      "La rilettura dei clienti in sottofondo (app di nuovo in primo piano dopo 5 minuti) non mostra più lo spinner di caricamento"
+    ]
+  },
   {
     version: "4.53.0",
     date: "22/10/2026",
