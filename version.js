@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.54.0';
+export const VERSION = '4.55.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.55.0",
+    date: "26/10/2026",
+    type: "feature",
+    changes: [
+      "Canoni: nuovo tipo «K-Tools» (ISA è uno degli strumenti): vendita K-Tools al posto di quella ISA, codice cliente WKI, banda viola, filtro e pulsante «Licenza K-Tools»; i canoni ISA già venduti passano a K-Tools",
+      "Canoni: «Prezzo da definire» per i primi clienti K-Tools (listino ancora da fare): canone provvisorio senza importo, non entra fra i da fatturare; definito il listino se ne crea uno nuovo col prezzo"
+    ]
+  },
   {
     version: "4.54.0",
     date: "22/10/2026",

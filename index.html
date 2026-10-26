@@ -1055,11 +1055,11 @@
                         <div class="vendite-action-desc">Registra un nuovo canone annuale</div>
                     </div>
                 </div>
-                <div class="vendite-action-card" onclick="openVenditaModal('isa')" style="margin-top:10px;">
-                    <span class="vendite-action-icon"><i class="fas fa-balance-scale"></i></span>
+                <div class="vendite-action-card" onclick="openVenditaModal('ktools')" style="margin-top:10px;">
+                    <span class="vendite-action-icon"><i class="fas fa-toolbox"></i></span>
                     <div>
-                        <div class="vendite-action-title">ISA Studio Legale</div>
-                        <div class="vendite-action-desc">Licenza annuale del programma ISA (con avvio il primo anno)</div>
+                        <div class="vendite-action-title">K-Tools</div>
+                        <div class="vendite-action-desc">Canone di K-Tools (fogli d'udienza, parcelle, allegati, ISA): gli strumenti li decide la licenza</div>
                     </div>
                 </div>
             </div>
@@ -1083,7 +1083,7 @@
                         <select id="canoni-filter-tipo" onchange="filterCanoni()">
                             <option value="">Tutti i tipi</option>
                             <option value="hypercare">Hypercare</option>
-                            <option value="isa">ISA Studio Legale</option>
+                            <option value="ktools">K-Tools</option>
                             <option value="controlli">Controlli periodici</option>
                             <option value="altro">Altri canoni</option>
                         </select>
@@ -1308,6 +1308,12 @@
                 </small>
             </div>
 
+            <div class="form-group" id="venditaKtoolsGroup" style="display:none;">
+                <label>Codice cliente WKI (Kleos)
+                    <input type="text" id="venditaKtoolsCodiceWki" placeholder="vuoto = quello della scheda cliente" inputmode="numeric"></label>
+                <small style="color:#666; display:block; margin-top:4px;">Va nella licenza: lega lo studio al suo contratto Kleos. Dopo la vendita, dalla card del canone «Licenza K-Tools».</small>
+            </div>
+
             <div class="form-group" id="venditaDescrizioneGroup">
                 <label id="venditaDescrizioneLabel">Descrizione</label>
                 <textarea id="venditaDescrizione" rows="3"></textarea>
@@ -1316,6 +1322,9 @@
             <div class="form-group" id="venditaImportoGroup">
                 <label>Importo (€) *</label>
                 <input type="number" id="venditaImporto" step="0.01" min="0" required>
+                <label id="venditaPrezzoDaDefinireGroup" style="display:none; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
+                    <input type="checkbox" id="venditaPrezzoDaDefinire" style="width:auto;" onchange="togglePrezzoDaDefinire()">
+                    <span>Prezzo da definire (canone provvisorio: col listino se ne crea uno nuovo)</span></label>
             </div>
 
             <div class="form-group">

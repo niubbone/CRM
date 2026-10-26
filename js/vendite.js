@@ -22,7 +22,8 @@ let scadenzeData = null;
 const CANONE_FATTURAZIONE = {
     DA_FATTURARE: 'Da fatturare',
     PROFORMATO: 'Proformato',
-    FATTURATO: 'Fatturato'
+    FATTURATO: 'Fatturato',
+    PREZZO_DA_DEFINIRE: 'Prezzo da definire'
 };
 
 function initVenditeTab() {
@@ -427,6 +428,11 @@ function openVenditaModal(tipo) {
     const importoGroup = document.getElementById('venditaImportoGroup');
     if (isaGroup) isaGroup.style.display = 'none';
     if (importoGroup) importoGroup.style.display = 'block';
+    const prezzoDaDefinireGroup = document.getElementById('venditaPrezzoDaDefinireGroup');
+    if (prezzoDaDefinireGroup) prezzoDaDefinireGroup.style.display = (tipo === 'canone' || tipo === 'ktools') ? 'flex' : 'none';
+    const ktoolsGroup = document.getElementById('venditaKtoolsGroup');
+    if (ktoolsGroup) ktoolsGroup.style.display = tipo === 'ktools' ? 'block' : 'none';
+    togglePrezzoDaDefinire();
 
     // Reset stato controlli periodici a ogni apertura
     if (controlliCheck) controlliCheck.checked = false;
@@ -454,6 +460,17 @@ function openVenditaModal(tipo) {
         if (descrizioneLabel) descrizioneLabel.textContent = 'Descrizione';
         if (noteGroup) noteGroup.style.display = 'none';
         if (controlliGroup) controlliGroup.style.display = 'block';
+    } else if (tipo === 'ktools') {
+        if (modalTitle) modalTitle.textContent = '🧰 K-Tools';
+        if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'none';
+        if (oreGroup) oreGroup.style.display = 'none';
+        if (oreInput) oreInput.required = false;
+        if (durataGroup) durataGroup.style.display = 'block';
+        if (durataLabel) durataLabel.textContent = 'Durata (anni)';
+        if (durataInput) durataInput.value = 1;
+        if (descrizioneGroup) descrizioneGroup.style.display = 'block';
+        if (descrizioneLabel) descrizioneLabel.textContent = 'Descrizione';
+        if (noteGroup) noteGroup.style.display = 'none';
     } else if (tipo === 'isa') {
         if (modalTitle) modalTitle.textContent = '⚖️ ISA Studio Legale';
         if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'none';
@@ -524,6 +541,22 @@ function aggiornaTotaleIsa() {
           + `<br>Dal rinnovo (01/10 – 30/09): <strong>${euro(r.canone)}</strong> l'anno + IVA`;
 }
 
+// Canone provvisorio «Prezzo da definire» (primi clienti K-Tools, listino da fare): definito il
+// listino si crea un canone nuovo col prezzo e questo si disdice
+function prezzoDaDefinire() {
+    return ['canone', 'ktools'].includes(document.getElementById('tipoVendita')?.value)
+        && !!document.getElementById('venditaPrezzoDaDefinire')?.checked;
+}
+
+function togglePrezzoDaDefinire() {
+    const importo = document.getElementById('venditaImporto');
+    if (!importo) return;
+    const daDefinire = prezzoDaDefinire();
+    importo.required = !daDefinire;
+    importo.disabled = daDefinire;
+    if (daDefinire) importo.value = '';
+}
+
 function closeVenditaModal() {
     const modal = document.getElementById('venditaModal');
     if (modal) modal.classList.remove('active');
@@ -545,7 +578,7 @@ async function submitVendita(e) {
         return;
     }
     
-    if (!importo || importo <= 0) {
+    if ((!importo || importo <= 0) && !prezzoDaDefinire()) {
         alert('⚠️ Inserisci un importo valido');
         return;
     }
@@ -571,6 +604,7 @@ async function submitVendita(e) {
         } else if (tipo === 'canone') {
             action = 'insert_canone';
             params += `&descrizione=${encodeURIComponent(descrizione)}&durata_anni=${durataAnni}`;
+            if (prezzoDaDefinire()) params += '&prezzo_da_definire=1';
 
             // Controlli periodici: canone di tipo CONTROLLI con N slot da tracciare
             const controlliCheck = document.getElementById('venditaControlliCheck');
@@ -582,6 +616,12 @@ async function submitVendita(e) {
                     params += `&etichette=${encodeURIComponent(etichette)}`;
                 }
             }
+        } else if (tipo === 'ktools') {
+            action = 'insert_canone';
+            const codiceWki = (document.getElementById('venditaKtoolsCodiceWki')?.value || '').trim();
+            params += `&tipo=KTOOLS&descrizione=${encodeURIComponent(descrizione)}&durata_anni=${durataAnni}`
+                + `&codice_wki=${encodeURIComponent(codiceWki)}`;
+            if (prezzoDaDefinire()) params += '&prezzo_da_definire=1';
         } else if (tipo === 'isa') {
             action = 'insert_canone';
             const r = letturaIsa();
@@ -1178,9 +1218,10 @@ function filterCanoniDebounced() {
     canoniFilterTimer = setTimeout(filterCanoni, 300);
 }
 
-// Categoria di un canone per colore, etichetta e filtro. ISA e CONTROLLI sono tipi del foglio;
+// Categoria di un canone per colore, etichetta e filtro. KTOOLS, ISA e CONTROLLI sono tipi del foglio;
 // Hypercare è un canone STANDARD riconosciuto dalla descrizione; il resto è «Altro».
 const CATEGORIE_CANONE = {
+    ktools:    { etichetta: 'K-Tools',            icona: 'fa-toolbox',         colore: '#7c3aed', sfondo: '#f5f0ff' },
     hypercare: { etichetta: 'Hypercare',          icona: 'fa-life-ring',       colore: '#0f766e', sfondo: '#ecfdf9' },
     isa:       { etichetta: 'ISA Studio Legale',  icona: 'fa-balance-scale',   colore: '#1c3557', sfondo: '#eef3fa' },
     controlli: { etichetta: 'Controlli periodici', icona: 'fa-clipboard-check', colore: '#c2410c', sfondo: '#fff5ec' },
@@ -1189,6 +1230,7 @@ const CATEGORIE_CANONE = {
 
 function categoriaCanone(c) {
     const tipo = (c.tipo || '').toUpperCase();
+    if (tipo === 'KTOOLS') return 'ktools';
     if (tipo === 'ISA') return 'isa';
     if (tipo === 'CONTROLLI') return 'controlli';
     if (/hypercare/i.test(c.descrizione || '')) return 'hypercare';
@@ -1272,14 +1314,16 @@ function renderCanoni(canoni) {
                             font-weight:700; letter-spacing:.04em; text-transform:uppercase; font-size:.8em;
                             display:flex; align-items:center; gap:8px;">
                     <i class="fas ${cat.icona}"></i> ${cat.etichetta}
-                    ${isIsa && c.isa && c.isa.gratuito ? `<span style="margin-left:auto; background:#fff; color:${cat.colore}; border-radius:4px; padding:1px 6px;">Primo periodo gratuito</span>` : ''}
+                    ${(isIsa && c.isa && c.isa.gratuito) || (c.ktools && c.ktools.gratuito) ? `<span style="margin-left:auto; background:#fff; color:${cat.colore}; border-radius:4px; padding:1px 6px;">Primo periodo gratuito</span>` : ''}
                 </div>`;
-            const controlliChip = isIsa && c.isa && c.isa.codiceWki
-                ? `<span class="storico-badge" style="background:#fff;color:#1c3557;border:1px solid #1c3557;margin-left:6px;" title="Codice cliente WKI (contratto Kleos in KSALES)">WKI ${c.isa.codiceWki}</span>`
+            const codiceWki = (isIsa && c.isa && c.isa.codiceWki) || (c.ktools && c.ktools.codiceWki) || '';
+            const controlliChip = codiceWki
+                ? `<span class="storico-badge" style="background:#fff;color:${cat.colore};border:1px solid ${cat.colore};margin-left:6px;" title="Codice cliente WKI (contratto Kleos in KSALES)">WKI ${codiceWki}</span>`
                 : '';
 
-            // Licenza K-Tools: sui canoni ISA e su quelli che in descrizione dicono «K-Tools»
-            const conLicenza = isAttivo && (isIsa || /k-?tools/i.test(c.descrizione || ''));
+            // Licenza K-Tools: sui canoni K-Tools e ISA, e su quelli che in descrizione dicono «K-Tools»
+            const conLicenza = isAttivo && (isIsa || (c.tipo || '').toUpperCase() === 'KTOOLS' || /k-?tools/i.test(c.descrizione || ''));
+            const prezzoAperto = c.fatturazione === CANONE_FATTURAZIONE.PREZZO_DA_DEFINIRE;
             const mostraAzioni = isAttivo || c.idPrecedente || isControlli;
 
             html += `
@@ -1301,7 +1345,7 @@ function renderCanoni(canoni) {
                     </div>
                     <div class="firma-stat">
                         <span class="storico-stat-label">Importo</span>
-                        <span class="storico-stat-value">€ ${parseFloat(c.importo).toFixed(2)}</span>
+                        <span class="storico-stat-value">${prezzoAperto ? 'da definire' : `€ ${parseFloat(c.importo).toFixed(2)}`}</span>
                     </div>
                 </div>
                 ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
@@ -3082,6 +3126,7 @@ if (typeof window !== 'undefined') {
     window.toggleStoricoFirma = toggleStoricoFirma;
     window.toggleControlliCanoneCard = toggleControlliCanoneCard;
     window.toggleLicenzaCanone = toggleLicenzaCanone;
+    window.togglePrezzoDaDefinire = togglePrezzoDaDefinire;
     window.emettiLicenzaCanone = emettiLicenzaCanone;
     window.copiaLicenza = copiaLicenza;
     window.toggleVccForm = toggleVccForm;
