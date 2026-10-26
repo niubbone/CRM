@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.55.1';
+export const VERSION = '4.56.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.56.0",
+    date: "26/10/2026",
+    type: "feature",
+    changes: [
+      "Vendite: K-Tools è una sezione a sé, accanto a Canoni (Nuovo e Riepilogo con i suoi filtri); i canoni K-Tools non compaiono più fra i Canoni"
+    ]
+  },
   {
     version: "4.55.1",
     date: "26/10/2026",

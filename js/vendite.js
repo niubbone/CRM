@@ -38,7 +38,7 @@ function initVenditeTab() {
 
 let currentVenditeSection = 'pacchetti';
 // Traccia se il riepilogo di ogni sezione è già stato caricato
-const riepilogoLoaded = { pacchetti: false, canoni: false, firme: false, qodnet: false, ferrari: false };
+const riepilogoLoaded = { pacchetti: false, canoni: false, ktools: false, firme: false, qodnet: false, ferrari: false };
 
 // Cache persistente delle liste (js/cache-liste.js). Se questo file arriva più
 // nuovo di index.html (cache HTTP nei minuti dopo un deploy) l'aiutante può non
@@ -54,13 +54,13 @@ function _crmCacheListe() {
 
 function switchVenditeSection(section) {
     // Aggiorna nav cards
-    ['pacchetti','canoni','firme','scadenze','qodnet','ferrari'].forEach(s => {
+    ['pacchetti','canoni','ktools','firme','scadenze','qodnet','ferrari'].forEach(s => {
         const card = document.getElementById(`vnav-${s}`);
         if (card) card.classList.toggle('active', s === section);
     });
 
     // Mostra/nascondi pannelli
-    ['pacchetti','canoni','firme','scadenze','qodnet','ferrari'].forEach(s => {
+    ['pacchetti','canoni','ktools','firme','scadenze','qodnet','ferrari'].forEach(s => {
         const panel = document.getElementById(`vendite-section-${s}`);
         if (panel) panel.style.display = s === section ? '' : 'none';
     });
@@ -91,7 +91,12 @@ function switchVenditeSubtab(section, subtab) {
     if (subtab === 'riepilogo' && !riepilogoLoaded[section]) {
         riepilogoLoaded[section] = true;
         if (section === 'pacchetti') loadStoricoPackages();
-        if (section === 'canoni')    loadCanoniRiepilogo();
+        // Canoni e K-Tools leggono gli stessi dati (get_canoni_riepilogo): se l'altra sezione li ha
+        // già letti basta ridisegnare
+        if (section === 'canoni' || section === 'ktools') {
+            const altra = section === 'canoni' ? 'ktools' : 'canoni';
+            if (riepilogoLoaded[altra]) filterCanoni(); else loadCanoniRiepilogo();
+        }
         if (section === 'firme')     loadFirmeRiepilogo();
         if (section === 'qodnet')    loadQodnetRiepilogo();
         if (section === 'ferrari')   loadFerrariRiepilogo();
@@ -1180,6 +1185,8 @@ async function loadCanoniRiepilogo(opzioni) {
 
         caricamento: () => {
             container.innerHTML = '<div class="loading-scadenze">Caricamento canoni...</div>';
+            const kt = document.getElementById('ktoolsContainer');
+            if (kt) kt.innerHTML = '<div class="loading-scadenze">Caricamento canoni K-Tools...</div>';
         },
 
         scarica: async (opzioniFetch) => {
@@ -1200,16 +1207,21 @@ async function loadCanoniRiepilogo(opzioni) {
         },
 
         errore: (error) => {
-            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+            const msg = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>Errore: ${error.message}</div></div>`;
+            container.innerHTML = msg;
+            const kt = document.getElementById('ktoolsContainer');
+            if (kt) kt.innerHTML = msg;
         }
     });
 }
 
 function populateCanoniClientFilter(canoni) {
-    const datalist = document.getElementById('canoni-client-list');
-    if (!datalist) return;
-    const nomi = [...new Set(canoni.map(c => c.nomeCliente).filter(Boolean))].sort();
-    datalist.innerHTML = nomi.map(n => `<option value="${n}">`).join('');
+    [['canoni-client-list', c => !isKtools(c)], ['ktools-client-list', isKtools]].forEach(([id, filtro]) => {
+        const datalist = document.getElementById(id);
+        if (!datalist) return;
+        const nomi = [...new Set(canoni.filter(filtro).map(c => c.nomeCliente).filter(Boolean))].sort();
+        datalist.innerHTML = nomi.map(n => `<option value="${n}">`).join('');
+    });
 }
 
 function filterCanoniDebounced() {
@@ -1236,33 +1248,41 @@ function categoriaCanone(c) {
     return 'altro';
 }
 
-function filterCanoni() {
-    const filtroCliente = (document.getElementById('canoni-filter-cliente')?.value || '').trim().toLowerCase();
-    const filtroStato   = (document.getElementById('canoni-filter-stato')?.value || '').toUpperCase();
-    const filtroTipo    = document.getElementById('canoni-filter-tipo')?.value || '';
-
-    const filtered = (canoniData || []).filter(c => {
-        const matchCliente = !filtroCliente || c.nomeCliente.toLowerCase().includes(filtroCliente);
-        const stU = (c.stato || '').toUpperCase();
-
-        let matchStato;
-        if (filtroStato === '')          matchStato = stU !== 'RINNOVATO';  // default: nascondi lo storico
-        else if (filtroStato === 'TUTTI') matchStato = true;
-        else                              matchStato = stU === filtroStato;
-
-        const matchTipo = !filtroTipo || categoriaCanone(c) === filtroTipo;
-
-        return matchCliente && matchStato && matchTipo;
-    });
-    renderCanoni(filtered);
+// I canoni K-Tools (e gli ISA venduti prima, ISA è uno degli strumenti) stanno nella sezione K-Tools
+function isKtools(c) {
+    return ['ktools', 'isa'].includes(categoriaCanone(c));
 }
 
-function renderCanoni(canoni) {
-    const container = document.getElementById('canoniContainer');
+function filterCanoni() {
+    const filtra = (prefisso, inSezione, conTipo) => {
+        const filtroCliente = (document.getElementById(`${prefisso}-filter-cliente`)?.value || '').trim().toLowerCase();
+        const filtroStato   = (document.getElementById(`${prefisso}-filter-stato`)?.value || '').toUpperCase();
+        const filtroTipo    = conTipo ? (document.getElementById(`${prefisso}-filter-tipo`)?.value || '') : '';
+        return (canoniData || []).filter(c => {
+            if (!inSezione(c)) return false;
+            const matchCliente = !filtroCliente || c.nomeCliente.toLowerCase().includes(filtroCliente);
+            const stU = (c.stato || '').toUpperCase();
+
+            let matchStato;
+            if (filtroStato === '')          matchStato = stU !== 'RINNOVATO';  // default: nascondi lo storico
+            else if (filtroStato === 'TUTTI') matchStato = true;
+            else                              matchStato = stU === filtroStato;
+
+            const matchTipo = !filtroTipo || categoriaCanone(c) === filtroTipo;
+
+            return matchCliente && matchStato && matchTipo;
+        });
+    };
+    renderCanoni(filtra('canoni', c => !isKtools(c), true), 'canoniContainer', 'Nessun canone trovato');
+    renderCanoni(filtra('ktools', isKtools, false), 'ktoolsContainer', 'Nessun canone K-Tools trovato');
+}
+
+function renderCanoni(canoni, idContenitore = 'canoniContainer', vuoto = 'Nessun canone trovato') {
+    const container = document.getElementById(idContenitore);
     if (!container) return;
 
     if (!canoni.length) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div>Nessun canone trovato</div></div>`;
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div>${vuoto}</div></div>`;
         return;
     }
 

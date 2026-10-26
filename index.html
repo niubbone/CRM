@@ -962,7 +962,7 @@
 <div id="vendite-tab" class="tab-content">
     <div class="form-container">
         <h1><i class="fas fa-cart-shopping"></i> Vendite</h1>
-        <div class="info-box"><p>Pacchetti ore, canoni e firme digitali. Seleziona una categoria per inserire o consultare.</p></div>
+        <div class="info-box"><p>Pacchetti ore, canoni, K-Tools e firme digitali. Seleziona una categoria per inserire o consultare.</p></div>
 
         <!-- Navigazione principale -->
         <div class="vendite-nav">
@@ -977,6 +977,10 @@
             <div class="vendite-nav-card" id="vnav-canoni" onclick="switchVenditeSection('canoni')">
                 <span class="vendite-nav-icon"><i class="fas fa-calendar"></i></span>
                 <span class="vendite-nav-label">Canoni</span>
+            </div>
+            <div class="vendite-nav-card" id="vnav-ktools" onclick="switchVenditeSection('ktools')">
+                <span class="vendite-nav-icon"><i class="fas fa-toolbox"></i></span>
+                <span class="vendite-nav-label">K-Tools</span>
             </div>
             <div class="vendite-nav-card" id="vnav-firme" onclick="switchVenditeSection('firme')">
                 <span class="vendite-nav-icon"><i class="fas fa-signature"></i></span>
@@ -1055,13 +1059,6 @@
                         <div class="vendite-action-desc">Registra un nuovo canone annuale</div>
                     </div>
                 </div>
-                <div class="vendite-action-card" onclick="openVenditaModal('ktools')" style="margin-top:10px;">
-                    <span class="vendite-action-icon"><i class="fas fa-toolbox"></i></span>
-                    <div>
-                        <div class="vendite-action-title">K-Tools</div>
-                        <div class="vendite-action-desc">Canone di K-Tools (fogli d'udienza, parcelle, allegati, ISA): gli strumenti li decide la licenza</div>
-                    </div>
-                </div>
             </div>
             <div id="vsub-canoni-riepilogo-content" class="vendite-subtab-content" style="display:none;">
                 <div class="storico-filtri">
@@ -1083,7 +1080,6 @@
                         <select id="canoni-filter-tipo" onchange="filterCanoni()">
                             <option value="">Tutti i tipi</option>
                             <option value="hypercare">Hypercare</option>
-                            <option value="ktools">K-Tools</option>
                             <option value="controlli">Controlli periodici</option>
                             <option value="altro">Altri canoni</option>
                         </select>
@@ -1101,6 +1097,48 @@
         </div>
 
         <!-- ===== SEZIONE FIRME ===== -->
+        <!-- ===== SEZIONE K-TOOLS (26/10/2026: separata dai canoni) ===== -->
+        <div id="vendite-section-ktools" class="vendite-section" style="display:none;">
+            <div class="vendite-subtabs">
+                <button class="vendite-subtab active" id="vsub-ktools-nuovo" onclick="switchVenditeSubtab('ktools','nuovo')">
+                    <i class="fas fa-plus"></i> Nuovo
+                </button>
+                <button class="vendite-subtab" id="vsub-ktools-riepilogo" onclick="switchVenditeSubtab('ktools','riepilogo')">
+                    <i class="fas fa-list"></i> Riepilogo
+                </button>
+            </div>
+            <div id="vsub-ktools-nuovo-content" class="vendite-subtab-content">
+                <div class="vendite-action-card" onclick="openVenditaModal('ktools')">
+                    <span class="vendite-action-icon"><i class="fas fa-toolbox"></i></span>
+                    <div>
+                        <div class="vendite-action-title">Nuovo canone K-Tools</div>
+                        <div class="vendite-action-desc">Fogli d'udienza, parcelle, allegati, ISA: gli strumenti li decide la licenza, che si emette dalla card del canone. Scade al 30/09.</div>
+                    </div>
+                </div>
+            </div>
+            <div id="vsub-ktools-riepilogo-content" class="vendite-subtab-content" style="display:none;">
+                <div class="storico-filtri">
+                    <div class="storico-filtro-group">
+                        <input type="text" id="ktools-filter-cliente" list="ktools-client-list"
+                               placeholder="Filtra per cliente..." oninput="filterCanoniDebounced()" autocomplete="off">
+                        <datalist id="ktools-client-list"></datalist>
+                    </div>
+                    <div class="storico-filtro-group">
+                        <select id="ktools-filter-stato" onchange="filterCanoni()">
+                            <option value="">Attivi e scaduti</option>
+                            <option value="ATTIVO">Attivo</option>
+                            <option value="SCADUTO">Scaduto (non rinnovati)</option>
+                            <option value="RINNOVATO">Rinnovati (storico)</option>
+                            <option value="TUTTI">Tutti</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ktoolsContainer">
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-toolbox"></i></div><div>Caricamento...</div></div>
+                </div>
+            </div>
+        </div>
+
         <div id="vendite-section-firme" class="vendite-section" style="display:none;">
             <div class="vendite-subtab-bar">
                 <button class="vendite-subtab active" id="vsub-firme-nuovo" onclick="switchVenditeSubtab('firme','nuovo')">
