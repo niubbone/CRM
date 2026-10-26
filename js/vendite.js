@@ -465,8 +465,7 @@ function openVenditaModal(tipo) {
         if (tipoFirmaGroup) tipoFirmaGroup.style.display = 'none';
         if (oreGroup) oreGroup.style.display = 'none';
         if (oreInput) oreInput.required = false;
-        if (durataGroup) durataGroup.style.display = 'block';
-        if (durataLabel) durataLabel.textContent = 'Durata (anni)';
+        if (durataGroup) durataGroup.style.display = 'none';   // come ISA: scade al 30/09
         if (durataInput) durataInput.value = 1;
         if (descrizioneGroup) descrizioneGroup.style.display = 'block';
         if (descrizioneLabel) descrizioneLabel.textContent = 'Descrizione';
@@ -541,8 +540,8 @@ function aggiornaTotaleIsa() {
           + `<br>Dal rinnovo (01/10 – 30/09): <strong>${euro(r.canone)}</strong> l'anno + IVA`;
 }
 
-// Canone provvisorio «Prezzo da definire» (primi clienti K-Tools, listino da fare): definito il
-// listino si crea un canone nuovo col prezzo e questo si disdice
+// Canone «Prezzo da definire» (primi clienti K-Tools, listino da fare): il prezzo si mette dopo
+// dalla card del canone («Imposta prezzo»)
 function prezzoDaDefinire() {
     return ['canone', 'ktools'].includes(document.getElementById('tipoVendita')?.value)
         && !!document.getElementById('venditaPrezzoDaDefinire')?.checked;
@@ -1324,7 +1323,7 @@ function renderCanoni(canoni) {
             // Licenza K-Tools: sui canoni K-Tools e ISA, e su quelli che in descrizione dicono «K-Tools»
             const conLicenza = isAttivo && (isIsa || (c.tipo || '').toUpperCase() === 'KTOOLS' || /k-?tools/i.test(c.descrizione || ''));
             const prezzoAperto = c.fatturazione === CANONE_FATTURAZIONE.PREZZO_DA_DEFINIRE;
-            const mostraAzioni = isAttivo || c.idPrecedente || isControlli;
+            const mostraAzioni = isAttivo || c.idPrecedente || isControlli || prezzoAperto;
 
             html += `
             <div class="storico-card"${cardStyle}>
@@ -1363,6 +1362,10 @@ function renderCanoni(canoni) {
                     ${c.idPrecedente ? `<button class="btn-small"
                         onclick="toggleStoricoCanone('${c.idCanone}')">
                         <i class="fas fa-clock-rotate-left"></i> Storico
+                    </button>` : ''}
+                    ${prezzoAperto ? `<button class="btn-small"
+                        onclick="impostaPrezzoCanone('${c.idCanone}')">
+                        <i class="fas fa-euro-sign"></i> Imposta prezzo
                     </button>` : ''}
                     ${conLicenza ? `<button class="btn-small"
                         onclick="toggleLicenzaCanone('${c.idCanone}', '${c.dataScadenza || ''}')">
@@ -1462,6 +1465,24 @@ const LICENZA_STRUMENTI = [
     ['udienze', "Fogli d'udienza"], ['parcelle', 'Parcelle da incassare'],
     ['allegati', 'Atto e allegati'], ['isa', 'ISA Studio Legale']
 ];
+
+// Prezzo di un canone nato «Prezzo da definire»: da qui entra fra i canoni da fatturare
+async function impostaPrezzoCanone(idCanone) {
+    const valore = prompt(`Prezzo del canone ${idCanone} (€, IVA esclusa):`);
+    if (valore === null) return;
+    const importo = parseFloat(valore.replace(',', '.'));
+    if (!(importo > 0)) { alert('⚠️ Inserisci un importo valido'); return; }
+    try {
+        const res = await fetch(`${getAPIUrl()}?action=imposta_prezzo_canone&canone_id=${encodeURIComponent(idCanone)}&importo=${importo}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        window.markTabDirty && window.markTabDirty('vendite');
+        loadCanoniRiepilogo();
+        loadScadenze();
+    } catch (e) {
+        alert('❌ Errore: ' + e.message);
+    }
+}
 
 async function toggleLicenzaCanone(idCanone, scadenza) {
     const box = document.getElementById(`canone-licenza-${idCanone}`);
@@ -3126,6 +3147,7 @@ if (typeof window !== 'undefined') {
     window.toggleStoricoFirma = toggleStoricoFirma;
     window.toggleControlliCanoneCard = toggleControlliCanoneCard;
     window.toggleLicenzaCanone = toggleLicenzaCanone;
+    window.impostaPrezzoCanone = impostaPrezzoCanone;
     window.togglePrezzoDaDefinire = togglePrezzoDaDefinire;
     window.emettiLicenzaCanone = emettiLicenzaCanone;
     window.copiaLicenza = copiaLicenza;

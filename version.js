@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.55.0';
+export const VERSION = '4.55.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,15 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.55.1",
+    date: "26/10/2026",
+    type: "feature",
+    changes: [
+      "Canoni K-Tools: scadono al 30/09 come gli ISA (rinnovo 01/10–30/09), niente durata nel modulo",
+      "Canoni «Prezzo da definire»: pulsante «Imposta prezzo» sulla card, da lì il canone diventa da fatturare"
+    ]
+  },
   {
     version: "4.55.0",
     date: "26/10/2026",
