@@ -1538,8 +1538,13 @@ function renderLicenzaCanone(idCanone, scadenza, licenze) {
                     <strong style="font-size:13px;">${_escControllo(l.id)}</strong> · emessa il ${_escControllo(l.emessaIl)}<br>
                     ${_escControllo(l.strumenti.join(', '))} · utenti: ${_escControllo(String(l.utenti))} · fino al ${_escControllo(l.scadenza.split('-').reverse().join('/'))}
                 </div>
-                <button class="btn-small" onclick="copiaLicenza(this, '${_escControllo(l.codice)}')"><i class="fas fa-copy"></i> Copia codice</button>
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                    <button class="btn-small" onclick="copiaLicenza(this, '${_escControllo(l.codice)}')"><i class="fas fa-copy"></i> Copia codice</button>
+                    <button class="btn-small" style="color:#dc3545;" title="Togli dal registro (licenza superata)"
+                            onclick="eliminaLicenzaCanone(this, '${idCanone}', '${scadenza || ''}', '${_escControllo(l.id)}')"><i class="fas fa-trash"></i></button>
+                </div>
             </div>
+            ${l.note ? `<div style="font-size:11px;color:#888;margin-top:4px;">${_escControllo(l.note)}</div>` : ''}
         </div>`).join('');
     const scelte = LICENZA_STRUMENTI.map(([k, nome]) =>
         `<label style="display:inline-flex;gap:4px;align-items:center;margin-right:10px;font-size:13px;">
@@ -1584,6 +1589,28 @@ async function emettiLicenzaCanone(idCanone, scadenza) {
             <textarea readonly rows="4" style="width:100%;font-family:monospace;font-size:11px;">${_escControllo(result.licenza.codice)}</textarea>`;
     } catch (e) {
         esito.innerHTML = `<span style="color:#dc3545;font-size:12px;">Errore: ${_escControllo(e.message)}</span>`;
+    }
+}
+
+// Primo clic: chiede conferma sul pulsante stesso; secondo clic: toglie la licenza dal registro.
+async function eliminaLicenzaCanone(bottone, idCanone, scadenza, idLicenza) {
+    if (bottone.dataset.conferma !== '1') {
+        bottone.dataset.conferma = '1';
+        bottone.innerHTML = `Elimino ${_escControllo(idLicenza)}?`;
+        return;
+    }
+    bottone.disabled = true;
+    bottone.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+        const res = await fetch(`${getAPIUrl()}?action=elimina_licenza&canone_id=${encodeURIComponent(idCanone)}&licenza_id=${encodeURIComponent(idLicenza)}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        await loadLicenzaCanone(idCanone, scadenza);
+    } catch (e) {
+        bottone.disabled = false;
+        bottone.innerHTML = '<i class="fas fa-trash"></i>';
+        bottone.dataset.conferma = '';
+        alert('❌ Errore: ' + e.message);
     }
 }
 
@@ -3171,6 +3198,7 @@ if (typeof window !== 'undefined') {
     window.togglePrezzoDaDefinire = togglePrezzoDaDefinire;
     window.emettiLicenzaCanone = emettiLicenzaCanone;
     window.copiaLicenza = copiaLicenza;
+    window.eliminaLicenzaCanone = eliminaLicenzaCanone;
     window.toggleVccForm = toggleVccForm;
     window.submitControlloCard = submitControlloCard;
     window.resetControlloCard = resetControlloCard;

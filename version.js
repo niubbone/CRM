@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.56.0';
+export const VERSION = '4.57.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.57.0",
+    date: "27/10/2026",
+    type: "feature",
+    changes: [
+      "K-Tools: nelle licenze di un canone si può togliere dal registro una licenza superata (cestino, con conferma); sotto ogni licenza compaiono le note"
+    ]
+  },
   {
     version: "4.56.0",
     date: "26/10/2026",
