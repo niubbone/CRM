@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.58.0';
+export const VERSION = '4.59.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.59.0",
+    date: "28/10/2026",
+    type: "feature",
+    changes: [
+      "Canoni e K-Tools: pulsante «Modifica» sulla card per cambiare descrizione (quella che va in proforma) e importo; l'importo solo sui canoni da fatturare (backend 4.48.0)"
+    ]
+  },
   {
     version: "4.58.0",
     date: "28/10/2026",

@@ -1346,6 +1346,7 @@ function renderCanoni(canoni, idContenitore = 'canoniContainer', vuoto = 'Nessun
             // Proforma automatica: sui canoni attivi; resta visibile se accesa (Hypercare scaduto a gennaio)
             const conProformaAuto = isAttivo || (c.proformaAuto && !isRinnovato);
             const mostraAzioni = isAttivo || c.idPrecedente || isControlli || prezzoAperto || conProformaAuto;
+            canoniCardDati[c.idCanone] = c;
 
             html += `
             <div class="storico-card"${cardStyle}>
@@ -1389,6 +1390,10 @@ function renderCanoni(canoni, idContenitore = 'canoniContainer', vuoto = 'Nessun
                         onclick="impostaPrezzoCanone('${c.idCanone}')">
                         <i class="fas fa-euro-sign"></i> Imposta prezzo
                     </button>` : ''}
+                    ${!isRinnovato ? `<button class="btn-small"
+                        onclick="toggleModificaCanone('${c.idCanone}')">
+                        <i class="fas fa-pen"></i> Modifica
+                    </button>` : ''}
                     ${conProformaAuto ? `<button class="btn-small"
                         title="${categoriaCanone(c) === 'hypercare'
                             ? 'Si rinnova e la proforma parte da sola il primo giorno feriale dal 7 gennaio; 5 giorni prima ti arriva un preavviso'
@@ -1402,6 +1407,7 @@ function renderCanoni(canoni, idContenitore = 'canoniContainer', vuoto = 'Nessun
                         <i class="fas fa-key"></i> Licenza K-Tools
                     </button>` : ''}
                 </div>
+                <div id="canone-modifica-${c.idCanone}" style="display:none;margin-top:8px;"></div>
                 <div id="canone-licenza-${c.idCanone}" style="display:none;margin-top:8px;"></div>
                 <div id="canone-controlli-${c.idCanone}" style="display:none;margin-top:8px;"></div>
                 <div id="storico-canone-${c.idCanone}" style="display:none;margin-top:8px;"></div>` : ''}
@@ -1504,6 +1510,59 @@ async function impostaPrezzoCanone(idCanone) {
     if (!(importo > 0)) { alert('⚠️ Inserisci un importo valido'); return; }
     try {
         const res = await fetch(`${getAPIUrl()}?action=imposta_prezzo_canone&canone_id=${encodeURIComponent(idCanone)}&importo=${importo}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        window.markTabDirty && window.markTabDirty('vendite');
+        loadCanoniRiepilogo();
+        loadScadenze();
+    } catch (e) {
+        alert('❌ Errore: ' + e.message);
+    }
+}
+
+// --- Modifica di descrizione e importo dalla card (prima solo a mano nel foglio Canoni) ---
+// L'importo si cambia solo sui canoni da fatturare: proformato o fatturato il documento è uscito.
+const canoniCardDati = {};
+const escAttr = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+function toggleModificaCanone(idCanone) {
+    const box = document.getElementById(`canone-modifica-${idCanone}`);
+    const c = canoniCardDati[idCanone];
+    if (!box || !c) return;
+    if (box.style.display === 'block') { box.style.display = 'none'; return; }
+    const isIsa = (c.tipo || '').toUpperCase() === 'ISA';
+    const importoModificabile = c.fatturazione === CANONE_FATTURAZIONE.DA_FATTURARE && !isIsa;
+    const perche = c.fatturazione === CANONE_FATTURAZIONE.PREZZO_DA_DEFINIRE ? 'Il prezzo si mette con «Imposta prezzo».'
+        : isIsa ? "Sui canoni ISA l'importo viene da listino e sconto."
+        : `Importo bloccato: il canone è «${c.fatturazione}».`;
+    box.innerHTML = `
+        <div style="background:#fff;border:1px solid #dee2e6;border-radius:6px;padding:10px;">
+            <label style="display:block;font-size:0.85em;font-weight:bold;margin-bottom:4px;">Descrizione <span style="font-weight:normal;color:#6c757d;">(va in proforma)</span></label>
+            <textarea id="mod-canone-descr-${idCanone}" rows="2" style="width:100%;box-sizing:border-box;">${escAttr(c.descrizione)}</textarea>
+            <label style="display:block;font-size:0.85em;font-weight:bold;margin:8px 0 4px;">Importo € <span style="font-weight:normal;color:#6c757d;">(IVA esclusa)</span></label>
+            <input id="mod-canone-importo-${idCanone}" type="text" inputmode="decimal" value="${escAttr(parseFloat(c.importo || 0).toFixed(2).replace('.', ','))}"
+                ${importoModificabile ? '' : 'disabled'} style="width:140px;">
+            ${importoModificabile ? '' : `<div style="font-size:0.8em;color:#6c757d;margin-top:3px;">${perche}</div>`}
+            <div style="margin-top:10px;display:flex;gap:6px;">
+                <button class="btn-small" style="background:#28a745;color:#fff;border-color:#28a745;" onclick="salvaModificaCanone('${idCanone}')"><i class="fas fa-check"></i> Salva</button>
+                <button class="btn-small" onclick="toggleModificaCanone('${idCanone}')">Annulla</button>
+            </div>
+        </div>`;
+    box.style.display = 'block';
+}
+
+async function salvaModificaCanone(idCanone) {
+    const descrizione = document.getElementById(`mod-canone-descr-${idCanone}`).value.trim();
+    const campoImporto = document.getElementById(`mod-canone-importo-${idCanone}`);
+    if (!descrizione) { alert('⚠️ La descrizione non può essere vuota'); return; }
+    let url = `${getAPIUrl()}?action=modifica_canone&canone_id=${encodeURIComponent(idCanone)}&descrizione=${encodeURIComponent(descrizione)}`;
+    if (!campoImporto.disabled) {
+        const importo = parseFloat(campoImporto.value.replace(',', '.'));
+        if (!(importo > 0)) { alert('⚠️ Inserisci un importo valido'); return; }
+        url += `&importo=${importo}`;
+    }
+    try {
+        const res = await fetch(url);
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Errore');
         window.markTabDirty && window.markTabDirty('vendite');
@@ -3225,6 +3284,8 @@ if (typeof window !== 'undefined') {
     window.toggleLicenzaCanone = toggleLicenzaCanone;
     window.impostaPrezzoCanone = impostaPrezzoCanone;
     window.impostaProformaAuto = impostaProformaAuto;
+    window.toggleModificaCanone = toggleModificaCanone;
+    window.salvaModificaCanone = salvaModificaCanone;
     window.togglePrezzoDaDefinire = togglePrezzoDaDefinire;
     window.emettiLicenzaCanone = emettiLicenzaCanone;
     window.copiaLicenza = copiaLicenza;
