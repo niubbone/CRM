@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.57.0';
+export const VERSION = '4.58.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.58.0",
+    date: "28/10/2026",
+    type: "feature",
+    changes: [
+      "Canoni e K-Tools: pulsante «Proforma automatica» sulla card. Acceso, alla scadenza il canone si rinnova e la proforma parte da sola al cliente: 15 giorni prima della scadenza, gli Hypercare il primo giorno feriale dal 7 gennaio. 5 giorni prima arriva un preavviso a info@studio-smart.it (backend 4.47.0)"
+    ]
+  },
   {
     version: "4.57.0",
     date: "27/10/2026",

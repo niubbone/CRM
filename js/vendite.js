@@ -1343,7 +1343,9 @@ function renderCanoni(canoni, idContenitore = 'canoniContainer', vuoto = 'Nessun
             // Licenza K-Tools: sui canoni K-Tools e ISA, e su quelli che in descrizione dicono «K-Tools»
             const conLicenza = isAttivo && (isIsa || (c.tipo || '').toUpperCase() === 'KTOOLS' || /k-?tools/i.test(c.descrizione || ''));
             const prezzoAperto = c.fatturazione === CANONE_FATTURAZIONE.PREZZO_DA_DEFINIRE;
-            const mostraAzioni = isAttivo || c.idPrecedente || isControlli || prezzoAperto;
+            // Proforma automatica: sui canoni attivi; resta visibile se accesa (Hypercare scaduto a gennaio)
+            const conProformaAuto = isAttivo || (c.proformaAuto && !isRinnovato);
+            const mostraAzioni = isAttivo || c.idPrecedente || isControlli || prezzoAperto || conProformaAuto;
 
             html += `
             <div class="storico-card"${cardStyle}>
@@ -1386,6 +1388,14 @@ function renderCanoni(canoni, idContenitore = 'canoniContainer', vuoto = 'Nessun
                     ${prezzoAperto ? `<button class="btn-small"
                         onclick="impostaPrezzoCanone('${c.idCanone}')">
                         <i class="fas fa-euro-sign"></i> Imposta prezzo
+                    </button>` : ''}
+                    ${conProformaAuto ? `<button class="btn-small"
+                        title="${categoriaCanone(c) === 'hypercare'
+                            ? 'Si rinnova e la proforma parte da sola il primo giorno feriale dal 7 gennaio; 5 giorni prima ti arriva un preavviso'
+                            : 'Si rinnova e la proforma parte da sola 15 giorni prima della scadenza; 5 giorni prima ti arriva un preavviso'}"
+                        ${c.proformaAuto ? 'style="background:#d4edda;border-color:#28a745;color:#155724;"' : ''}
+                        onclick="impostaProformaAuto('${c.idCanone}', ${!c.proformaAuto})">
+                        <i class="fas fa-paper-plane"></i> Proforma automatica: ${c.proformaAuto ? 'sì' : 'no'}
                     </button>` : ''}
                     ${conLicenza ? `<button class="btn-small"
                         onclick="toggleLicenzaCanone('${c.idCanone}', '${c.dataScadenza || ''}')">
@@ -1499,6 +1509,25 @@ async function impostaPrezzoCanone(idCanone) {
         window.markTabDirty && window.markTabDirty('vendite');
         loadCanoniRiepilogo();
         loadScadenze();
+    } catch (e) {
+        alert('❌ Errore: ' + e.message);
+    }
+}
+
+// Proforma automatica alla scadenza: il CRM rinnova il canone e manda la proforma da solo
+async function impostaProformaAuto(idCanone, attiva) {
+    if (attiva && !confirm(`Proforma automatica per ${idCanone}?
+
+Alla scadenza il canone si rinnova con lo stesso importo e la proforma parte da sola al cliente. ` +
+        `5 giorni prima ti arriva un preavviso per fermarla o correggerla.
+
+Non accenderla per chi paga con abbonamento Stripe.`)) return;
+    try {
+        const res = await fetch(`${getAPIUrl()}?action=imposta_proforma_auto&canone_id=${encodeURIComponent(idCanone)}&attiva=${attiva}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        window.markTabDirty && window.markTabDirty('vendite');
+        loadCanoniRiepilogo();
     } catch (e) {
         alert('❌ Errore: ' + e.message);
     }
@@ -3195,6 +3224,7 @@ if (typeof window !== 'undefined') {
     window.toggleControlliCanoneCard = toggleControlliCanoneCard;
     window.toggleLicenzaCanone = toggleLicenzaCanone;
     window.impostaPrezzoCanone = impostaPrezzoCanone;
+    window.impostaProformaAuto = impostaProformaAuto;
     window.togglePrezzoDaDefinire = togglePrezzoDaDefinire;
     window.emettiLicenzaCanone = emettiLicenzaCanone;
     window.copiaLicenza = copiaLicenza;
