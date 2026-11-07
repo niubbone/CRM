@@ -749,7 +749,7 @@ function openRinnovoModal(id, tipo) {
         if (c) prodotto = {
             idCanone: c.idCanone, nomeCliente: c.nomeCliente, descrizione: c.descrizione,
             importo: c.importo, dataScadenza: c.dataScadenza, tipoProdotto: 'CANONE',
-            tipo: c.tipo, isa: c.isa
+            tipo: c.tipo, isa: c.isa, importoRinnovo: c.importoRinnovo
         };
     }
     if (!prodotto && tipo !== 'CANONE' && Array.isArray(firmeData)) {
@@ -807,7 +807,11 @@ function openRinnovoModal(id, tipo) {
     }
     
     if (dettagli) dettagli.textContent = dettagliText;
-    if (importo) importo.value = (isIsa && prodotto.isa) ? prodotto.isa.importoRinnovo : (prodotto.importo || '');
+    // il prezzo scritto con «Modifica» per il prossimo rinnovo, se c'è
+    const daCanone = tipo === 'CANONE' && Array.isArray(canoniData) ? canoniData.find(x => x.idCanone === id) : null;
+    const nuovoPrezzo = parseFloat(prodotto.importoRinnovo || (daCanone && daCanone.importoRinnovo)) || 0;
+    if (importo) importo.value = (isIsa && prodotto.isa) ? prodotto.isa.importoRinnovo : (nuovoPrezzo || prodotto.importo || '');
+    if (!isIsa && nuovoPrezzo && dettagli) dettagli.textContent += ` • Nuovo prezzo dal rinnovo: € ${nuovoPrezzo.toFixed(2)} (prima € ${parseFloat(prodotto.importo || 0).toFixed(2)})`;
     if (isIsa && dettagli) dettagli.textContent += ' • ISA: rinnovo senza avvio';
     
     modal.classList.add('active');
@@ -1372,6 +1376,7 @@ function renderCanoni(canoni, idContenitore = 'canoniContainer', vuoto = 'Nessun
                     </div>
                 </div>
                 ${scadenzaInfo ? `<div class="storico-date" style="margin-top:4px;">${scadenzaInfo}</div>` : ''}
+                ${!isRinnovato && parseFloat(c.importoRinnovo) > 0 ? `<div class="storico-date" style="margin-top:4px;color:#0d6efd;"><i class="fas fa-arrow-trend-up"></i> Dal prossimo rinnovo: € ${parseFloat(c.importoRinnovo).toFixed(2)}</div>` : ''}
                 ${c.idPrecedente ? `<div class="storico-date" style="color:#bbb;">Rinnovo di: ${c.idPrecedente}</div>` : ''}
                 ${mostraAzioni ? `
                 <div class="storico-actions">
@@ -1544,6 +1549,9 @@ function toggleModificaCanone(idCanone) {
             <input id="mod-canone-importo-${idCanone}" type="text" inputmode="decimal" value="${escAttr(parseFloat(c.importo || 0).toFixed(2).replace('.', ','))}"
                 ${importoModificabile ? '' : 'disabled'} style="width:140px;">
             ${importoModificabile ? '' : `<div style="font-size:0.8em;color:#6c757d;margin-top:3px;">${perche}</div>`}
+            ${isIsa ? '' : `
+            <label style="display:block;font-size:0.85em;font-weight:bold;margin:8px 0 4px;">Prezzo dal prossimo rinnovo € <span style="font-weight:normal;color:#6c757d;">(IVA esclusa; vuoto = stesso importo)</span></label>
+            <input id="mod-canone-rinnovo-${idCanone}" type="text" inputmode="decimal" value="${parseFloat(c.importoRinnovo) > 0 ? escAttr(parseFloat(c.importoRinnovo).toFixed(2).replace('.', ',')) : ''}" style="width:140px;">`}
             <div style="margin-top:10px;display:flex;gap:6px;">
                 <button class="btn-small" style="background:#28a745;color:#fff;border-color:#28a745;" onclick="salvaModificaCanone('${idCanone}')"><i class="fas fa-check"></i> Salva</button>
                 <button class="btn-small" onclick="toggleModificaCanone('${idCanone}')">Annulla</button>
@@ -1562,6 +1570,12 @@ async function salvaModificaCanone(idCanone) {
         if (!(importo > 0)) { alert('⚠️ Inserisci un importo valido'); return; }
         url += `&importo=${importo}`;
     }
+    const campoRinnovo = document.getElementById(`mod-canone-rinnovo-${idCanone}`);
+    if (campoRinnovo) {
+        const v = campoRinnovo.value.trim();
+        if (v && !(parseFloat(v.replace(',', '.')) > 0)) { alert('⚠️ Prezzo del rinnovo non valido'); return; }
+        url += `&importo_rinnovo=${encodeURIComponent(v ? parseFloat(v.replace(',', '.')) : '')}`;
+    }
     try {
         const res = await fetch(url);
         const result = await res.json();
@@ -1578,7 +1592,7 @@ async function salvaModificaCanone(idCanone) {
 async function impostaProformaAuto(idCanone, attiva) {
     if (attiva && !confirm(`Proforma automatica per ${idCanone}?
 
-Alla scadenza il canone si rinnova con lo stesso importo e la proforma parte da sola al cliente. ` +
+Alla scadenza il canone si rinnova (con lo stesso importo o con il prezzo scritto in «Modifica» per il prossimo rinnovo) e la proforma parte da sola al cliente. ` +
         `5 giorni prima ti arriva un preavviso per fermarla o correggerla.
 
 Non accenderla per chi paga con abbonamento Stripe.`)) return;
