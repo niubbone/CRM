@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.60.1';
+export const VERSION = '4.60.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.60.2",
+    date: "07/11/2026",
+    type: "fix",
+    changes: [ "Vendite: la sezione dei contratti di servizi si chiama «Kleos»" ]
+  },
   {
     version: "4.60.1",
     date: "07/11/2026",
