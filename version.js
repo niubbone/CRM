@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.60.0';
+export const VERSION = '4.60.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.60.1",
+    date: "07/11/2026",
+    type: "fix",
+    changes: [
+      "Contratti: il numero di utenti non sceglie più da solo l'avviamento (contratti con il solo monte ore), solo un suggerimento nel riepilogo; referente facoltativo; «Elimina» sui contratti annullati (backend 4.50.0)"
+    ]
+  },
   {
     version: "4.60.0",
     date: "07/11/2026",

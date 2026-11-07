@@ -76,7 +76,8 @@ function cardContratto(c) {
         c.firmatoUrl ? `<a class="btn-small" href="${c.firmatoUrl}" target="_blank" rel="noopener"><i class="fas fa-file-signature"></i> Firmato</a>` : '',
         aperto ? `<button class="btn-small" onclick="inviaContratto('${c.id}')"><i class="fas fa-envelope"></i> ${c.stato === 'INVIATO' ? 'Reinvia' : 'Invia al cliente'}</button>` : '',
         aperto ? `<button class="btn-small contratto-btn-firma" onclick="openFirmaContratto('${c.id}')"><i class="fas fa-signature"></i> Segna firmato…</button>` : '',
-        aperto ? `<button class="btn-small qodnet-btn-elimina" onclick="annullaContratto('${c.id}')"><i class="fas fa-ban"></i> Annulla</button>` : ''
+        aperto ? `<button class="btn-small qodnet-btn-elimina" onclick="annullaContratto('${c.id}')"><i class="fas fa-ban"></i> Annulla</button>` : '',
+        c.stato === 'ANNULLATO' ? `<button class="btn-small qodnet-btn-elimina" onclick="eliminaContratto('${c.id}')"><i class="fas fa-trash"></i> Elimina</button>` : ''
     ].filter(Boolean).join('');
     return `
         <div class="storico-card contratto-card">
@@ -184,8 +185,10 @@ async function caricaClienteContratto() {
             <div class="contratto-anagrafica">
                 ${CAMPI_ANAGRAFICA_CONTRATTO.map(([k, etichetta]) => {
                     const v = String(r.cliente[k] || '').trim();
-                    return v
-                        ? `<div><small>${etichetta}</small><div>${escQodnet(v)}</div></div>`
+                    if (v) return `<div><small>${etichetta}</small><div>${escQodnet(v)}</div></div>`;
+                    // il referente è facoltativo: niente evidenza arancione
+                    return k === 'referente'
+                        ? `<div><small>${etichetta} (facoltativo)</small><input type="text" data-campo="${k}" autocomplete="off" style="width:100%;"></div>`
                         : `<div class="contratto-mancante"><small>${etichetta} — da completare</small><input type="text" data-campo="${k}" autocomplete="off"></div>`;
                 }).join('')}
             </div>
@@ -196,17 +199,11 @@ async function caricaClienteContratto() {
     }
 }
 
-/** Avviamento proposto dal numero di utenti */
+/**
+ * Numero di utenti: NON sceglie l'avviamento (si può fare un contratto con il solo
+ * monte ore). La fascia giusta compare solo come suggerimento sotto la tendina.
+ */
 function proponiAvviamentoContratto() {
-    const utenti = parseInt(document.getElementById('contrattoUtenti').value, 10);
-    if (!utenti || !contrattiDati) return;
-    const a = contrattiDati.listino.avviamento.find(x => utenti >= x.utentiDa && utenti <= x.utentiA);
-    const sel = document.getElementById('contrattoAvviamento');
-    if (a && sel.value !== '' && sel.value !== a.codice) {
-        // lascio la scelta fatta a mano, ma la segnalo nel riepilogo
-    } else if (a) {
-        sel.value = a.codice;
-    }
     aggiornaContrattoForm();
 }
 
@@ -275,7 +272,8 @@ function aggiornaContrattoForm() {
         <small>${rate
             ? `Monte ore in ${selPag.value === 'R12' ? 12 : 36} rate${subito > 0 ? `; alla firma proforma di ${euroQodnet(subito)}` : ''}.`
             : `Alla firma proforma di ${euroQodnet(totale)}.`}</small>
-        ${fuoriFascia ? `<small class="qodnet-arancio">Con ${utenti} utenti la fascia di avviamento è ${escQodnet(fascia.nome)}.</small>` : ''}`
+        ${fuoriFascia ? `<small class="qodnet-arancio">Con ${utenti} utenti la fascia di avviamento è ${escQodnet(fascia.nome)}.</small>` : ''}
+        ${!a && fascia ? `<small>Senza avviamento. Se servisse, per ${utenti} utenti sarebbe ${escQodnet(fascia.nome)}.</small>` : ''}`
         : '<small>Scegli almeno una voce.</small>';
     document.getElementById('contrattoSubmitBtn').disabled = !voci.length;
 }
@@ -338,6 +336,16 @@ async function annullaContratto(id) {
     if (!confirm(`Annullare il contratto ${id}? Resta in archivio come annullato.`)) return;
     try {
         await chiamaQodnet('annulla_contratto', { id });
+        dopoScritturaContratti();
+    } catch (error) {
+        alert('❌ Errore: ' + error.message);
+    }
+}
+
+async function eliminaContratto(id) {
+    if (!confirm(`Eliminare del tutto il contratto ${id}?\n\nSparisce dall'archivio e il PDF va nel cestino di Drive.`)) return;
+    try {
+        await chiamaQodnet('elimina_contratto', { id, conferma: 'SI' });
         dopoScritturaContratti();
     } catch (error) {
         alert('❌ Errore: ' + error.message);
@@ -436,6 +444,7 @@ window.aggiornaContrattoForm = aggiornaContrattoForm;
 window.submitContratto = submitContratto;
 window.inviaContratto = inviaContratto;
 window.annullaContratto = annullaContratto;
+window.eliminaContratto = eliminaContratto;
 window.openFirmaContratto = openFirmaContratto;
 window.closeFirmaContratto = closeFirmaContratto;
 window.submitFirmaContratto = submitFirmaContratto;
