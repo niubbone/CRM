@@ -167,9 +167,13 @@ function resetFattureFilters() {
   loadFattureList();
 }
 
-function openNuovaFatturaModal() {
+// prefill (facoltativo, dallo scadenzario Incassi): { cliente, imponibile, note, rataId }
+let _nfRataId = '';
+function openNuovaFatturaModal(prefill) {
   const modal = document.getElementById('nuova-fattura-modal');
   if (!modal) return;
+  const pre = (prefill && typeof prefill === 'object' && 'cliente' in prefill) ? prefill : null;
+  _nfRataId = pre && pre.rataId ? pre.rataId : '';
   document.getElementById('nf-numero').value = '';
   document.getElementById('nf-data').value = new Date().toISOString().split('T')[0];
   document.getElementById('nf-imponibile').value = '';
@@ -219,6 +223,13 @@ function openNuovaFatturaModal() {
       opt.value = name;
       clientDatalist.appendChild(opt);
     });
+  }
+
+  if (pre) {
+    if (clientInput) clientInput.value = pre.cliente || '';
+    document.getElementById('nf-imponibile').value = pre.imponibile != null ? pre.imponibile : '';
+    document.getElementById('nf-note').value = pre.note || '';
+    if (typeof aggiornaCalcoloIVA === 'function') aggiornaCalcoloIVA();
   }
 
   modal.style.display = 'flex';
@@ -335,6 +346,7 @@ async function saveNuovaFattura(event) {
     } else {
       if (tsIds.length)  params.append('timesheet_ids', tsIds.join(','));
       if (canIds.length) params.append('canoni_ids', canIds.join(','));
+      if (_nfRataId) params.append('rata_id', _nfRataId);
     }
     const response = await fetch(`${API_URL}?${params.toString()}`);
     const result = await response.json();
@@ -343,6 +355,8 @@ async function saveNuovaFattura(event) {
     let msg = '✅ ' + (notaCredito ? 'Nota di credito ' : 'Fattura ') + nFattura + ' inserita con successo!';
     if (result.timesheetMarcati) msg += '\n' + result.timesheetMarcati + ' timesheet marcati.';
     if (result.canoniMarcati) msg += '\n' + result.canoniMarcati + ' canoni marcati.';
+    if (result.rata) msg += result.rata.success ? '\nRata ' + result.rata.rata + ' segnata come fatturata.' : '\n⚠️ Rata non aggiornata: ' + result.rata.error;
+    if (_nfRataId) { window.markTabDirty && window.markTabDirty('vendite'); _nfRataId = ''; }
     alert(msg);
     closeNuovaFatturaModal();
     loadFattureList();

@@ -260,7 +260,7 @@ function renderHome() {
 
     container.innerHTML =
         renderBarraAggiornamento() +
-        renderPendenze(homeData.pendenze || {}, homeData.controlli || [], homeData.qodnet, homeData.ferrari) +
+        renderPendenze(homeData.pendenze || {}, homeData.controlli || [], homeData.qodnet, homeData.ferrari, homeData.incassi) +
         renderTodoSezione(todoDati) +
         renderControlliSezione(homeData.controlli || []) +
         renderStartupSezione(startupDati);
@@ -297,7 +297,16 @@ function renderBarraAggiornamento() {
 // === BLOCCO 1 — PENDENZE ===
 // =======================================================================
 
-function renderPendenze(p, controlli, qodnet, ferrari) {
+/** Riga sotto il numero della card Incassi: in ritardo e in arrivo */
+function _extraIncassi(i) {
+    const pezzi = [];
+    if (i.importoDaFatturare) pezzi.push('€ ' + i.importoDaFatturare.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' + IVA');
+    if (i.inRitardo) pezzi.push(`${i.inRitardo} in ritardo`);
+    if (i.inArrivo) pezzi.push(`${i.inArrivo} in arrivo`);
+    return pezzi.join(' · ');
+}
+
+function renderPendenze(p, controlli, qodnet, ferrari, incassi) {
     const card = (numero, label, icona, colore, onclick, extra) => `
         <div class="home-pendenza-card ${numero > 0 ? '' : 'vuota'}" onclick="${onclick}">
             <div class="home-pendenza-icon ${colore}"><i class="fas ${icona}"></i></div>
@@ -324,6 +333,7 @@ function renderPendenze(p, controlli, qodnet, ferrari) {
         ${card(p.fattureNonPagate || 0, 'Fatture non pagate', 'fa-money-bill-wave', 'rosso', "vaiA('fatture')", importo)}
         ${qodnet ? card(qodnet.attenzione || 0, 'QODNET', 'fa-globe', 'blu', "vaiA('qodnet')", _extraQodnet(qodnet)) : ''}
         ${ferrari ? card(ferrari.daFatturare || 0, 'Ferrari da fatturare', 'fa-desktop', 'verde', "vaiA('ferrari')", _extraFerrari(ferrari)) : ''}
+        ${incassi && (incassi.previste || incassi.daFatturare) ? card(incassi.daFatturare || 0, 'Rate da fatturare', 'fa-coins', (incassi.inRitardo ? 'rosso' : 'verde'), "vaiA('incassi')", _extraIncassi(incassi)) : ''}
     </div>`;
 }
 
@@ -381,6 +391,7 @@ function vaiA(dove) {
         case 'proforma':  apriProformaDaFatturare();  break;
         case 'fatture':   apriFattureNonPagate();     break;
         case 'ferrari': vaiVendite('ferrari'); break;
+        case 'incassi': vaiVendite('incassi'); break;
         case 'qodnet': {
             // Servizi scoperti → vista Servizi filtrata; altrimenti Provvigioni
             const q = (homeData && homeData.qodnet) || {};

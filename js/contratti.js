@@ -414,6 +414,7 @@ async function submitFirmaContratto(e) {
         let msg = `✅ Contratto ${id} firmato.`;
         if (r.pacchetti && r.pacchetti.length) msg += `\nPacchetti creati: ${r.pacchetti.join(', ')}.`;
         if (r.proforma) msg += `\nProforma ${r.proforma} emessa e inviata.`;
+        if (r.rate) msg += `\n${r.rate} rate create in Vendite → Incassi (e nel calendario «Incassi»).`;
         if (r.promemoria) msg += `\n\n👉 ${r.promemoria}`;
         if (r.avvisi && r.avvisi.length) msg += '\n\n⚠️ ' + r.avvisi.join('\n⚠️ ');
         alert(msg);

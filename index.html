@@ -998,6 +998,10 @@
                 <span class="vendite-nav-icon"><i class="fas fa-file-signature"></i></span>
                 <span class="vendite-nav-label">Kleos</span>
             </div>
+            <div class="vendite-nav-card" id="vnav-incassi" onclick="switchVenditeSection('incassi')">
+                <span class="vendite-nav-icon"><i class="fas fa-coins"></i></span>
+                <span class="vendite-nav-label">Incassi</span>
+            </div>
         </div>
 
         <!-- ===== SEZIONE PACCHETTI ===== -->
@@ -1299,6 +1303,22 @@
             </div>
         </div>
 
+        <!-- ===== SEZIONE INCASSI (js/incassi.js) ===== -->
+        <div id="vendite-section-incassi" class="vendite-section" style="display:none;">
+            <div id="vsub-incassi-riepilogo-content" class="vendite-subtab-content">
+                <div class="vendite-action-card" onclick="openNuoveRate()">
+                    <span class="vendite-action-icon"><i class="fas fa-coins"></i></span>
+                    <div>
+                        <div class="vendite-action-title">Nuove rate</div>
+                        <div class="vendite-action-desc">Le rate dei contratti Kleos nascono alla firma; da qui quelle di un contratto già firmato o di un pagamento a rate concordato a parte</div>
+                    </div>
+                </div>
+                <div id="incassiContainer">
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-coins"></i></div><div>Caricamento...</div></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== SEZIONE SCADENZE ===== -->
         <div id="vendite-section-scadenze" class="vendite-section" style="display:none;">
             <div class="info-banner" style="margin-bottom:16px;">
@@ -1577,6 +1597,53 @@
             </div>
             <div class="contratto-riepilogo" id="contrattoFirmaEffetti"></div>
             <button type="submit" class="btn-primary" id="contrattoFirmaSubmitBtn">Registra firma</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Incassi - Nuove rate (js/incassi.js) -->
+<div id="nuoveRateModal" class="modal-vendite">
+    <div class="modal-content-vendite">
+        <div class="modal-header-vendite">
+            <span>Nuove rate</span>
+            <button class="modal-close-vendite" onclick="closeNuoveRate()">&times;</button>
+        </div>
+        <form id="nuoveRateForm" onsubmit="submitNuoveRate(event)">
+            <div class="form-group">
+                <label>Contratto Kleos già firmato <span style="font-weight:normal;color:#6c757d;">(es. C-2026-026: importi e numero di rate dal contratto)</span></label>
+                <input type="text" id="nuoveRateContratto" placeholder="Lascia vuoto per rate senza contratto">
+            </div>
+            <div style="border-top:1px solid #dee2e6;margin:10px 0;padding-top:10px;font-size:0.85em;color:#6c757d;">Oppure, senza contratto:</div>
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="nuoveRateCliente" list="nuoveRateClienti" autocomplete="off" placeholder="Cerca o seleziona cliente...">
+                <datalist id="nuoveRateClienti"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Descrizione</label>
+                <input type="text" id="nuoveRateDescrizione" placeholder="es. Monte ore 40 h tramite fornitore">
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <div class="form-group" style="flex:1;min-width:120px;">
+                    <label>Numero di rate</label>
+                    <input type="number" id="nuoveRateNumero" min="1" max="60" value="12">
+                </div>
+                <div class="form-group" style="flex:1;min-width:140px;">
+                    <label>Totale € (IVA esclusa)</label>
+                    <input type="text" id="nuoveRateTotale" inputmode="decimal" placeholder="es. 3360">
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <div class="form-group" style="flex:1;min-width:140px;">
+                    <label>Prima rata il</label>
+                    <input type="date" id="nuoveRatePrima">
+                </div>
+                <div class="form-group" style="flex:1;min-width:140px;">
+                    <label>Canale previsto</label>
+                    <input type="text" id="nuoveRateCanale" placeholder="Stripe, Bonifico…">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" id="nuoveRateSubmit">Crea rate</button>
         </form>
     </div>
 </div>
@@ -2318,6 +2385,7 @@
 <script src="js/qodnet-riscontro.js"></script>
 <script src="js/ferrari.js"></script>
 <script src="js/contratti.js"></script>
+<script src="js/incassi.js"></script>
 <script src="js/fatture.js"></script>
 <script src="js/fatture-stats.js"></script>
 <script type="module" src="js/clienti.js"></script>
