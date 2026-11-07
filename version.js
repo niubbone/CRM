@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.59.0';
+export const VERSION = '4.60.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,14 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.60.0",
+    date: "07/11/2026",
+    type: "feature",
+    changes: [
+      "Vendite > Contratti: contratto di servizi Kleos con le sole voci acquistate (avviamento, monte ore con 12/36 rate, analisi, postazioni), PDF dal modello Google Docs, invio al cliente con il listino, «Segna firmato» che archivia il file e crea pacchetti ore e proforma (backend 4.49.0)"
+    ]
+  },
   {
     version: "4.59.0",
     date: "28/10/2026",

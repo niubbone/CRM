@@ -689,3 +689,28 @@
 .qodnet-fattura-voce { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 4px 0; border-top: 1px solid #f1f3f5; cursor: pointer; }
 .qodnet-fattura-voce span { flex: 1; }
 .qodnet-fattura-voce input { width: 16px; height: 16px; }
+
+/* ===== VENDITE > CONTRATTI (js/contratti.js) ===== */
+.contratto-card { padding: 12px 14px; margin-bottom: 10px; }
+.contratto-testa { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.contratto-totale { font-weight: 700; white-space: nowrap; }
+.contratto-stato { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: #e9ecef; color: #495057; }
+.contratto-stato.bozza { background: #fff3cd; color: #856404; }
+.contratto-stato.inviato { background: #cfe2ff; color: #084298; }
+.contratto-stato.firmato { background: #d1e7dd; color: #0f5132; }
+.contratto-stato.annullato { background: #f8d7da; color: #842029; }
+.contratto-voci { margin: 8px 0 4px; }
+.contratto-voce { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 2px 0; }
+.contratto-voce span:last-child { white-space: nowrap; }
+.contratto-voce-totale { border-top: 1px solid #dee2e6; margin-top: 4px; padding-top: 4px; font-weight: 700; }
+.contratto-info { display: block; color: #6c757d; margin-top: 2px; }
+.contratto-azioni { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.contratto-azioni a.btn-small { text-decoration: none; }
+.contratto-btn-firma { background: #198754; color: #fff; border-color: #198754; }
+.contratto-anagrafica { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 12px; margin: 4px 0 6px; font-size: 13px; }
+.contratto-anagrafica small { color: #6c757d; }
+.contratto-mancante small { color: #fd7e14; font-weight: 600; }
+.contratto-mancante input { width: 100%; }
+.contratto-riepilogo { background: #f8f9fa; border-radius: 6px; padding: 10px 12px; margin: 8px 0 12px; font-size: 13px; }
+.contratto-riepilogo ul { margin: 6px 0 0 18px; padding: 0; }
+.contratto-riepilogo small { display: block; margin-top: 4px; }

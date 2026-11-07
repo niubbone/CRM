@@ -38,7 +38,7 @@ function initVenditeTab() {
 
 let currentVenditeSection = 'pacchetti';
 // Traccia se il riepilogo di ogni sezione è già stato caricato
-const riepilogoLoaded = { pacchetti: false, canoni: false, ktools: false, firme: false, qodnet: false, ferrari: false };
+const riepilogoLoaded = { pacchetti: false, canoni: false, ktools: false, firme: false, qodnet: false, ferrari: false, contratti: false };
 
 // Cache persistente delle liste (js/cache-liste.js). Se questo file arriva più
 // nuovo di index.html (cache HTTP nei minuti dopo un deploy) l'aiutante può non
@@ -54,13 +54,13 @@ function _crmCacheListe() {
 
 function switchVenditeSection(section) {
     // Aggiorna nav cards
-    ['pacchetti','canoni','ktools','firme','scadenze','qodnet','ferrari'].forEach(s => {
+    ['pacchetti','canoni','ktools','firme','scadenze','qodnet','ferrari','contratti'].forEach(s => {
         const card = document.getElementById(`vnav-${s}`);
         if (card) card.classList.toggle('active', s === section);
     });
 
     // Mostra/nascondi pannelli
-    ['pacchetti','canoni','ktools','firme','scadenze','qodnet','ferrari'].forEach(s => {
+    ['pacchetti','canoni','ktools','firme','scadenze','qodnet','ferrari','contratti'].forEach(s => {
         const panel = document.getElementById(`vendite-section-${s}`);
         if (panel) panel.style.display = s === section ? '' : 'none';
     });
@@ -100,6 +100,7 @@ function switchVenditeSubtab(section, subtab) {
         if (section === 'firme')     loadFirmeRiepilogo();
         if (section === 'qodnet')    loadQodnetRiepilogo();
         if (section === 'ferrari')   loadFerrariRiepilogo();
+        if (section === 'contratti') loadContrattiRiepilogo();
     }
 
     // QODNET: Servizi e Provvigioni leggono gli stessi dati

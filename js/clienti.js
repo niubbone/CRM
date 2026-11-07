@@ -193,6 +193,11 @@ async function loadClienteDetail(clienteId) {
                 btnCreaProforma.dataset.nome = data.cliente.nome || '';
                 btnCreaProforma.style.display = 'inline-block';
             }
+            const btnContratto = document.getElementById('btn-nuovo-contratto-cliente');
+            if (btnContratto) {
+                btnContratto.dataset.nome = data.cliente.nome || '';
+                btnContratto.style.display = window.nuovoContrattoCliente ? 'inline-block' : 'none';
+            }
 
             // Usa i dati già ricevuti — nessuna ulteriore chiamata di rete
             currentClienteProdotti = data.prodotti || [];

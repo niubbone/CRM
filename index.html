@@ -994,6 +994,10 @@
                 <span class="vendite-nav-icon"><i class="fas fa-desktop"></i></span>
                 <span class="vendite-nav-label">Ferrari</span>
             </div>
+            <div class="vendite-nav-card" id="vnav-contratti" onclick="switchVenditeSection('contratti')">
+                <span class="vendite-nav-icon"><i class="fas fa-file-signature"></i></span>
+                <span class="vendite-nav-label">Contratti</span>
+            </div>
         </div>
 
         <!-- ===== SEZIONE PACCHETTI ===== -->
@@ -1279,6 +1283,22 @@
             </div>
         </div>
 
+        <!-- ===== SEZIONE CONTRATTI (js/contratti.js) ===== -->
+        <div id="vendite-section-contratti" class="vendite-section" style="display:none;">
+            <div id="vsub-contratti-riepilogo-content" class="vendite-subtab-content">
+                <div class="vendite-action-card" onclick="openContrattoForm()">
+                    <span class="vendite-action-icon"><i class="fas fa-file-signature"></i></span>
+                    <div>
+                        <div class="vendite-action-title">Nuovo contratto di servizi</div>
+                        <div class="vendite-action-desc">Avviamento, monte ore, analisi: il PDF contiene solo le voci scelte, con condizioni generali e nomina GDPR</div>
+                    </div>
+                </div>
+                <div id="contrattiContainer">
+                    <div class="empty-state"><div class="empty-state-icon"><i class="fas fa-file-signature"></i></div><div>Caricamento...</div></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== SEZIONE SCADENZE ===== -->
         <div id="vendite-section-scadenze" class="vendite-section" style="display:none;">
             <div class="info-banner" style="margin-bottom:16px;">
@@ -1472,6 +1492,91 @@
             </div>
             <div class="qodnet-totale" id="qodnetTotale">Provvigione totale: € 0,00</div>
             <button type="submit" class="btn-primary" id="qodnetSubmitBtn">Salva</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Contratto - Nuovo contratto di servizi -->
+<div id="contrattoModal" class="modal-vendite">
+    <div class="modal-content-vendite qodnet-modal-largo">
+        <div class="modal-header-vendite">
+            <span>Nuovo contratto di servizi</span>
+            <button class="modal-close-vendite" onclick="closeContrattoModal()">&times;</button>
+        </div>
+        <form id="contrattoForm" onsubmit="submitContratto(event)">
+            <div class="form-group">
+                <label>Cliente *</label>
+                <input type="text" id="contrattoCliente" list="contratto-client-list" required placeholder="Cerca o seleziona cliente..." autocomplete="off" onchange="caricaClienteContratto()">
+                <datalist id="contratto-client-list"></datalist>
+            </div>
+            <div id="contrattoAnagrafica"></div>
+            <div class="qodnet-griglia-doc">
+                <div class="form-group">
+                    <label>Utenti Kleos</label>
+                    <input type="number" id="contrattoUtenti" min="1" step="1" placeholder="es. 5" oninput="proponiAvviamentoContratto()">
+                </div>
+                <div class="form-group">
+                    <label>Data di attivazione</label>
+                    <input type="date" id="contrattoAttivazione" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Avviamento</label>
+                <select id="contrattoAvviamento" onchange="aggiornaContrattoForm()"></select>
+                <small class="qodnet-arancio" id="contrattoAvvisoAvviamento"></small>
+            </div>
+            <div class="qodnet-griglia-doc" id="contrattoEntBox" style="display:none;">
+                <div class="form-group"><label>Ore (Enterprise)</label><input type="number" id="contrattoEntOre" min="1" step="1" oninput="aggiornaContrattoForm()"></div>
+                <div class="form-group"><label>Importo (€)</label><input type="number" id="contrattoEntImporto" min="0" step="0.01" oninput="aggiornaContrattoForm()"></div>
+            </div>
+            <div class="qodnet-griglia-doc">
+                <div class="form-group"><label>Postazioni Windows in più</label><input type="number" id="contrattoPostWin" min="0" step="1" value="0" oninput="aggiornaContrattoForm()"></div>
+                <div class="form-group"><label>Postazioni macOS in più</label><input type="number" id="contrattoPostMac" min="0" step="1" value="0" oninput="aggiornaContrattoForm()"></div>
+            </div>
+            <div class="qodnet-griglia-doc">
+                <div class="form-group">
+                    <label>Monte ore</label>
+                    <select id="contrattoMonteOre" onchange="aggiornaContrattoForm()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Pagamento</label>
+                    <select id="contrattoPagamento" onchange="aggiornaContrattoForm()"></select>
+                    <small id="contrattoPagamentoNota"></small>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Analisi dei processi</label>
+                <select id="contrattoAnalisi" onchange="aggiornaContrattoForm()"></select>
+            </div>
+            <div class="form-group" id="contrattoAnalisiImportoBox" style="display:none;">
+                <label>Importo analisi a progetto (€)</label>
+                <input type="number" id="contrattoAnalisiImporto" min="0" step="0.01" oninput="aggiornaContrattoForm()">
+            </div>
+            <div class="form-group">
+                <label>Condizioni particolari</label>
+                <textarea id="contrattoCondizioni" rows="2" placeholder="facoltative, compaiono nel contratto"></textarea>
+            </div>
+            <div class="contratto-riepilogo" id="contrattoRiepilogo"></div>
+            <button type="submit" class="btn-primary" id="contrattoSubmitBtn">Crea contratto</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Contratto - Registra firma -->
+<div id="contrattoFirmaModal" class="modal-vendite">
+    <div class="modal-content-vendite">
+        <div class="modal-header-vendite">
+            <span id="contrattoFirmaTitolo">Contratto firmato</span>
+            <button class="modal-close-vendite" onclick="closeFirmaContratto()">&times;</button>
+        </div>
+        <form onsubmit="submitFirmaContratto(event)">
+            <input type="hidden" id="contrattoFirmaId">
+            <div class="form-group">
+                <label>File firmato (firma digitale .p7m/.pdf, oppure scansione)</label>
+                <input type="file" id="contrattoFirmaFile" accept=".pdf,.p7m,.jpg,.jpeg,.png">
+            </div>
+            <div class="contratto-riepilogo" id="contrattoFirmaEffetti"></div>
+            <button type="submit" class="btn-primary" id="contrattoFirmaSubmitBtn">Registra firma</button>
         </form>
     </div>
 </div>
@@ -2132,7 +2237,11 @@
              SEZIONE PRODOTTI CLIENTE
         ========================= -->
         <div id="cliente-prodotti-section" class="clienti-section" style="display: none;">
-            <h3><i class="fas fa-box"></i> Prodotti Attivi</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                <h3 style="margin:0;"><i class="fas fa-box"></i> Prodotti Attivi</h3>
+                <button type="button" id="btn-nuovo-contratto-cliente" class="btn btn-sm btn-secondary" style="display:none;"
+                        onclick="nuovoContrattoCliente(this.dataset.nome)"><i class="fas fa-file-signature"></i> Nuovo contratto</button>
+            </div>
             <div id="cliente-prodotti-content">
                 <p class="empty-state">Seleziona un cliente per visualizzare i suoi prodotti</p>
             </div>
@@ -2208,6 +2317,7 @@
 <script src="js/vendite.js"></script>
 <script src="js/qodnet-riscontro.js"></script>
 <script src="js/ferrari.js"></script>
+<script src="js/contratti.js"></script>
 <script src="js/fatture.js"></script>
 <script src="js/fatture-stats.js"></script>
 <script type="module" src="js/clienti.js"></script>
