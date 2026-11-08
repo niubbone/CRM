@@ -75,6 +75,7 @@ function cardContratto(c) {
         c.pdfUrl ? `<a class="btn-small" href="${c.pdfUrl}" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> Contratto</a>` : '',
         c.firmatoUrl ? `<a class="btn-small" href="${c.firmatoUrl}" target="_blank" rel="noopener"><i class="fas fa-file-signature"></i> Firmato</a>` : '',
         aperto ? `<button class="btn-small" onclick="inviaContratto('${c.id}')"><i class="fas fa-envelope"></i> ${c.stato === 'INVIATO' ? 'Reinvia' : 'Invia al cliente'}</button>` : '',
+        aperto ? `<button class="btn-small" onclick="rigeneraPdfContratto('${c.id}')" title="Rifà il PDF con il modello attuale, stesso numero e stessi dati"><i class="fas fa-rotate"></i> Rifai PDF</button>` : '',
         aperto ? `<button class="btn-small contratto-btn-firma" onclick="openFirmaContratto('${c.id}')"><i class="fas fa-signature"></i> Segna firmato…</button>` : '',
         aperto ? `<button class="btn-small qodnet-btn-elimina" onclick="annullaContratto('${c.id}')"><i class="fas fa-ban"></i> Annulla</button>` : '',
         c.stato === 'ANNULLATO' ? `<button class="btn-small qodnet-btn-elimina" onclick="eliminaContratto('${c.id}')"><i class="fas fa-trash"></i> Elimina</button>` : ''
@@ -332,6 +333,21 @@ async function inviaContratto(id) {
     }
 }
 
+async function rigeneraPdfContratto(id) {
+    if (!confirm(`Rifare il PDF del contratto ${id} con il modello attuale?
+
+Stesso numero e stessi dati; il PDF precedente va nel cestino di Drive.`)) return;
+    try {
+        const r = await chiamaQodnet('rigenera_pdf_contratto', { id });
+        dopoScritturaContratti();
+        if (r.pdfUrl && confirm(`✅ PDF del contratto ${id} rifatto.
+
+Aprirlo per controllarlo?`)) window.open(r.pdfUrl, '_blank');
+    } catch (error) {
+        alert('❌ Errore: ' + error.message);
+    }
+}
+
 async function annullaContratto(id) {
     if (!confirm(`Annullare il contratto ${id}? Resta in archivio come annullato.`)) return;
     try {
@@ -444,6 +460,7 @@ window.proponiAvviamentoContratto = proponiAvviamentoContratto;
 window.aggiornaContrattoForm = aggiornaContrattoForm;
 window.submitContratto = submitContratto;
 window.inviaContratto = inviaContratto;
+window.rigeneraPdfContratto = rigeneraPdfContratto;
 window.annullaContratto = annullaContratto;
 window.eliminaContratto = eliminaContratto;
 window.openFirmaContratto = openFirmaContratto;

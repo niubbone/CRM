@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.62.0';
+export const VERSION = '4.63.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.63.0",
+    date: "08/11/2026",
+    type: "feature",
+    changes: [ "Contratti Kleos: «Rifai PDF» sui contratti non firmati; nel PDF i dati del fornitore su righe separate e i punti delle condizioni non si spezzano fra due pagine", "Licenze K-Tools: strumento «Preventivi»" ]
+  },
   {
     version: "4.60.2",
     date: "07/11/2026",

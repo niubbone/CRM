@@ -1506,7 +1506,7 @@ function renderStoricoRinnovi(catena) {
 
 const LICENZA_STRUMENTI = [
     ['udienze', "Fogli d'udienza"], ['parcelle', 'Parcelle da incassare'],
-    ['allegati', 'Atto e allegati'], ['isa', 'ISA Studio Legale']
+    ['allegati', 'Atto e allegati'], ['isa', 'ISA Studio Legale'], ['preventivi', 'Preventivi']
 ];
 
 // Prezzo di un canone nato «Prezzo da definire»: da qui entra fra i canoni da fatturare
