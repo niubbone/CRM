@@ -303,9 +303,7 @@ async function submitContratto(e) {
         dopoScritturaContratti();
         const extra = r.anagraficaCompletata && r.anagraficaCompletata.length
             ? `\nScheda cliente completata: ${r.anagraficaCompletata.join(', ')}.` : '';
-        if (confirm(`✅ Contratto ${r.id} creato per ${r.cliente} (${euroQodnet(r.totale)}).${extra}\n\nAprire il PDF per controllarlo?`)) {
-            window.open(r.pdfUrl, '_blank');
-        }
+        avvisoConPdf(`✅ Contratto ${r.id} creato per ${r.cliente} (${euroQodnet(r.totale)}).${extra}`, r.pdfUrl);
     } catch (error) {
         alert('❌ Errore: ' + error.message);
     } finally {
@@ -316,6 +314,42 @@ async function submitContratto(e) {
 // -----------------------------------------------------------------------
 // Invio, firma, annullamento
 // -----------------------------------------------------------------------
+
+/**
+ * Messaggio con un vero collegamento al PDF. window.open dopo una chiamata al server
+ * viene bloccato dal browser (non è più il clic dell'utente): il clic sul link no.
+ */
+function avvisoConPdf(messaggio, url) {
+    const vecchio = document.getElementById('avvisoPdfContratto');
+    if (vecchio) vecchio.remove();
+    const fondo = document.createElement('div');
+    fondo.id = 'avvisoPdfContratto';
+    fondo.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:10000;padding:16px';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;color:#1f2937;border-radius:10px;max-width:420px;width:100%;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:15px';
+    const testo = document.createElement('div');
+    testo.style.cssText = 'white-space:pre-line;margin-bottom:16px';
+    testo.textContent = messaggio;
+    const azioni = document.createElement('div');
+    azioni.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
+    const chiudi = () => fondo.remove();
+    if (url) {
+        const a = document.createElement('a');
+        a.href = url; a.target = '_blank'; a.rel = 'noopener';
+        a.className = 'btn-small';
+        a.innerHTML = '<i class="fas fa-file-pdf"></i> Apri PDF';
+        a.addEventListener('click', () => setTimeout(chiudi, 100));
+        azioni.appendChild(a);
+    }
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn-small'; b.textContent = 'Chiudi';
+    b.addEventListener('click', chiudi);
+    azioni.appendChild(b);
+    fondo.addEventListener('click', e => { if (e.target === fondo) chiudi(); });
+    box.append(testo, azioni);
+    fondo.appendChild(box);
+    document.body.appendChild(fondo);
+}
 
 function contrattoPerId(id) {
     return contrattiDati && contrattiDati.contratti.find(c => c.id === id);
@@ -340,9 +374,7 @@ Stesso numero e stessi dati; il PDF precedente va nel cestino di Drive.`)) retur
     try {
         const r = await chiamaQodnet('rigenera_pdf_contratto', { id });
         dopoScritturaContratti();
-        if (r.pdfUrl && confirm(`✅ PDF del contratto ${id} rifatto.
-
-Aprirlo per controllarlo?`)) window.open(r.pdfUrl, '_blank');
+        avvisoConPdf(`✅ PDF del contratto ${id} rifatto.`, r.pdfUrl);
     } catch (error) {
         alert('❌ Errore: ' + error.message);
     }

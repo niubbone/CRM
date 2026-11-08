@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.63.0';
+export const VERSION = '4.64.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.64.0",
+    date: "08/11/2026",
+    type: "fix",
+    changes: [ "Contratti Kleos: dopo «Crea contratto» e «Rifai PDF» il pulsante «Apri PDF» apre davvero il PDF (prima il browser bloccava la finestra)", "Contratto senza la dicitura «Edizione 2027» (resta nel nome del listino)" ]
+  },
   {
     version: "4.63.0",
     date: "08/11/2026",
