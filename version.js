@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.64.0';
+export const VERSION = '4.65.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.65.0",
+    date: "08/11/2026",
+    type: "feature",
+    changes: [ "Licenze K-Tools: opzione «Tutti gli strumenti, anche i futuri (cliente pilota)»: gli strumenti attivi li sceglie Studio Smart in K-Tools" ]
+  },
   {
     version: "4.64.0",
     date: "08/11/2026",

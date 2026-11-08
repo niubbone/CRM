@@ -1640,7 +1640,7 @@ function renderLicenzaCanone(idCanone, scadenza, licenze) {
             <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
                 <div style="font-size:12px;">
                     <strong style="font-size:13px;">${_escControllo(l.id)}</strong> · emessa il ${_escControllo(l.emessaIl)}<br>
-                    ${_escControllo(l.strumenti.join(', '))} · utenti: ${_escControllo(String(l.utenti))} · fino al ${_escControllo(l.scadenza.split('-').reverse().join('/'))}
+                    ${l.strumenti.indexOf('*') >= 0 ? '<strong>tutti gli strumenti</strong> (pilota)' : _escControllo(l.strumenti.join(', '))} · utenti: ${_escControllo(String(l.utenti))} · fino al ${_escControllo(l.scadenza.split('-').reverse().join('/'))}
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0;">
                     <button class="btn-small" onclick="copiaLicenza(this, '${_escControllo(l.codice)}')"><i class="fas fa-copy"></i> Copia codice</button>
@@ -1659,6 +1659,8 @@ function renderLicenzaCanone(idCanone, scadenza, licenze) {
         <div style="border:1px dashed #b8c4d6;border-radius:6px;padding:8px;">
             <div style="font-weight:600;font-size:13px;margin-bottom:6px;"><i class="fas fa-key"></i> Emetti una licenza</div>
             <div style="margin-bottom:6px;">${scelte}</div>
+            <label style="display:flex;gap:6px;align-items:center;font-size:12px;margin-bottom:6px;" title="Gli strumenti attivi li scegli tu in K-Tools (Impostazioni, con l'utente di assistenza), anche quelli futuri, senza nuove licenze. Serve K-Tools dal Setup 2026.11.08.">
+                <input type="checkbox" id="lic-tutti-${idCanone}"> Tutti gli strumenti, anche i futuri (cliente pilota)</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
                 <label style="font-size:12px;">Utenti attivi (vuoto = senza limite)<br>
                     <input type="number" min="1" id="lic-utenti-${idCanone}" style="width:110px;"></label>
@@ -1672,7 +1674,9 @@ function renderLicenzaCanone(idCanone, scadenza, licenze) {
 }
 
 async function emettiLicenzaCanone(idCanone, scadenza) {
-    const strumenti = [...document.querySelectorAll(`.lic-str-${idCanone}:checked`)].map(x => x.value);
+    const tutti = document.getElementById(`lic-tutti-${idCanone}`);
+    const strumenti = tutti && tutti.checked ? ['*']
+        : [...document.querySelectorAll(`.lic-str-${idCanone}:checked`)].map(x => x.value);
     const esito = document.getElementById(`lic-esito-${idCanone}`);
     if (!strumenti.length) { esito.innerHTML = '<span style="color:#dc3545;font-size:12px;">Scegli almeno uno strumento.</span>'; return; }
     esito.innerHTML = '<span style="font-size:12px;color:#888;">⏳ Firma della licenza...</span>';
