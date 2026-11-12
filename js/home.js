@@ -1212,9 +1212,16 @@ function renderStartupSezione(s) {
                 <i class="fas fa-graduation-cap"></i> Startup Kleos
                 <span id="startup-conteggi">${renderStartupConteggi(s)}</span>
             </div>
-            <button class="home-btn piccolo" onclick="toggleSezioneStartup(true); toggleNuovoStartup()">
-                <i class="fas fa-plus"></i> Nuovo monte ore
-            </button>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <a href="https://www.studio-smart.it/api/ks-telefoni.php" target="_blank" rel="noopener"
+                   title="Telefoni di formazione e configurazione (da KSALES)" aria-label="Telefoni di formazione e configurazione"
+                   style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:#1f8a4c;color:#fff;font-size:22px;text-decoration:none;flex:none;">
+                    <i class="fas fa-phone"></i>
+                </a>
+                <button class="home-btn piccolo" onclick="toggleSezioneStartup(true); toggleNuovoStartup()">
+                    <i class="fas fa-plus"></i> Nuovo monte ore
+                </button>
+            </div>
         </div>
 
         <div id="startupCorpo" style="${startupUI.chiusa ? 'display:none;' : ''}">

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.65.0';
+export const VERSION = '4.65.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.65.1",
+    date: "12/11/2026",
+    type: "feature",
+    changes: [ "Home, Startup Kleos: icona del telefono che apre la pagina dei telefoni di formazione e configurazione (da KSALES), per chiamare dallo smartphone" ]
+  },
   {
     version: "4.65.0",
     date: "08/11/2026",
