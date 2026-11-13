@@ -872,7 +872,7 @@ function displayClienteTimesheet(timesheet) {
 
     let totalOre = 0;
     let totalCosto = 0;
-    let totalExtra = 0;
+    let totalDaDecidere = 0;
 
     let html = `
         <table class="timesheet-table">
@@ -881,7 +881,6 @@ function displayClienteTimesheet(timesheet) {
                     <th>Data</th>
                     <th>Descrizione</th>
                     <th>Ore</th>
-                    <th>Extra</th>
                     <th>Stato</th>
                     <th>Tipo</th>
                     <th>Costo €</th>
@@ -895,37 +894,28 @@ function displayClienteTimesheet(timesheet) {
         totalOre  += parseFloat(ts.ore)  || 0;
         totalCosto+= parseFloat(ts.costo)|| 0;
 
+        // Ore da decidere: riga «Errore pacchetto» (o, per sicurezza, ore rimaste in EXTRA)
         const isErrore = ts.modAddebito?.toLowerCase() === 'errore pacchetto';
         const hasExtra = ts.oreExtra > 0;
-        totalExtra += hasExtra ? (parseFloat(ts.oreExtra) || 0) : isErrore ? (parseFloat(ts.ore) || 0) : 0;
-
-        const rowStyle = isErrore ? 'background:#fff3cd;' : hasExtra ? 'background:#ffe5e5;' : '';
-
-        const statoLabel = isErrore
-            ? '<span style="color:#dc3545;font-weight:600;font-size:11px;">⚠️ Nessun pacchetto</span>'
-            : hasExtra
-                ? '<span style="color:#dc3545;font-weight:600;font-size:11px;">⚠️ Ore extra</span>'
-                : '<span style="color:#28a745;font-size:11px;">Da fatturare</span>';
-
+        const daDecidere = isErrore || hasExtra;
         const oreActionabili = hasExtra ? ts.oreExtra : isErrore ? ts.ore : 0;
-        const extraCell = hasExtra
-            ? `<td style="color:#dc3545;font-weight:600;white-space:nowrap;" title="${ts.ore}h totali, ${ts.ore - ts.oreExtra}h già scalate">+${ts.oreExtra}h</td>`
-            : isErrore
-                ? `<td style="color:#dc3545;font-weight:600;white-space:nowrap;">+${ts.ore}h</td>`
-                : '<td style="color:#6c757d;">—</td>';
+        totalDaDecidere += parseFloat(oreActionabili) || 0;
+
+        const statoLabel = daDecidere
+            ? '<span style="color:#dc3545;font-weight:600;font-size:11px;">Da decidere</span>'
+            : '<span style="color:#28a745;font-size:11px;">Da fatturare</span>';
 
         html += `
-            <tr style="${rowStyle}">
+            <tr style="${daDecidere ? 'background:#fff3cd;' : ''}">
                 <td>${ts.data}</td>
                 <td>${ts.descrizione}</td>
-                <td style="white-space:nowrap;">${hasExtra ? `<span title="${ts.ore}h totali">${ts.ore - ts.oreExtra}h+<span style="color:#dc3545;">${ts.oreExtra}h</span></span>` : `${ts.ore}h`}</td>
-                ${extraCell}
+                <td style="white-space:nowrap;">${ts.ore}h</td>
                 <td>${statoLabel}</td>
                 <td>${ts.tipoIntervento}</td>
                 <td style="text-align:right;">${parseFloat(ts.costo).toFixed(2)}</td>
                 <td class="actions-column" style="white-space:nowrap;">
                     <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')"><i class="fas fa-pen"></i></button>
-                    ${(isErrore || hasExtra) ? `
+                    ${daDecidere ? `
                       <button class="timesheet-edit-btn" style="background:#dc3545;color:#fff;margin-left:4px;"
                         onclick="apriScalaInPacchetto('${ts.id || ts.rowIndex}',${oreActionabili})"
                         title="Ore da decidere: assegnale a un pacchetto, da fatturare o omaggio"><i class="fas fa-clock"></i> Assegna</button>` : ''}
@@ -940,8 +930,8 @@ function displayClienteTimesheet(timesheet) {
                 <tr style="font-weight:bold;background:#f8f9fa;">
                     <td colspan="2" style="text-align:right;">TOTALE:</td>
                     <td style="white-space:nowrap;">${totalOre.toFixed(2)}h</td>
-                    <td style="color:#dc3545;">${totalExtra > 0 ? '+' + totalExtra.toFixed(2) + 'h da gestire' : '—'}</td>
-                    <td colspan="2"></td>
+                    <td style="color:#dc3545;white-space:nowrap;">${totalDaDecidere > 0 ? totalDaDecidere.toFixed(2) + 'h da decidere' : ''}</td>
+                    <td></td>
                     <td style="text-align:right;">€&nbsp;${totalCosto.toFixed(2)}</td>
                     <td></td>
                 </tr>
@@ -1567,18 +1557,15 @@ async function openPacchettoDettaglio(idPacchetto, descrizione, meta) {
                 <th style="padding:8px;text-align:left;border-bottom:2px solid #dee2e6;">Data</th>
                 <th style="padding:8px;text-align:left;border-bottom:2px solid #dee2e6;">Descrizione</th>
                 <th style="padding:8px;text-align:center;border-bottom:2px solid #dee2e6;">Ore</th>
-                <th style="padding:8px;text-align:center;border-bottom:2px solid #dee2e6;">Extra</th>
                 <th style="padding:8px;text-align:left;border-bottom:2px solid #dee2e6;">Tipo</th>
                 <th style="padding:8px;text-align:right;border-bottom:2px solid #dee2e6;">Costo €</th>
             </tr></thead><tbody>`;
 
         rows.forEach(r => {
-            const extraCell = r.oreExtra > 0 ? `<td style="padding:8px;text-align:center;color:#dc3545;font-weight:600;">+${r.oreExtra}h</td>` : '<td style="padding:8px;text-align:center;color:#adb5bd;">—</td>';
             html += `<tr style="border-bottom:1px solid #f0f0f0;">
                 <td style="padding:8px;white-space:nowrap;">${r.data}</td>
                 <td style="padding:8px;">${r.descrizione}</td>
                 <td style="padding:8px;text-align:center;">${r.ore}h</td>
-                ${extraCell}
                 <td style="padding:8px;">${r.tipoIntervento}</td>
                 <td style="padding:8px;text-align:right;">${r.costo.toFixed(2)}</td>
             </tr>`;
@@ -1587,7 +1574,6 @@ async function openPacchettoDettaglio(idPacchetto, descrizione, meta) {
         html += `</tbody><tfoot><tr style="background:#f8f9fa;font-weight:700;">
             <td colspan="2" style="padding:8px;text-align:right;">TOTALE</td>
             <td style="padding:8px;text-align:center;">${data.totOre.toFixed(2)}h</td>
-            <td style="padding:8px;text-align:center;color:#dc3545;">${data.totExtra > 0 ? '+'+data.totExtra.toFixed(2)+'h' : '—'}</td>
             <td></td>
             <td style="padding:8px;text-align:right;">€ ${data.totCosto.toFixed(2)}</td>
         </tr></tfoot></table>`;
@@ -1626,14 +1612,14 @@ function closePacchettoDettaglioModal() {
 function exportPacchettoDettaglio() {
     const modal = document.getElementById('pacchetto-dettaglio-modal');
     if (!modal || !modal.dataset.exportData) return;
-    const { idPacchetto, descrizione, rows, totOre, totExtra } = JSON.parse(modal.dataset.exportData);
+    const { idPacchetto, descrizione, rows, totOre } = JSON.parse(modal.dataset.exportData);
 
     let csv = `Pacchetto: ${idPacchetto} - ${descrizione}\n`;
-    csv += `Data;Descrizione;Ore;Ore Extra;Tipo Intervento;Costo\n`;
+    csv += `Data;Descrizione;Ore;Tipo Intervento;Costo\n`;
     rows.forEach(r => {
-        csv += `${r.data};"${r.descrizione}";${r.ore};${r.oreExtra||0};${r.tipoIntervento};${r.costo.toFixed(2)}\n`;
+        csv += `${r.data};"${r.descrizione}";${r.ore};${r.tipoIntervento};${r.costo.toFixed(2)}\n`;
     });
-    csv += `\nTOTALE;;${totOre.toFixed(2)};${totExtra.toFixed(2)};;\n`;
+    csv += `\nTOTALE;;${totOre.toFixed(2)};;\n`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1760,29 +1746,6 @@ window.chiudiScalaExtraModal    = chiudiScalaExtraModal;
 // =======================================================================
 // === STORICO ABBONAMENTI QODNET CLIENTE ===
 // =======================================================================
-
-async function loadClienteQODNETStorico(clienteId) {
-    const section = document.getElementById('cliente-qodnet-section');
-    const contentDiv = document.getElementById('cliente-qodnet-content');
-    section.style.display = 'none';
-
-    if (!clienteId) return;
-
-    try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=get_cliente_qodnet_storico&id=${encodeURIComponent(clienteId)}`;
-        const response = await fetch(url);
-        const data = await response.json();
-
-        const html = data.success ? renderQODNETCliente(data) : '';
-        if (!html) return;
-
-        section.style.display = 'block';
-        contentDiv.innerHTML = html;
-
-    } catch(err) {
-        // Silenzioso: se non ci sono abbonamenti QODNET non mostrare errori
-    }
-}
 
 /**
  * Servizi QODNET del cliente con la copertura provvigioni, più le voci una tantum.
@@ -1936,11 +1899,3 @@ function initClienteTab() {
 }
 window.initClienteTab = initClienteTab;
 
-function showToast(message, type = 'info') {
-    const colors = { info: '#1976D2', success: '#2e7d32', error: '#c62828' };
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${colors[type]||colors.info};color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.4s;`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
-}

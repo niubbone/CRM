@@ -279,58 +279,6 @@ function resetTimesheetFilters() {
 // =======================================================================
 
 /**
- * DEPRECATA - Ora usa editTimesheet() da clienti.js
- * Modifica timesheet - RICICLA logica da clienti.js
- */
-/*
-async function editTimesheetFromList(rowIndex) {
-    try {
-        // Carica i dati del timesheet da modificare
-        const response = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=get_timesheet_row&row=${rowIndex}`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Errore caricamento timesheet');
-        }
-        
-        const ts = data.timesheet;
-        
-        // Chiudi modal elenco
-        closeTimesheetListModal();
-        
-        // Vai alla tab Timesheet
-        openTab('timesheet');
-        
-        // Popola il form con i dati esistenti
-        document.getElementById('date').value = ts.data || '';
-        document.getElementById('start_time').value = ts.startTime || '';
-        document.getElementById('stop_time').value = ts.stopTime || '';
-        document.getElementById('client_name').value = ts.cliente || '';
-        document.getElementById('tipo_intervento').value = ts.tipoIntervento || '';
-        document.getElementById('mod_esecuzione').value = ts.modEsecuzione || '';
-        document.getElementById('chiamata').value = ts.chiamata || '';
-        document.getElementById('mod_addebito').value = ts.modAddebito || '';
-        document.getElementById('description').value = ts.descrizione || '';
-        
-        // Cambia testo del pulsante submit
-        const submitBtn = document.getElementById('submit-btn');
-        submitBtn.value = 'Aggiorna Timesheet';
-        submitBtn.dataset.editMode = 'true';
-        submitBtn.dataset.editRow = rowIndex;
-        
-        // Scroll in cima
-        window.scrollTo(0, 0);
-        
-        alert(`📝 Modifica il timesheet e clicca "Aggiorna Timesheet" per salvare le modifiche`);
-        
-    } catch (error) {
-        console.error('Errore caricamento timesheet per modifica:', error);
-        alert('❌ Errore durante il caricamento del timesheet da modificare');
-    }
-}
-*/
-
-/**
  * Elimina timesheet
  */
 async function deleteTimesheetFromList(idIntervento, rowIndex) {

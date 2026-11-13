@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.68.0';
+export const VERSION = '4.69.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.69.0",
+    date: "13/11/2026",
+    type: "cleanup",
+    changes: [ "Assegnare ore a un pacchetto che non basta: la parte in più resta subito da decidere in una riga sua", "Via la colonna «Extra» (scheda cliente, dettaglio pacchetto, stampa, CSV)", "Utilità: via «Riaggancia righe orfane», le orfane si elencano soltanto", "Pulizia: funzioni non usate" ]
+  },
   {
     version: "4.68.0",
     date: "13/11/2026",

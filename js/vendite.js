@@ -1004,7 +1004,7 @@ function proponiTimesheetInAttesa(pacchetto) {
                 window.markTabDirty && window.markTabDirty('vendite');
                 const saltati = (res.esiti || []).filter(e => !e.ok);
                 let msg = `✅ ${res.attribuiti} timesheet scalati da ${pacchetto.id_pacchetto}: ${res.oreScalate} h`;
-                if (res.oreExtra) msg += ` (${res.oreExtra} h oltre il pacchetto, segnate come EXTRA)`;
+                if (res.oreExtra) msg += ` (${res.oreExtra} h oltre il pacchetto: restano da decidere in una riga loro)`;
                 if (saltati.length) msg += `\n⚠️ Saltati: ${saltati.map(e => `${e.id} (${e.motivo})`).join(', ')}`;
                 alert(msg);
                 chiudi();
@@ -2232,7 +2232,6 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
             <td>${r.data || '—'}</td>
             <td class="desc">${r.descrizione || '—'}</td>
             <td class="center">${r.ore}h</td>
-            <td class="center">${r.oreExtra > 0 ? '+' + r.oreExtra + 'h' : '—'}</td>
             <td>${r.tipoIntervento || '—'}</td>
             ${costoCell}
         </tr>`;
@@ -2325,10 +2324,6 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
       <div class="m-label">Ore utilizzate</div>
       <div class="m-value">${totOre.toFixed(1)}h</div>
     </div>
-    <div class="meta-card">
-      <div class="m-label">Ore extra</div>
-      <div class="m-value" style="color:${totExtra > 0 ? '#dc3545' : '#aaa'};">${totExtra > 0 ? '+' + totExtra.toFixed(1) + 'h' : '—'}</div>
-    </div>
     ${oreAbbuonate > 0 ? `
     <div class="meta-card" style="border-color:#34a853;">
       <div class="m-label" style="color:#34a853;">In omaggio</div>
@@ -2354,7 +2349,6 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
         <th>Data</th>
         <th>Descrizione</th>
         <th class="center">Ore</th>
-        <th class="center">Extra</th>
         <th>Tipo</th>
         <th class="right">Costo €</th>
       </tr>
@@ -2364,7 +2358,6 @@ function stampaPacchettoRiepilogo(idPacchetto, nomeCliente, descrizione, rows, t
       <tr>
         <td colspan="2" style="text-align:right;">TOTALE</td>
         <td class="center">${totOre.toFixed(2)}h</td>
-        <td class="center">${totExtra > 0 ? '+' + totExtra.toFixed(2) + 'h' : '—'}</td>
         <td style="color:#34a853;font-weight:600;">${oreAbbuonate > 0 ? '🎁 ' + oreAbbuonate.toFixed(1) + 'h omaggio' : ''}</td>
         <td class="right">€ ${totCosto.toFixed(2)}</td>
       </tr>
