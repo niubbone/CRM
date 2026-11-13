@@ -93,7 +93,11 @@ function _segnaHomeAggiornata() {
 
 function _oraBreve(ts) {
     if (!ts) return '';
-    return new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const d = new Date(ts);
+    const ora = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    // Fotografia non di oggi: anche la data, sennò «agg. 11:14» sembra di stamattina.
+    if (d.toDateString() === new Date().toDateString()) return ora;
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) + ' ' + ora;
 }
 
 function _escHome(s) {
@@ -237,9 +241,13 @@ function _homeInModifica() {
         return true;
     }
 
+    // Solo campi visibili e cambiati a mano (13/11/2026): i moduli nascosti della Home
+    // (modifica monti ore Startup, date dei controlli) sono già compilati e facevano
+    // rimandare il rinfresco per sempre, lasciando a schermo la fotografia di settembre.
     return Array.from(c.querySelectorAll('input, textarea')).some(el => {
-        if (el.type === 'checkbox' || el.type === 'radio') return false;
-        return el.value && el.value.trim() !== '';
+        if (el.type === 'checkbox' || el.type === 'radio' || el.type === 'hidden') return false;
+        if (!el.offsetParent) return false;
+        return el.value.trim() !== '' && el.value !== el.defaultValue;
     });
 }
 

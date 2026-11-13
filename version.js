@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.65.1';
+export const VERSION = '4.65.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.65.2",
+    date: "13/11/2026",
+    type: "fix",
+    changes: [ "Home: i contatori si aggiornano di nuovo (i moduli nascosti già compilati facevano rimandare il rinfresco all'infinito, restava la fotografia vecchia: es. ore extra a 0)", "Home: accanto ad «agg.» anche la data se i dati non sono di oggi" ]
+  },
   {
     version: "4.65.1",
     date: "12/11/2026",
