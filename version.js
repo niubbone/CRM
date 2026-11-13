@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.66.1';
+export const VERSION = '4.66.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.66.2",
+    date: "13/11/2026",
+    type: "feature",
+    changes: [ "Proforma da fatturare: «Inviata il … a …» in verde, oppure in rosso «Email non risulta inviata» (con Reinvia email)" ]
+  },
   {
     version: "4.66.1",
     date: "13/11/2026",

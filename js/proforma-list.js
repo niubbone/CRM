@@ -161,7 +161,16 @@ function renderProformaList(proformeList) {
                 <span class="info-icon" style="margin-right: 8px;">👤</span>
                 <span style="font-weight: 500;">${proforma.cliente || 'Cliente non specificato'}</span>
               </div>
-              
+              ${proforma.stato !== 'Fatturata' && proforma.stato !== 'Pagata' ? (() => {
+                // Esito dell'invio (13/11/2026): se non risulta partita c'è «Reinvia email» qui sotto.
+                const e = (proforma.emailInviata || '').toString();
+                const ok = /^Inviata/.test(e);
+                return `<div style="font-size:13px;margin-bottom:6px;color:${ok ? '#198754' : '#dc3545'};">
+                  <i class="fas ${ok ? 'fa-envelope-circle-check' : 'fa-triangle-exclamation'}"></i>
+                  ${ok ? e.replace(/</g, '&lt;') : (e ? e.replace(/</g, '&lt;') : 'Email non risulta inviata')}
+                </div>`;
+              })() : ''}
+
               ${proforma.stato === 'Fatturata' || proforma.stato === 'Pagata' ? `
                 <div style="padding-top: 8px; border-top: 1px solid #e9ecef; margin-top: 8px; font-size: 13px; color: #6c757d;">
                   Fattura: ${proforma.numeroFattura || 'N/A'}
