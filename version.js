@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.69.0';
+export const VERSION = '4.69.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.69.1",
+    date: "13/11/2026",
+    type: "cleanup",
+    changes: [ "Elenco timesheet: via il filtro «Fatturato e pagato» (le 13 righe vecchie sono «Fatturato», il pagamento è sulla fattura)" ]
+  },
   {
     version: "4.69.0",
     date: "13/11/2026",
