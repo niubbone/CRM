@@ -526,6 +526,25 @@ async function loadClienteProdotti(clienteId) {
 }
 
 /**
+ * Pacchetto chiuso (13/11/2026): terminato, over, disdetto... la scadenza non interessa più e
+ * il conto dei giorni distrae. Resta solo per gli attivi e per gli scaduti (lì è il motivo).
+ */
+function _scadenzaIrrilevante(prodotto) {
+    const st = (prodotto.stato || '').toUpperCase();
+    return prodotto.tipo === 'Pacchetto' && st !== 'ATTIVO' && st !== 'SCADUTO';
+}
+
+/** «Mostra solo attivi» nei pacchetti della scheda cliente: ricordato su questo dispositivo. */
+function _soloPacchettiAttivi() {
+    try { return localStorage.getItem('crm_pacchetti_solo_attivi') !== '0'; } catch (e) { return true; }
+}
+function toggleSoloPacchettiAttivi(on) {
+    try { localStorage.setItem('crm_pacchetti_solo_attivi', on ? '1' : '0'); } catch (e) {}
+    displayClienteProdotti(currentClienteProdotti);
+}
+window.toggleSoloPacchettiAttivi = toggleSoloPacchettiAttivi;
+
+/**
  * Renderizza un singolo prodotto (helper interno)
  */
 function _renderProdottoItem(prodotto) {
@@ -565,7 +584,7 @@ function _renderProdottoItem(prodotto) {
                     <span class="prodotto-info-label">Ore Residue</span>
                     <span class="prodotto-info-value">${prodotto.oreResidue}h</span>
                 </div>` : ''}
-                ${prodotto.dataScadenza ? (() => {
+                ${prodotto.dataScadenza && !_scadenzaIrrilevante(prodotto) ? (() => {
                     const parts = prodotto.dataScadenza.split('/');
                     const scad = new Date(parts[2], parts[1]-1, parts[0]);
                     const giorni = Math.ceil((scad - new Date()) / 86400000);
@@ -636,14 +655,21 @@ function displayClienteProdotti(prodotti) {
         html += `</div>`;
     }
 
-    // Sezione Pacchetti
+    // Sezione Pacchetti: di base solo gli attivi (13/11/2026), gli altri con la spunta tolta
     if (pacchetti.length > 0) {
         if (canoniEFirme.length > 0) html += `<hr style="margin:12px 0;border:none;border-top:1px solid #e9ecef;">`;
+        const soloAttivi = _soloPacchettiAttivi();
+        const attivi = pacchetti.filter(p => (p.stato || '').toUpperCase() === 'ATTIVO');
+        const visibili = soloAttivi ? attivi : pacchetti;
         html += `<div style="margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;color:#6f42c1;margin-bottom:8px;padding:6px 10px;background:#f0ebff;border-radius:6px;border-left:3px solid #6f42c1;">
-                <i class="fas fa-box"></i> Pacchetti Ore (${pacchetti.length})
+            <div style="font-size:13px;font-weight:700;color:#6f42c1;margin-bottom:8px;padding:6px 10px;background:#f0ebff;border-radius:6px;border-left:3px solid #6f42c1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span><i class="fas fa-box"></i> Pacchetti Ore (${attivi.length} ${attivi.length === 1 ? 'attivo' : 'attivi'} su ${pacchetti.length})</span>
+                <label style="font-weight:500;color:#555;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                    <input type="checkbox" ${soloAttivi ? 'checked' : ''} onchange="toggleSoloPacchettiAttivi(this.checked)"> Mostra solo attivi
+                </label>
             </div>`;
-        pacchetti.forEach(p => { html += _renderProdottoItem(p); });
+        if (!visibili.length) html += `<p class="text-muted" style="margin:4px 10px;">Nessun pacchetto attivo.</p>`;
+        visibili.forEach(p => { html += _renderProdottoItem(p); });
         html += `</div>`;
     }
 

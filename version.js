@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.66.0';
+export const VERSION = '4.66.1';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.66.1",
+    date: "13/11/2026",
+    type: "fix",
+    changes: [ "Scheda cliente: niente scadenza né conto dei giorni sui pacchetti chiusi (terminati), resta su attivi e scaduti", "Pacchetti ore: spunta «Mostra solo attivi», di base accesa" ]
+  },
   {
     version: "4.66.0",
     date: "13/11/2026",
