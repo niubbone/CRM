@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.66.2';
+export const VERSION = '4.67.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.67.0",
+    date: "13/11/2026",
+    type: "feature",
+    changes: [ "Ore oltre il pacchetto: all'inserimento e alla modifica diventano subito una riga separata «da decidere» (niente più colonna EXTRA)", "Modifica timesheet: solo modifica, le ore da decidere si assegnano col pulsante rosso «Assegna»" ]
+  },
   {
     version: "4.66.2",
     date: "13/11/2026",

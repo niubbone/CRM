@@ -1291,14 +1291,10 @@ async function editTimesheet(rowIndex, idIntervento) {
         let oreDisplay = ts.ore;
         let bannerMsg = '';
 
-        if (isExtra) {
-            mode = 'extra';
-            oreDisplay = ts.oreExtra;
-            const oreScalate = ts.ore - ts.oreExtra;
-            bannerMsg = `⚠️ Stai gestendo <strong>${ts.oreExtra}h extra</strong> (le ${oreScalate}h scalate al pacchetto rimangono invariate). Salvando verrà creata una nuova riga "Da fatturare" per queste ore.`;
-        } else if (isErrore) {
-            mode = 'errore';
-            bannerMsg = `⚠️ Intervento senza pacchetto valido. Salvando verrà convertito in <strong>"Da fatturare"</strong>.`;
+        // Passo 3 (13/11/2026): la modifica è solo una modifica. Dove vanno le ore da decidere
+        // (pacchetto, da fatturare, omaggio) lo sceglie il pulsante rosso «Assegna».
+        if (isExtra || isErrore) {
+            bannerMsg = `<i class="fas fa-circle-info"></i> Ore da decidere: per mandarle a un pacchetto, da fatturare o in omaggio usa il pulsante rosso <strong>«Assegna»</strong> nell'elenco.`;
         }
 
         // Popola il modal
