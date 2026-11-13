@@ -390,9 +390,13 @@ function vaiA(dove) {
             break;
         case 'controlli': vaiVendite('canoni', 'controlli'); break;
         case 'scadenze':  vaiVendite('scadenze'); break;
-        case 'oreextra':
-            if (typeof window.switchTab === 'function') window.switchTab('clienti');
+        case 'oreextra': {
+            // Un solo cliente con ore extra: si apre direttamente la sua scheda (13/11/2026).
+            const per = (homeData && homeData.oreExtraDettaglio && homeData.oreExtraDettaglio.perCliente) || [];
+            if (per.length === 1 && typeof window.apriClienteDaNome === 'function') window.apriClienteDaNome(per[0].cliente);
+            else if (typeof window.switchTab === 'function') window.switchTab('clienti');
             break;
+        }
         // I due contatori sotto portavano alla lista completa, lasciando
         // all'utente il compito di ritrovare a mano le righe contate. Ora la
         // vista arriva già filtrata sullo stesso criterio del contatore.

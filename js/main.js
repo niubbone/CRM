@@ -214,8 +214,9 @@ function renderOreExtraBadge(count, perCliente) {
       let rows = '';
       (perCliente || []).forEach(c => {
         const totH = c.righe.reduce((s, r) => s + (parseFloat(r.oreExtra) || 0), 0);
-        rows += `<tr>
-          <td style="padding:7px 12px;font-weight:600;">${c.cliente}</td>
+        const nomeAttr = String(c.cliente).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        rows += `<tr class="ore-extra-riga" data-cliente="${nomeAttr}" style="cursor:pointer;" title="Apri la scheda del cliente">
+          <td style="padding:7px 12px;font-weight:600;color:#1e3c72;text-decoration:underline;">${nomeAttr}</td>
           <td style="padding:7px 12px;text-align:center;color:#dc3545;font-weight:700;">${totH}h</td>
           <td style="padding:7px 12px;text-align:center;color:#888;font-size:12px;">${c.righe.length} riga${c.righe.length > 1 ? 'e' : ''}</td>
         </tr>`;
@@ -234,10 +235,19 @@ function renderOreExtraBadge(count, perCliente) {
           <tbody>${rows}</tbody>
         </table>
         <div style="padding:8px 12px;font-size:11px;color:#888;border-top:1px solid #f0f0f0;">
-          Apri la scheda del cliente per gestire le ore.
+          Tocca un cliente per aprire la sua scheda: le ore extra sono nell'elenco degli interventi.
         </div>`;
 
       document.body.appendChild(popover);
+
+      // Clic su un cliente: apre direttamente la sua scheda (13/11/2026).
+      popover.addEventListener('click', (e) => {
+        const riga = e.target.closest('.ore-extra-riga');
+        if (!riga) return;
+        e.stopPropagation();
+        popover.style.display = 'none';
+        apriClienteDaNome(riga.dataset.cliente);
+      });
 
       // Mostra/nascondi al click sul badge
       badge.addEventListener('click', (e) => {
@@ -266,3 +276,20 @@ function renderOreExtraBadge(count, perCliente) {
 // Esposta globalmente: la Home la chiama passando il dettaglio ore extra che
 // ha già calcolato, così il badge non fa una seconda scansione del Timesheet.
 window.renderOreExtraBadge = renderOreExtraBadge;
+
+/** Apre la scheda di un cliente partendo dal nome (le ore extra arrivano per nome). */
+async function apriClienteDaNome(nome) {
+  try {
+    if (typeof window.switchTab === 'function') window.switchTab('clienti');
+    const res = await fetch(`${window.CONFIG.APPS_SCRIPT_URL}?action=search_clienti&search=${encodeURIComponent(nome)}`);
+    const data = await res.json();
+    const lista = (data && data.clienti) || [];
+    const c = lista.find(x => (x.nome || '').trim() === String(nome).trim()) || (lista.length === 1 ? lista[0] : null);
+    if (c && typeof window.loadClienteDetail === 'function') { window.loadClienteDetail(c.id); return; }
+    const campo = document.getElementById('cliente-search');
+    if (campo) { campo.value = nome; if (typeof window.searchCliente === 'function') window.searchCliente(); }
+  } catch (e) {
+    console.warn('apriClienteDaNome:', e);
+  }
+}
+window.apriClienteDaNome = apriClienteDaNome;

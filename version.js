@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.65.2';
+export const VERSION = '4.65.3';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.65.3",
+    date: "13/11/2026",
+    type: "feature",
+    changes: [ "Ore extra: nel badge rosso il nome del cliente apre direttamente la sua scheda; la card della Home apre il cliente se è uno solo" ]
+  },
   {
     version: "4.65.2",
     date: "13/11/2026",
