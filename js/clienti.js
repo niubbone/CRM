@@ -928,10 +928,7 @@ function displayClienteTimesheet(timesheet) {
                     ${(isErrore || hasExtra) ? `
                       <button class="timesheet-edit-btn" style="background:#dc3545;color:#fff;margin-left:4px;"
                         onclick="apriScalaInPacchetto('${ts.id || ts.rowIndex}',${oreActionabili})"
-                        title="Ore da decidere: assegnale a un pacchetto, da fatturare o omaggio"><i class="fas fa-clock"></i> Assegna</button>` : `
-                      <button class="timesheet-edit-btn" style="background:#fd7e14;color:#fff;margin-left:4px;"
-                        onclick="segnaPagatoContanti('${ts.id || ts.rowIndex}')"
-                        title="Segna come pagato in contanti"><i class="fas fa-money-bill-wave"></i></button>`}
+                        title="Ore da decidere: assegnale a un pacchetto, da fatturare o omaggio"><i class="fas fa-clock"></i> Assegna</button>` : ''}
                 </td>
             </tr>
         `;
@@ -1377,40 +1374,14 @@ async function saveTimesheetChanges(event) {
 
         let body, successMsg;
 
-        if (mode === 'extra') {
-            // Crea nuova riga Da fatturare con le ore e i dati del form, azzera EXTRA sull'originale
-            body = new URLSearchParams({
-                action: 'crea_entry_da_fatturare',
-                row_index: rowIndex,
-                id_intervento: idIntervento,
-                ore_extra: oreExtra,
-                data_override: formData.data,
-                descrizione_override: formData.descrizione,
-                ore_override: formData.ore,
-                tipo_override: formData.tipoIntervento,
-                mod_esec_override: formData.modEsecuzione
-            });
-            successMsg = `✅ Creata riga "Da fatturare" per ${formData.ore}h`;
-        } else if (mode === 'errore') {
-            // Aggiorna la riga cambiando Mod_Addebito in Da fatturare
-            body = new URLSearchParams({
-                action: 'update_timesheet',
-                rowIndex,
-                id_intervento: idIntervento,
-                modAddebito: 'Da fatturare',
-                ...formData
-            });
-            successMsg = '✅ Convertito in "Da fatturare"';
-        } else {
-            // Modifica normale
-            body = new URLSearchParams({
-                action: 'update_timesheet',
-                rowIndex,
-                id_intervento: idIntervento,
-                ...formData
-            });
-            successMsg = '✅ Timesheet aggiornato con successo';
-        }
+        // Passo 4 (13/11/2026): solo modifica; le ore da decidere si assegnano con «Assegna»
+        body = new URLSearchParams({
+            action: 'update_timesheet',
+            rowIndex,
+            id_intervento: idIntervento,
+            ...formData
+        });
+        successMsg = '✅ Timesheet aggiornato con successo';
 
         const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
             method: 'POST',
@@ -1675,33 +1646,7 @@ function exportPacchettoDettaglio() {
     URL.revokeObjectURL(url);
 }
 
-async function convertiDaFatturare(rowIndex) {
-    if (!confirm('Convertire questa riga in "Da fatturare"? Sarà inclusa nella prossima proforma.')) return;
-    try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=converti_da_fatturare&id_intervento=${encodeURIComponent(rowIndex)}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (!data.success) throw new Error(data.error);
-        showNotification('clienti-info', '✅ Convertita in Da fatturare', 'success');
-        if (currentCliente) loadClienteTimesheet(currentCliente.id);
-    } catch(err) {
-        alert('❌ Errore: ' + err.message);
-    }
-}
 
-async function convertiExtraDaFatturare(rowIndex, oreExtra) {
-    if (!confirm(`Creare una nuova riga "Da fatturare" per ${oreExtra}h extra?`)) return;
-    try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=crea_entry_da_fatturare&id_intervento=${encodeURIComponent(rowIndex)}&ore_extra=${oreExtra}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (!data.success) throw new Error(data.error);
-        showNotification('clienti-info', '✅ Creata nuova riga Da fatturare (' + oreExtra + 'h)', 'success');
-        if (currentCliente) loadClienteTimesheet(currentCliente.id);
-    } catch(err) {
-        alert('❌ Errore: ' + err.message);
-    }
-}
 
 // Ore da decidere (13/11/2026): una finestra sola al posto di «Da fatturare», «Scala in
 // pacchetto» e «Omaggio». Le ore vanno a un pacchetto attivo, a un pacchetto nuovo (lo
@@ -1778,53 +1723,7 @@ function chiudiScalaExtraModal() {
     if (modal) modal.style.display = 'none';
 }
 
-/**
- * Abbuona le ore extra di una riga timesheet come omaggio al cliente.
- * @param {number} rowIndex - Indice riga timesheet
- * @param {number} oreExtra - Ore extra da abbuonare
- * @param {string} idPacchetto - ID del pacchetto di appartenenza
- */
-async function abbuonaOreExtra(rowIndex, oreExtra, idPacchetto) {
-    if (!confirm(`Abbuonare ${oreExtra}h extra come omaggio al cliente? L'operazione è irreversibile.`)) return;
 
-    try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=abbuona_ore_extra&id_intervento=${encodeURIComponent(rowIndex)}&id_pacchetto=${encodeURIComponent(idPacchetto || '')}`;
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.success) {
-            showNotification('clienti-info', `🎁 ${data.oreAbbuonate}h abbuonate come omaggio`, 'success');
-            if (currentCliente) {
-                loadClienteTimesheet(currentCliente.id);
-                loadClienteProdotti(currentCliente.id);
-            }
-        } else {
-            alert('❌ Errore: ' + (data.error || 'Errore sconosciuto'));
-        }
-    } catch(err) {
-        alert('❌ Errore di rete: ' + err.message);
-    }
-}
-
-/**
- * Segna una riga timesheet come pagata in contanti.
- */
-async function segnaPagatoContanti(rowIndex) {
-    if (!confirm('Segnare questa riga come pagata in contanti? La riga non verrà inclusa nelle prossime proforma.')) return;
-    try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=segna_pagato&id_intervento=${encodeURIComponent(rowIndex)}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.success) {
-            showNotification('clienti-info', '💵 Riga segnata come pagata in contanti', 'success');
-            if (currentCliente) loadClienteTimesheet(currentCliente.id);
-        } else {
-            alert('❌ Errore: ' + (data.error || 'Errore sconosciuto'));
-        }
-    } catch(err) {
-        alert('❌ Errore di rete: ' + err.message);
-    }
-}
 
 // Mantieni window.* solo per funzioni chiamate da HTML onclick
 window.searchCliente = searchCliente;
@@ -1854,13 +1753,9 @@ window.submitControllo = submitControllo;
 window.resetControllo = resetControllo;
 window.exportPacchettoDettaglio    = exportPacchettoDettaglio;
 window.stampaPacchettoDettaglio    = stampaPacchettoDettaglio;
-window.convertiDaFatturare       = convertiDaFatturare;
-window.convertiExtraDaFatturare = convertiExtraDaFatturare;
 window.apriScalaInPacchetto     = apriScalaInPacchetto;
 window.eseguiScalaExtra         = eseguiScalaExtra;
 window.chiudiScalaExtraModal    = chiudiScalaExtraModal;
-window.abbuonaOreExtra          = abbuonaOreExtra;
-window.segnaPagatoContanti      = segnaPagatoContanti;
 
 // =======================================================================
 // === STORICO ABBONAMENTI QODNET CLIENTE ===

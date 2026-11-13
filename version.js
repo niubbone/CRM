@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.67.0';
+export const VERSION = '4.68.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.68.0",
+    date: "13/11/2026",
+    type: "cleanup",
+    changes: [ "Tolti i pulsanti e le azioni vecchie sulle ore (da fatturare, scala extra, abbuona, pagato in contanti): resta solo «Assegna»", "Il pagamento si segna sulle fatture, non sul timesheet" ]
+  },
   {
     version: "4.67.0",
     date: "13/11/2026",
