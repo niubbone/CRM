@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.65.3';
+export const VERSION = '4.66.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.66.0",
+    date: "13/11/2026",
+    type: "feature",
+    changes: [ "Ore da decidere: ore oltre il pacchetto e timesheet senza pacchetto sono una coda sola (card Home, badge)", "Un pulsante «Assegna» al posto di tre: pacchetto attivo, nuovo pacchetto, da fatturare o omaggio", "Creando un pacchetto si propongono già spuntate anche le ore oltre il pacchetto precedente" ]
+  },
   {
     version: "4.65.3",
     date: "13/11/2026",

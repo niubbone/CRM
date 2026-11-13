@@ -957,13 +957,13 @@ function proponiTimesheetInAttesa(pacchetto) {
             <div id="timesheetAttesaModal" class="modal active">
                 <div class="modal-content" style="max-width: 560px;">
                     <div class="modal-header">
-                        <h2><i class="fas fa-clock"></i> Timesheet in attesa del pacchetto</h2>
+                        <h2><i class="fas fa-clock"></i> Ore da decidere</h2>
                         <button class="close-btn" data-azione="chiudi">✕</button>
                     </div>
                     <div class="modal-body">
                         <div class="info-banner" style="margin-bottom: 15px;">
-                            ${esc(pacchetto.cliente)} ha <strong>${righe.length}</strong> timesheet «Scala da pacchetto»
-                            registrati senza un pacchetto attivo (${totale.toFixed(1)} h).
+                            ${esc(pacchetto.cliente || 'Il cliente')} ha <strong>${totale.toFixed(1)} h</strong> da decidere
+                            (${righe.length} ${righe.length === 1 ? 'riga' : 'righe'}: ore oltre un pacchetto o senza pacchetto).
                             Vuoi scalarli dal pacchetto <strong>${esc(pacchetto.id_pacchetto)}</strong> (${esc(pacchetto.ore_totali)} h)?
                         </div>
                         <div style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
@@ -971,7 +971,7 @@ function proponiTimesheetInAttesa(pacchetto) {
                                 <label style="display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer;">
                                     <input type="checkbox" class="ts-attesa-check" value="${esc(r.idIntervento)}" checked style="margin-top: 3px;">
                                     <span style="flex: 1;">
-                                        <strong>${esc(r.data)}</strong> · ${esc(r.tipo)} · <strong>${(parseFloat(r.ore) || 0).toFixed(1)} h</strong>
+                                        <strong>${esc(r.data)}</strong> · ${esc(r.tipo)} · <strong>${(parseFloat(r.ore) || 0).toFixed(1)} h</strong>${r.extra ? ' <small style="color:#dc3545;">oltre il pacchetto</small>' : ''}
                                         ${r.descrizione ? `<br><small style="color:#666;">${esc(r.descrizione)}</small>` : ''}
                                     </span>
                                 </label>`).join('')}

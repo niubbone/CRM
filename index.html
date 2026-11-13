@@ -2513,18 +2513,35 @@ function toggleOptionalFields() {
 
 <!-- Modal Scala Ore Extra in Pacchetto -->
 <div id="scala-extra-modal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:450px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h2 style="margin:0;font-size:18px;">📦 Scala ore extra in pacchetto</h2>
+    <div class="modal-content" style="max-width:460px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h2 style="margin:0;font-size:18px;"><i class="fas fa-clock"></i> Assegna <span id="assegna-ore-quante"></span></h2>
             <button onclick="chiudiScalaExtraModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6c757d;">✕</button>
         </div>
-        <p style="font-size:14px;color:#6c757d;margin-bottom:16px;">
-            Seleziona il pacchetto attivo in cui scalare le ore extra. Le ore verranno detratte dal pacchetto selezionato.
-        </p>
-        <select id="scala-extra-select" style="width:100%;padding:9px 12px;border:1px solid #ced4da;border-radius:6px;font-size:14px;margin-bottom:20px;box-sizing:border-box;"></select>
+        <p id="assegna-ore-cosa" style="font-size:13px;color:#6c757d;margin:0 0 14px;"></p>
+        <div id="assegna-ore-scelte" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;font-size:14px;">
+            <label id="assegna-riga-pacchetto" style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
+                <input type="radio" name="assegna-dest" value="pacchetto" style="margin-top:3px;">
+                <span style="flex:1;">Scala da un pacchetto attivo
+                    <select id="scala-extra-select" style="width:100%;padding:7px 10px;border:1px solid #ced4da;border-radius:6px;font-size:14px;margin-top:6px;box-sizing:border-box;"></select>
+                </span>
+            </label>
+            <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
+                <input type="radio" name="assegna-dest" value="nuovo" style="margin-top:3px;">
+                <span>Apri un nuovo pacchetto <small style="color:#6c757d;">(le ore si scalano da lì appena lo crei)</small></span>
+            </label>
+            <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
+                <input type="radio" name="assegna-dest" value="da_fatturare" style="margin-top:3px;">
+                <span>Da fatturare</span>
+            </label>
+            <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
+                <input type="radio" name="assegna-dest" value="omaggio" style="margin-top:3px;">
+                <span>Omaggio <small style="color:#6c757d;">(non si pagano)</small></span>
+            </label>
+        </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;">
             <button class="btn btn-secondary" onclick="chiudiScalaExtraModal()">Annulla</button>
-            <button id="scala-extra-confirm" class="btn btn-primary" onclick="eseguiScalaExtra()">📦 Scala</button>
+            <button id="scala-extra-confirm" class="btn btn-primary" onclick="eseguiScalaExtra()"><i class="fas fa-check"></i> Assegna</button>
         </div>
     </div>
 </div>

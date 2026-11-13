@@ -336,7 +336,7 @@ function renderPendenze(p, controlli, qodnet, ferrari, incassi) {
     <div class="home-pendenze">
         ${card((controlli || []).length, 'Controlli', 'fa-clipboard-check', 'arancio', "vaiA('controlli-home')")}
         ${card(p.scadenzeTotale || 0, 'Scadenze 90gg', 'fa-calendar-day', (p.scadenzeCritiche > 0 ? 'rosso' : 'blu'), "vaiA('scadenze')")}
-        ${card(p.oreExtra || 0, 'Ore extra sospese', 'fa-hourglass-half', 'rosso', "vaiA('oreextra')")}
+        ${card(p.oreExtra || 0, 'Ore da decidere', 'fa-hourglass-half', 'rosso', "vaiA('oreextra')")}
         ${card(p.proformaDaFatturare || 0, 'Proforma da fatturare', 'fa-file-invoice', 'verde', "vaiA('proforma')")}
         ${card(p.fattureNonPagate || 0, 'Fatture non pagate', 'fa-money-bill-wave', 'rosso', "vaiA('fatture')", importo)}
         ${qodnet ? card(qodnet.attenzione || 0, 'QODNET', 'fa-globe', 'blu', "vaiA('qodnet')", _extraQodnet(qodnet)) : ''}

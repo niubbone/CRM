@@ -197,7 +197,7 @@ function renderOreExtraBadge(count, perCliente) {
       badge.textContent = count;
       badge.style.display = 'inline-block';
       badge.style.cursor = 'pointer';
-      badge.title = 'Clicca per vedere i clienti con ore extra';
+      badge.title = 'Clienti con ore da decidere';
 
       // Popover già iniettato? Rimuovi e ricrea
       const existing = document.getElementById('ore-extra-popover');
@@ -224,7 +224,7 @@ function renderOreExtraBadge(count, perCliente) {
 
       popover.innerHTML = `
         <div style="background:#dc3545;color:#fff;padding:10px 14px;border-radius:7px 7px 0 0;font-weight:600;font-size:13px;">
-          ⏰ Ore extra in sospeso (${count})
+          ⏰ Ore da decidere (${count})
         </div>
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead><tr style="background:#f8f9fa;font-size:11px;text-transform:uppercase;color:#888;">
@@ -235,7 +235,7 @@ function renderOreExtraBadge(count, perCliente) {
           <tbody>${rows}</tbody>
         </table>
         <div style="padding:8px 12px;font-size:11px;color:#888;border-top:1px solid #f0f0f0;">
-          Tocca un cliente per aprire la sua scheda: le ore extra sono nell'elenco degli interventi.
+          Tocca un cliente per aprire la sua scheda: nell'elenco degli interventi c'è il pulsante rosso «Assegna».
         </div>`;
 
       document.body.appendChild(popover);

@@ -900,15 +900,9 @@ function displayClienteTimesheet(timesheet) {
                 <td class="actions-column" style="white-space:nowrap;">
                     <button class="timesheet-edit-btn" onclick="editTimesheet(${ts.rowIndex}, '${ts.id}')"><i class="fas fa-pen"></i></button>
                     ${(isErrore || hasExtra) ? `
-                      <button class="timesheet-edit-btn" style="background:#28a745;color:#fff;margin-left:4px;"
-                        onclick="${isErrore ? `convertiDaFatturare('${ts.id || ts.rowIndex}')` : `convertiExtraDaFatturare('${ts.id || ts.rowIndex}',${ts.oreExtra})`}"
-                        title="Converti in Da fatturare"><i class="fas fa-euro-sign"></i></button>
-                      <button class="timesheet-edit-btn" style="background:#1976D2;color:#fff;margin-left:4px;"
+                      <button class="timesheet-edit-btn" style="background:#dc3545;color:#fff;margin-left:4px;"
                         onclick="apriScalaInPacchetto('${ts.id || ts.rowIndex}',${oreActionabili})"
-                        title="Scala in un pacchetto esistente"><i class="fas fa-box"></i></button>
-                      ${hasExtra ? `<button class="timesheet-edit-btn" style="background:#6f42c1;color:#fff;margin-left:4px;"
-                        onclick="abbuonaOreExtra('${ts.id || ts.rowIndex}',${ts.oreExtra},'${ts.idPacchetto || ''}')"
-                        title="Ore extra in omaggio"><i class="fas fa-gift"></i></button>` : ''}` : `
+                        title="Ore da decidere: assegnale a un pacchetto, da fatturare o omaggio"><i class="fas fa-clock"></i> Assegna</button>` : `
                       <button class="timesheet-edit-btn" style="background:#fd7e14;color:#fff;margin-left:4px;"
                         onclick="segnaPagatoContanti('${ts.id || ts.rowIndex}')"
                         title="Segna come pagato in contanti"><i class="fas fa-money-bill-wave"></i></button>`}
@@ -1687,56 +1681,73 @@ async function convertiExtraDaFatturare(rowIndex, oreExtra) {
     }
 }
 
+// Ore da decidere (13/11/2026): una finestra sola al posto di «Da fatturare», «Scala in
+// pacchetto» e «Omaggio». Le ore vanno a un pacchetto attivo, a un pacchetto nuovo (lo
+// propone la creazione del pacchetto), da fatturare o in omaggio: azione assegna_ore.
 function apriScalaInPacchetto(rowIndex, oreActionabili) {
     const modal = document.getElementById('scala-extra-modal');
     if (!modal) return;
+    const ore = (Math.round((parseFloat(oreActionabili) || 0) * 100) / 100).toString().replace('.', ',');
+    document.getElementById('assegna-ore-quante').textContent = ore + (ore === '1' ? ' ora' : ' ore');
+    document.getElementById('assegna-ore-cosa').textContent = (currentCliente && currentCliente.nome ? currentCliente.nome + ' · ' : '') + 'intervento ' + rowIndex;
 
     const pacchetti = (currentClienteProdotti || []).filter(p => p.tipo === 'Pacchetto' && p.stato === 'ATTIVO');
     const select = document.getElementById('scala-extra-select');
-    select.innerHTML = '';
+    select.innerHTML = pacchetti.map(p => `<option value="${p.id}">${p.id}${p.descrizione ? ' — ' + p.descrizione : ''} (${p.oreResidue}h residue)</option>`).join('');
+    document.getElementById('assegna-riga-pacchetto').style.display = pacchetti.length ? 'flex' : 'none';
+    modal.querySelectorAll('input[name="assegna-dest"]').forEach(x => {
+        x.checked = x.value === (pacchetti.length ? 'pacchetto' : 'nuovo');
+    });
 
-    if (pacchetti.length === 0) {
-        select.innerHTML = '<option value="">Nessun pacchetto attivo disponibile</option>';
-        document.getElementById('scala-extra-confirm').disabled = true;
-    } else {
-        document.getElementById('scala-extra-confirm').disabled = false;
-        pacchetti.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = `${p.id}${p.descrizione ? ' — ' + p.descrizione : ''} (${p.oreResidue}h residue)`;
-            select.appendChild(opt);
-        });
-    }
-
-    modal.dataset.rowIndex    = rowIndex;
+    modal.dataset.rowIndex = rowIndex;
     modal.dataset.oreActionabili = oreActionabili;
     modal.style.display = 'flex';
 }
 
 async function eseguiScalaExtra() {
     const modal = document.getElementById('scala-extra-modal');
-    const rowIndex      = modal.dataset.rowIndex; // ID dell'intervento
-    const oreActionabili = parseFloat(modal.dataset.oreActionabili);
-    const idPacchetto   = document.getElementById('scala-extra-select').value;
-    if (!idPacchetto) { alert('Seleziona un pacchetto'); return; }
+    const id = modal.dataset.rowIndex;          // ID dell'intervento
+    const scelta = modal.querySelector('input[name="assegna-dest"]:checked');
+    const dest = scelta ? scelta.value : '';
+    if (!dest) { alert('Scegli dove vanno le ore'); return; }
+
+    if (dest === 'nuovo') {
+        // Il pacchetto nuovo, appena creato, propone già spuntate le ore da decidere del cliente.
+        modal.style.display = 'none';
+        if (typeof window.openVenditaModal === 'function') {
+            window.openVenditaModal('pacchetto');
+            const campo = document.getElementById('venditaCliente');
+            if (campo && currentCliente && currentCliente.nome) campo.value = currentCliente.nome;
+        } else if (typeof window.switchTab === 'function') {
+            window.switchTab('vendite');
+        }
+        return;
+    }
+
+    const idPacchetto = dest === 'pacchetto' ? document.getElementById('scala-extra-select').value : '';
+    if (dest === 'pacchetto' && !idPacchetto) { alert('Seleziona un pacchetto'); return; }
+    if (dest === 'omaggio' && !confirm('Le ore vanno in omaggio e non si pagano. Confermi?')) return;
 
     const btn = document.getElementById('scala-extra-confirm');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
-        const url = `${CONFIG.APPS_SCRIPT_URL}?action=scala_extra_in_pacchetto&id_intervento=${encodeURIComponent(rowIndex)}&id_pacchetto=${encodeURIComponent(idPacchetto)}&ore_extra=${oreActionabili}`;
-        const response = await fetch(url);
-        const data = await response.json();
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=assegna_ore&timesheet_ids=${encodeURIComponent(id)}` +
+                    `&destinazione=${dest}&id_pacchetto=${encodeURIComponent(idPacchetto)}`;
+        const data = await (await fetch(url)).json();
         if (!data.success) throw new Error(data.error);
-        showNotification('clienti-info', `✅ ${oreActionabili}h scalate dal pacchetto ${idPacchetto}`, 'success');
+        const saltato = (data.esiti || []).find(e => !e.ok);
+        if (saltato) throw new Error(saltato.motivo);
+        const dove = dest === 'pacchetto' ? 'scalate da ' + idPacchetto : dest === 'omaggio' ? 'in omaggio' : 'da fatturare';
+        showNotification('clienti-info', `✅ Ore ${dove}` + (data.oreExtra ? ` (${data.oreExtra}h oltre il pacchetto, ancora da decidere)` : ''), 'success');
         modal.style.display = 'none';
         if (currentCliente) {
             loadClienteTimesheet(currentCliente.id);
             loadClienteProdotti(currentCliente.id);
         }
-    } catch(err) {
+    } catch (err) {
         alert('❌ Errore: ' + err.message);
     } finally {
-        btn.disabled = false; btn.innerHTML = '<i class="fas fa-box"></i> Scala';
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Assegna';
     }
 }
 
