@@ -84,10 +84,6 @@ function updateUtilitiesVersionBox() {
       <a href="/CRM/docs/manuale.html" target="_blank" class="doc-link">
         📖 Manuale Utente
       </a>
-
-      <a href="/CRM/docs/architecture.html" target="_blank" class="doc-link">
-        📚 Documentazione Architettura
-      </a>
     </div>
   `;
 

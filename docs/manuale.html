@@ -1,505 +1,221 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manuale Utente — CRM Studio Smart</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.7;
-            color: #2d2d2d;
-            background: #f4f6fb;
-            padding: 24px;
-        }
-
-        .container {
-            max-width: 860px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 32px 36px;
-            border-radius: 12px 12px 0 0;
-            margin-bottom: 0;
-        }
-
-        .header h1 { font-size: 1.9rem; margin-bottom: 4px; }
-        .header p { opacity: 0.85; font-size: 0.95rem; }
-
-        .quick-nav {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-top: none;
-            padding: 16px 24px;
-            border-radius: 0 0 12px 12px;
-            margin-bottom: 28px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .quick-nav a {
-            font-size: 0.85rem;
-            color: #667eea;
-            text-decoration: none;
-            padding: 4px 10px;
-            border: 1px solid #c5ccf5;
-            border-radius: 20px;
-            background: #f0f2ff;
-            transition: all 0.2s;
-        }
-
-        .quick-nav a:hover { background: #667eea; color: white; border-color: #667eea; }
-
-        .section {
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #e8e8e8;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .section-header {
-            padding: 16px 24px;
-            background: #f8f9ff;
-            border-bottom: 1px solid #e8e8e8;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-header h2 {
-            font-size: 1.1rem;
-            color: #4a3aaa;
-            flex: 1;
-        }
-
-        .section-body { padding: 20px 28px 24px; }
-
-        .flow-box {
-            background: #f0f2ff;
-            border-left: 4px solid #667eea;
-            border-radius: 0 6px 6px 0;
-            padding: 14px 18px;
-            margin-bottom: 20px;
-            font-size: 0.92rem;
-        }
-
-        .flow-box strong { color: #4a3aaa; }
-
-        .steps { counter-reset: step; list-style: none; }
-
-        .steps li {
-            counter-increment: step;
-            padding: 10px 0 10px 44px;
-            position: relative;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .steps li:last-child { border-bottom: none; }
-
-        .steps li::before {
-            content: counter(step);
-            position: absolute;
-            left: 0;
-            top: 10px;
-            width: 28px;
-            height: 28px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            font-size: 0.8rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-
-        .tip {
-            margin-top: 14px;
-            padding: 10px 14px;
-            background: #e8f5e9;
-            border-left: 3px solid #4caf50;
-            border-radius: 0 4px 4px 0;
-            font-size: 0.88rem;
-            color: #2e7d32;
-        }
-
-        .warn {
-            margin-top: 14px;
-            padding: 10px 14px;
-            background: #fff8e1;
-            border-left: 3px solid #ffb300;
-            border-radius: 0 4px 4px 0;
-            font-size: 0.88rem;
-            color: #6d4c00;
-        }
-
-        .sub-flow {
-            margin: 16px 0 4px;
-            font-weight: 700;
-            color: #555;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        kbd {
-            background: #eee;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            padding: 1px 6px;
-            font-size: 0.85em;
-            font-family: monospace;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 24px;
-            padding: 10px 20px;
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-
-        .back-link:hover { background: #667eea; color: white; }
-
-        @media (max-width: 600px) {
-            body { padding: 12px; }
-            .section-body { padding: 16px 16px 20px; }
-            .steps li { padding-left: 38px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manuale CRM Studio Smart</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.65; color: #2d2d2d; background: #f4f6fb; padding: 24px 16px; }
+  .container { max-width: 860px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 28px 32px; border-radius: 12px 12px 0 0; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+  .header p { opacity: .9; font-size: .95rem; }
+  .quick-nav { background: #fff; border: 1px solid #e0e0e0; border-top: none; padding: 14px 20px; border-radius: 0 0 12px 12px; margin-bottom: 26px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .quick-nav a { font-size: .85rem; color: #5a4fcf; text-decoration: none; padding: 4px 10px; border: 1px solid #c5ccf5; border-radius: 20px; background: #f0f2ff; }
+  .quick-nav a:hover { background: #667eea; color: #fff; border-color: #667eea; }
+  .section { background: #fff; border-radius: 10px; border: 1px solid #e8e8e8; margin-bottom: 20px; overflow: hidden; scroll-margin-top: 12px; }
+  .section-header { padding: 14px 24px; background: #f8f9ff; border-bottom: 1px solid #e8e8e8; }
+  .section-header h2 { font-size: 1.1rem; color: #4a3aaa; }
+  .section-body { padding: 18px 26px 22px; }
+  .section-body p { margin-bottom: 10px; }
+  .flow-box { background: #f0f2ff; border-left: 4px solid #667eea; border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: 16px; font-size: .93rem; }
+  .sub-flow { margin: 16px 0 4px; font-weight: 700; color: #555; font-size: .88rem; text-transform: uppercase; letter-spacing: .05em; }
+  .steps { counter-reset: step; list-style: none; }
+  .steps li { counter-increment: step; padding: 8px 0 8px 42px; position: relative; border-bottom: 1px solid #f0f0f0; }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before { content: counter(step); position: absolute; left: 0; top: 9px; width: 26px; height: 26px; background: #667eea; color: #fff; border-radius: 50%; font-size: .78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  ul.punti { margin: 6px 0 6px 20px; }
+  ul.punti li { margin: 4px 0; }
+  .tip, .warn { margin-top: 12px; padding: 10px 14px; border-radius: 0 4px 4px 0; font-size: .9rem; }
+  .tip { background: #e8f5e9; border-left: 3px solid #4caf50; color: #2e6b31; }
+  .warn { background: #fff8e1; border-left: 3px solid #ffb300; color: #6d4c00; }
+  .piede { text-align: center; color: #888; font-size: .85rem; margin: 10px 0 30px; }
+  @media (max-width: 600px) { .section-body { padding: 14px 16px 18px; } .header { padding: 22px 18px; } }
+</style>
 </head>
 <body>
 <div class="container">
 
-    <div class="header">
-        <h1>📖 Manuale Utente</h1>
-        <p>CRM Studio Smart — come si fa tutto, in ordine</p>
-    </div>
+<div class="header">
+  <h1>Manuale CRM Studio Smart</h1>
+  <p>Come si usa, nelle parti essenziali · aggiornato alla versione 4.69 (novembre 2026)</p>
+</div>
 
-    <div class="quick-nav">
-        <a href="#flusso-mese">📅 Flusso mensile</a>
-        <a href="#clienti">👥 Clienti</a>
-        <a href="#timesheet">⏱️ Timesheet</a>
-        <a href="#proforma">📄 Proforma</a>
-        <a href="#fatture">🧾 Fatture</a>
-        <a href="#pagamenti">💶 Pagamenti</a>
-        <a href="#pacchetti">📦 Pacchetti ore</a>
-        <a href="#canoni">🔁 Canoni</a>
-        <a href="#firme">✍️ Firme digitali</a>
-        <a href="#scadenze">⚠️ Scadenze</a>
-    </div>
+<nav class="quick-nav">
+  <a href="#flusso">Flusso tipico</a>
+  <a href="#home">Home</a>
+  <a href="#clienti">Clienti</a>
+  <a href="#timesheet">Timesheet</a>
+  <a href="#ore">Ore da decidere</a>
+  <a href="#proforma">Proforma</a>
+  <a href="#fatture">Fatture</a>
+  <a href="#vendite">Vendite</a>
+  <a href="#canoni">Canoni e K-Tools</a>
+  <a href="#altre">Altre vendite</a>
+  <a href="#utilities">Utilities</a>
+</nav>
 
+<section class="section" id="flusso">
+  <div class="section-header"><h2>📅 Il flusso tipico</h2></div>
+  <div class="section-body">
+    <div class="flow-box">Si registrano le ore → ogni ora ha la sua copertura (pacchetto, da fatturare, omaggio) → proforma al cliente → fattura quando arriva il pagamento.</div>
+    <ol class="steps">
+      <li><b>Durante il mese</b>: registra ogni intervento nella scheda <b>Timesheet</b>. Se il cliente ha un pacchetto ore attivo, le ore si scalano da lì.</li>
+      <li><b>Ogni tanto</b>: guarda la <b>Home</b>. Le ore senza copertura (oltre il pacchetto, o di clienti senza pacchetto) sono nella coda <b>Ore da decidere</b>: assegnale.</li>
+      <li><b>Quando si fattura</b>: nella scheda <b>Proforma</b> scegli il cliente, spunta le voci da fatturare (ore e canoni) e genera la proforma, che parte per email.</li>
+      <li><b>Al pagamento</b>: dalla proforma premi <b>Emetti fattura</b> con il numero della fattura emessa, oppure fai una <b>fattura diretta</b>. Poi segnala come pagata.</li>
+    </ol>
+    <div class="tip">I canoni con «Proforma automatica» accesa fanno da soli i passi 3 e 4 fino alla proforma: vedi <a href="#canoni">Canoni</a>.</div>
+  </div>
+</section>
 
-    <!-- FLUSSO MENSILE -->
-    <div class="section" id="flusso-mese">
-        <div class="section-header">
-            <h2>📅 Flusso operativo mensile tipico</h2>
-        </div>
-        <div class="section-body">
-            <div class="flow-box">
-                <strong>Sequenza standard:</strong> inserisci le ore durante il mese → a fine mese genera la proforma per ogni cliente → emetti la fattura → marca come pagata quando incassi.
-            </div>
-            <ol class="steps">
-                <li><strong>Durante il mese</strong> — inserisci le ore nella tab <em>Timesheet</em> man mano che lavori. Per i clienti con canone, le voci canone vengono già tracciate nella tab <em>Vendite</em>.</li>
-                <li><strong>A fine mese</strong> — vai in tab <em>Proforma</em>, seleziona il cliente, scegli il mese, seleziona le voci da includere e genera la proforma. Il PDF viene salvato su Drive e arriva via email al cliente.</li>
-                <li><strong>Emetti la fattura</strong> — dalla lista proforma, clicca <em>Emetti Fattura</em> sulla proforma interessata e inserisci il numero fattura. La fattura viene registrata automaticamente nel tab <em>Fatture</em> con tutti i calcoli fiscali corretti.</li>
-                <li><strong>Incasso</strong> — quando ricevi il pagamento, vai in tab <em>Fatture</em>, trova la fattura e clicca <em>Segna come pagata</em>. Lo stato si aggiorna anche sulla proforma collegata.</li>
-            </ol>
-        </div>
-    </div>
+<section class="section" id="home">
+  <div class="section-header"><h2>🏠 Home</h2></div>
+  <div class="section-body">
+    <p>È la prima schermata. Mostra subito l'ultima lettura salvata e si aggiorna in sottofondo («agg.» indica quando).</p>
+    <ul class="punti">
+      <li><b>Pendenze</b>: le card con i numeri (da fare, scadenze a 90 giorni, ore da decidere, proforma da fatturare, fatture non pagate, rate da fatturare). Un clic porta alla sezione giusta.</li>
+      <li><b>Da fare</b>: i promemoria scritti a mano. Si riordinano trascinandoli dalla maniglia; doppio tap (o il fulmine) per segnarli urgenti, che salgono in cima.</li>
+      <li><b>Controlli</b>: i controlli periodici dei canoni ancora da eseguire, con la registrazione (data e rapportino) direttamente lì.</li>
+      <li><b>Startup Kleos</b>: i monti ore compresi nelle vendite degli agenti Kleos. Non si fatturano: si registrano solo le ore usate. Il titolo apre e chiude la sezione; l'icona del telefono apre la pagina dei telefoni di formazione e configurazione.</li>
+    </ul>
+  </div>
+</section>
 
+<section class="section" id="clienti">
+  <div class="section-header"><h2>👥 Clienti</h2></div>
+  <div class="section-body">
+    <ol class="steps">
+      <li><b>Nuovo cliente</b>: scheda <b>Clienti</b> → compila almeno il nome; P.IVA, codice fiscale, SDI ed email servono per fatture e invio delle proforma.</li>
+      <li><b>Scheda del cliente</b>: cercalo e aprilo. Vedi pacchetti, canoni, controlli, firme e ore; da qui c'è anche <b>Crea proforma</b>, che apre la proforma già sul cliente con le sue ore da fatturare spuntate.</li>
+      <li><b>Rinominare</b>: si può fare. Il CRM riconosce il cliente dal suo codice, non dal nome, e riallinea da solo il nome nei fogli (proforma e fatture già emesse restano come sono state emesse).</li>
+    </ol>
+    <div class="tip">Il badge rosso sulla scheda Clienti indica clienti con ore da decidere: il nome apre direttamente la sua scheda.</div>
+  </div>
+</section>
 
-    <!-- CLIENTI -->
-    <div class="section" id="clienti">
-        <div class="section-header">
-            <h2>👥 Clienti</h2>
-        </div>
-        <div class="section-body">
+<section class="section" id="timesheet">
+  <div class="section-header"><h2>⏱️ Timesheet</h2></div>
+  <div class="section-body">
+    <ol class="steps">
+      <li>Scheda <b>Timesheet</b>: scegli cliente, data, tipo di intervento, modalità di esecuzione e di addebito, ore e descrizione. Salva.</li>
+      <li>Se il cliente ha un pacchetto attivo e le ore non bastano, la parte in più diventa subito una <b>riga a sé «da decidere»</b> (stessa data e descrizione).</li>
+      <li>Un cliente rinominato da poco non compare col nome nuovo? Premi <b>↻</b> accanto al cliente per rileggere l'elenco.</li>
+    </ol>
+    <p class="sub-flow">Elenco e modifica</p>
+    <p>Il pulsante dell'elenco mostra tutte le righe con filtri (cliente, periodo, stato, tipo) e totali. Da lì si modifica o si elimina una riga.</p>
+    <div class="warn">Le righe già in proforma o fatturate non vanno modificate: fanno parte di un documento emesso. Il pagamento non si segna sul timesheet ma sulla fattura.</div>
+  </div>
+</section>
 
-            <p class="sub-flow">Aggiungere un nuovo cliente</p>
-            <ol class="steps">
-                <li>Tab <strong>Clienti</strong> → pulsante <strong>Nuovo Cliente</strong>.</li>
-                <li>Compila almeno <em>Nome</em>. Gli altri campi (P.IVA, CF, SDI, email, telefono, indirizzo) sono facoltativi ma utili per la fatturazione.</li>
-                <li>Clicca <strong>Salva</strong>. Il cliente è subito disponibile in tutti i menu a discesa dell'app.</li>
-            </ol>
+<section class="section" id="ore">
+  <div class="section-header"><h2>🟥 Ore da decidere</h2></div>
+  <div class="section-body">
+    <p>Una sola coda per tutte le ore senza copertura: ore oltre il pacchetto e ore di clienti senza pacchetto. La conta è sulla card della Home e nel badge della scheda Clienti.</p>
+    <ol class="steps">
+      <li>Apri il cliente e premi il pulsante rosso <b>Assegna</b>.</li>
+      <li>Scegli dove vanno: <b>pacchetto attivo</b>, <b>nuovo pacchetto</b>, <b>da fatturare</b> oppure <b>omaggio</b>.</li>
+      <li>Se il pacchetto non basta per tutte, la parte che avanza resta subito da decidere in una riga sua.</li>
+    </ol>
+    <div class="tip">Creando un pacchetto nuovo (da Vendite o dalla fattura di una proforma) il CRM propone già spuntate le ore da decidere di quel cliente.</div>
+  </div>
+</section>
 
-            <p class="sub-flow">Modificare un cliente</p>
-            <ol class="steps">
-                <li>Tab <strong>Clienti</strong> → trova il cliente nella lista o cercalo con la barra di ricerca.</li>
-                <li>Clicca sul nome per aprire il dettaglio, poi <strong>Modifica</strong>.</li>
-                <li>Salva. Il nome aggiornato non cambia automaticamente le voci già registrate (il vecchio nome rimane sulle righe storiche del Timesheet).</li>
-            </ol>
+<section class="section" id="proforma">
+  <div class="section-header"><h2>📄 Proforma</h2></div>
+  <div class="section-body">
+    <ol class="steps">
+      <li>Scheda <b>Proforma</b> → scegli il cliente: compaiono le ore «da fatturare» e i canoni da fatturare.</li>
+      <li>Spunta le voci da includere. La quota integrativa 4% è facoltativa; il riepilogo mostra imponibile, IVA, ritenuta e totale.</li>
+      <li><b>Genera</b>: il PDF va su Drive, parte l'email al cliente e la proforma entra nell'elenco.</li>
+    </ol>
+    <p class="sub-flow">Elenco delle proforma</p>
+    <ul class="punti">
+      <li>Filtri per anno, stato e cliente (trova anche i nomi vecchi dei clienti rinominati).</li>
+      <li>Su ogni proforma da fatturare: «Inviata il … a …» in verde, oppure in rosso «Email non risulta inviata» con <b>Reinvia email</b>.</li>
+      <li><b>Modifica</b> per aggiungere o togliere voci prima della fattura; <b>Emetti fattura</b> per chiuderla (vedi sotto).</li>
+    </ul>
+  </div>
+</section>
 
-            <div class="tip">Il campo <strong>SDI</strong> (codice destinatario) serve per la fatturazione elettronica — compilarlo ora evita di cercarlo al momento di emettere la fattura.</div>
-        </div>
-    </div>
+<section class="section" id="fatture">
+  <div class="section-header"><h2>🧾 Fatture</h2></div>
+  <div class="section-body">
+    <p class="sub-flow">Da una proforma</p>
+    <ol class="steps">
+      <li>Nell'elenco delle proforma premi <b>Emetti fattura</b>, scrivi numero e data della fattura emessa.</li>
+      <li>La fattura compare nella scheda <b>Fatture</b> con gli importi calcolati; ore e canoni della proforma diventano «Fatturato» con il numero.</li>
+      <li>Più proforma nella stessa fattura: emetti la fattura da ognuna con <b>lo stesso numero</b>, gli importi si sommano su una riga.</li>
+    </ol>
+    <p class="sub-flow">Fattura diretta, senza proforma</p>
+    <ol class="steps">
+      <li>Scheda <b>Fatture</b> → <b>Nuova fattura</b>: cliente, numero, data, imponibile; ritenuta 20% se il cliente la applica.</li>
+      <li>Si possono collegare ore e canoni aperti del cliente: diventano «Fatturato».</li>
+      <li><b>Nota di credito</b>: spunta la casella e scegli la fattura stornata, i dati si precompilano. Le note di credito non contano fra le fatture da incassare.</li>
+    </ol>
+    <p class="sub-flow">Pagamenti e statistiche</p>
+    <ul class="punti">
+      <li><b>Segna come pagata</b> con la data (e una nota, es. il bonifico). Si può tornare indietro.</li>
+      <li>In alto i totali fatturato, incassato e da incassare secondo i filtri; il pulsante <b>Statistiche</b> mostra l'andamento per anno e il confronto per mesi.</li>
+    </ul>
+  </div>
+</section>
 
+<section class="section" id="vendite">
+  <div class="section-header"><h2>🛒 Vendite</h2></div>
+  <div class="section-body">
+    <p>La scheda Vendite ha una sezione per ogni tipo di vendita, scelta dalle card in alto: Scadenze, Pacchetti, Canoni, K-Tools, Firme, QODNET, Ferrari, Kleos, Incassi.</p>
+    <ul class="punti">
+      <li><b>Scadenze</b>: canoni, firme e controlli in scadenza, con lo stato della fattura («Fattura N pagata / non pagata»). Su un canone da fatturare, <b>Proforma</b> o <b>Fattura</b> aprono il documento vero col canone già spuntato.</li>
+      <li><b>Pacchetti</b>: <b>Nuovo</b> (cliente, ore, importo, inizio) e <b>Riepilogo</b> con «Mostra solo attivi». Un cliente ha un solo pacchetto attivo alla volta; a ore finite il pacchetto è terminato.</li>
+    </ul>
+  </div>
+</section>
 
-    <!-- TIMESHEET -->
-    <div class="section" id="timesheet">
-        <div class="section-header">
-            <h2>⏱️ Timesheet</h2>
-        </div>
-        <div class="section-body">
+<section class="section" id="canoni">
+  <div class="section-header"><h2>🔁 Canoni e K-Tools</h2></div>
+  <div class="section-body">
+    <ol class="steps">
+      <li><b>Nuovo canone</b>: cliente, descrizione (è quella che va in proforma), importo, inizio. Per le visite periodiche spunta «Controlli periodici» e indica quanti per anno.</li>
+      <li><b>Sulla card</b> di ogni canone: <b>Modifica</b> (descrizione; importo solo se da fatturare), <b>Rinnova</b>, <b>Imposta prezzo</b> per i canoni «prezzo da definire», <b>Proforma automatica: sì/no</b>.</li>
+      <li><b>Proforma automatica</b>: accesa, alla scadenza il canone si rinnova e la proforma parte da sola al cliente, 15 giorni prima (gli Hypercare il primo giorno feriale dal 7 gennaio). Cinque giorni prima arriva un preavviso a info@. Non parte con importo zero, prezzo da definire o cliente senza email.</li>
+      <li><b>Rinnovo</b>: il vecchio canone diventa «Rinnovato», il nuovo riparte con la nuova scadenza. Un canone non pagato si mette <b>Disdetto</b> e non si rinnova.</li>
+    </ol>
+    <p class="sub-flow">K-Tools</p>
+    <ul class="punti">
+      <li>Sezione a sé: canoni K-Tools con codice cliente WKI, scadenza al 30/09 come gli ISA.</li>
+      <li><b>Licenza K-Tools</b> sulla card: strumenti, utenti e scadenza, poi «copia codice» da incollare nel programma dello studio. «Tutti gli strumenti, anche i futuri» solo per il cliente pilota. Il cestino toglie dal registro una licenza superata.</li>
+    </ul>
+  </div>
+</section>
 
-            <div class="flow-box">
-                Usa il timesheet per registrare ogni intervento fatturabile. Le voci con stato <strong>Da fatturare</strong> vengono poi incluse nella proforma.
-            </div>
+<section class="section" id="altre">
+  <div class="section-header"><h2>📦 Firme, QODNET, Ferrari, Kleos, Incassi</h2></div>
+  <div class="section-body">
+    <ul class="punti">
+      <li><b>Firme</b>: firma digitale Token o Remota, scadenza a 3 anni calcolata da sola; <b>Rinnova</b> dalla card.</li>
+      <li><b>QODNET</b>: registro delle vendite (documenti con più voci) e delle provvigioni. <b>Riscontro</b>: carichi il PDF del report provvigioni e vedi cosa registrare e cosa differisce. <b>Fattura a QODNET</b>: sempre fattura diretta, con ritenuta 20%.</li>
+      <li><b>Ferrari</b>: vendite hardware di Ferrari Computers; «Fattura a Ferrari…» per le provvigioni (ritenuta 20%).</li>
+      <li><b>Kleos</b>: contratti di servizi Kleos con le sole voci acquistate (avviamento, monte ore in 12 o 36 rate, analisi, postazioni). PDF dal modello, invio al cliente col listino, <b>Segna firmato</b> che archivia e crea le rate.</li>
+      <li><b>Incassi</b>: le rate dei contratti (prevista → incassata → fatturata), anche nel calendario «Incassi». Dalla rata si apre la fattura già compilata; una mail ricorda la rata il giorno previsto e dopo 7 giorni se non incassata.</li>
+    </ul>
+  </div>
+</section>
 
-            <p class="sub-flow">Inserire un intervento</p>
-            <ol class="steps">
-                <li>Tab <strong>Timesheet</strong> → <strong>Nuovo Intervento</strong>.</li>
-                <li>Seleziona il <strong>cliente</strong>, la <strong>data</strong>, le <strong>ore</strong> e la <strong>descrizione</strong> del lavoro svolto.</li>
-                <li>Scegli la <strong>modalità di addebito</strong>:
-                    <ul style="margin: 6px 0 0 16px; line-height: 2;">
-                        <li><em>Da fatturare</em> — voce aperta, andrà in proforma</li>
-                        <li><em>Omaggio</em> — non fatturabile</li>
-                        <li><em>Scalato</em> — scalato da un pacchetto ore prepagato</li>
-                    </ul>
-                </li>
-                <li>Inserisci il <strong>costo</strong> se diverso da quello standard. Clicca <strong>Salva</strong>.</li>
-            </ol>
+<section class="section" id="utilities">
+  <div class="section-header"><h2>⚙️ Utilities</h2></div>
+  <div class="section-body">
+    <ul class="punti">
+      <li><b>Versione</b> dell'app con il changelog: tutte le novità, dalla più recente.</li>
+      <li><b>Forza aggiornamento app</b>: se dopo un rilascio vedi ancora la versione vecchia.</li>
+      <li><b>Controllo integrità</b> dei dati e <b>log</b>: per capire un errore.</li>
+      <li><b>Backup ZIP</b> dei file dell'app.</li>
+    </ul>
+  </div>
+</section>
 
-            <div class="warn">Non modificare manualmente le voci con stato <em>Proformato</em> o <em>Pagato</em> — sono già collegate a una proforma emessa.</div>
-        </div>
-    </div>
-
-
-    <!-- PROFORMA -->
-    <div class="section" id="proforma">
-        <div class="section-header">
-            <h2>📄 Proforma</h2>
-        </div>
-        <div class="section-body">
-
-            <p class="sub-flow">Generare una proforma da timesheet (caso più comune)</p>
-            <ol class="steps">
-                <li>Tab <strong>Proforma</strong> → seleziona il <strong>cliente</strong> e il <strong>mese/anno</strong>.</li>
-                <li>Clicca <strong>Carica dati</strong>. Appaiono tutte le voci del timesheet con stato <em>Da fatturare</em> per quel cliente in quel mese.</li>
-                <li>Seleziona le voci da includere (di default sono tutte selezionate). Puoi spuntare anche eventuali <strong>canoni</strong> da includere.</li>
-                <li>Scegli se applicare la <strong>quota integrativa 4%</strong> (Cassa Previdenziale). In caso di dubbio, lascia deselezionato.</li>
-                <li>Verifica il <strong>totale</strong> nel riepilogo fiscale (imponibile → ritenuta 20% → IVA 22% → netto da pagare).</li>
-                <li>Clicca <strong>Genera Proforma</strong>. Il sistema crea il PDF su Drive, invia l'email al cliente e registra la proforma nella lista.</li>
-            </ol>
-
-            <p class="sub-flow">Generare una proforma da acquisto pacchetto ore</p>
-            <ol class="steps">
-                <li>Tab <strong>Proforma</strong> → seleziona il cliente.</li>
-                <li>Scegli la voce <em>Pacchetto Ore</em> tra i tipi disponibili.</li>
-                <li>Seleziona il pacchetto attivo del cliente.</li>
-                <li>Genera. La proforma include le ore acquistate come voce unica.</li>
-            </ol>
-
-            <p class="sub-flow">Aggiungere voci a una proforma già emessa</p>
-            <ol class="steps">
-                <li>Tab <strong>Proforma</strong> → lista proforma → trova la proforma.</li>
-                <li>Clicca <strong>Aggiungi Voci</strong>.</li>
-                <li>Seleziona le nuove voci timesheet da aggiungere e conferma. Il totale della proforma si aggiorna.</li>
-            </ol>
-
-            <div class="tip">Se dimentichi di includere un canone, puoi sempre aggiungere voci dopo l'emissione prima di emettere la fattura.</div>
-        </div>
-    </div>
-
-
-    <!-- FATTURE -->
-    <div class="section" id="fatture">
-        <div class="section-header">
-            <h2>🧾 Fatture</h2>
-        </div>
-        <div class="section-body">
-
-            <p class="sub-flow">Emettere fattura da una proforma (percorso standard)</p>
-            <ol class="steps">
-                <li>Tab <strong>Proforma</strong> → lista → trova la proforma con stato <em>Da fatturare</em>.</li>
-                <li>Clicca <strong>Emetti Fattura</strong>.</li>
-                <li>Inserisci il <strong>numero fattura</strong> (es. <kbd>1/A</kbd> o <kbd>2026/001</kbd>, il formato è libero).</li>
-                <li>Inserisci la <strong>data fattura</strong> se diversa da oggi.</li>
-                <li>Clicca <strong>Conferma</strong>. La fattura appare nel tab <em>Fatture</em> con tutti gli importi già calcolati (imponibile, IVA 22%, ritenuta 20%, netto).</li>
-            </ol>
-
-            <p class="sub-flow">Fattura che copre più proforma</p>
-            <ol class="steps">
-                <li>Emetti la fattura dalla prima proforma come sopra (passi 1-5).</li>
-                <li>Vai sulla seconda proforma e clicca <strong>Emetti Fattura</strong>.</li>
-                <li>Inserisci <strong>lo stesso numero fattura</strong>. Il sistema riconosce che esiste già e aggiunge la seconda proforma alla stessa riga, sommando gli importi.</li>
-                <li>Nel tab <em>Fatture</em> vedrai una sola riga con entrambe le proforma collegate e il totale cumulato.</li>
-            </ol>
-
-            <p class="sub-flow">Fattura diretta (senza proforma)</p>
-            <ol class="steps">
-                <li>Tab <strong>Fatture</strong> → <strong>Nuova Fattura</strong>.</li>
-                <li>Seleziona il cliente, inserisci numero fattura, data e imponibile.</li>
-                <li>Spunta <strong>Applica ritenuta 20%</strong> se il cliente è soggetto a ritenuta d'acconto.</li>
-                <li>Opzionale: clicca <strong>Collega timesheet / canoni</strong> per associare e marcare voci aperte del cliente.</li>
-                <li>Salva.</li>
-            </ol>
-
-            <div class="warn">Il campo <strong>Imponibile</strong> nella fattura diretta è il subtotale <em>prima</em> di IVA e ritenuta. L'app calcola tutto il resto automaticamente.</div>
-        </div>
-    </div>
-
-
-    <!-- PAGAMENTI -->
-    <div class="section" id="pagamenti">
-        <div class="section-header">
-            <h2>💶 Pagamenti</h2>
-        </div>
-        <div class="section-body">
-
-            <p class="sub-flow">Marcare una fattura come pagata</p>
-            <ol class="steps">
-                <li>Tab <strong>Fatture</strong> → trova la fattura nella lista.</li>
-                <li>Clicca <strong>Segna come pagata</strong> (o il pulsante con l'icona spunta).</li>
-                <li>Inserisci la <strong>data di pagamento</strong>. Aggiungi una nota opzionale (es. riferimento bonifico).</li>
-                <li>Conferma. La fattura passa a stato <em>Pagata</em> e le proforma collegate vengono aggiornate automaticamente.</li>
-            </ol>
-
-            <p class="sub-flow">Annullare un pagamento registrato per errore</p>
-            <ol class="steps">
-                <li>Tab <strong>Fatture</strong> → trova la fattura pagata.</li>
-                <li>Clicca <strong>Segna come da pagare</strong>. Lo stato torna a <em>Da pagare</em>.</li>
-            </ol>
-
-            <div class="tip">Nella parte alta del tab Fatture ci sono i <strong>totali</strong> (totale fatturato, totale incassato, totale da incassare) aggiornati in tempo reale in base ai filtri attivi.</div>
-        </div>
-    </div>
-
-
-    <!-- PACCHETTI ORE -->
-    <div class="section" id="pacchetti">
-        <div class="section-header">
-            <h2>📦 Pacchetti Ore</h2>
-        </div>
-        <div class="section-body">
-
-            <div class="flow-box">
-                Un pacchetto ore è un blocco di ore prepagato dal cliente. Le ore si "scalano" man mano che vengono usate. Quando il pacchetto si esaurisce, si crea un nuovo acquisto.
-            </div>
-
-            <p class="sub-flow">Creare un nuovo pacchetto</p>
-            <ol class="steps">
-                <li>Tab <strong>Vendite</strong> → sezione <strong>Pacchetti</strong> → <strong>Nuovo Pacchetto</strong>.</li>
-                <li>Seleziona il cliente, inserisci le ore totali acquistate, l'importo e la data di inizio.</li>
-                <li>Salva. Il pacchetto è ora attivo e le ore residue sono tracciate in tempo reale.</li>
-            </ol>
-
-            <p class="sub-flow">Scalare ore da un pacchetto (via timesheet)</p>
-            <ol class="steps">
-                <li>Quando inserisci un intervento nel Timesheet, imposta la modalità addebito su <strong>Scalato</strong>.</li>
-                <li>Il sistema scalerà le ore dal pacchetto attivo del cliente.</li>
-            </ol>
-
-            <p class="sub-flow">Emettere proforma per acquisto pacchetto</p>
-            <ol class="steps">
-                <li>Tab <strong>Proforma</strong> → seleziona il cliente → scegli il tipo <em>Pacchetto Ore</em>.</li>
-                <li>Seleziona il pacchetto. Genera.</li>
-            </ol>
-        </div>
-    </div>
-
-
-    <!-- CANONI -->
-    <div class="section" id="canoni">
-        <div class="section-header">
-            <h2>🔁 Canoni</h2>
-        </div>
-        <div class="section-body">
-
-            <div class="flow-box">
-                I canoni sono abbonamenti periodici (es. assistenza annuale, manutenzione). Ogni rinnovo crea una nuova voce collegata alla precedente (catena di rinnovi).
-            </div>
-
-            <p class="sub-flow">Inserire un nuovo canone</p>
-            <ol class="steps">
-                <li>Tab <strong>Vendite</strong> → sezione <strong>Canoni</strong> → <strong>Nuovo Canone</strong>.</li>
-                <li>Seleziona il cliente, inserisci la descrizione del servizio, l'importo annuale e la data di inizio.</li>
-                <li>Salva. La scadenza viene calcolata automaticamente e aggiunta al Google Calendar.</li>
-            </ol>
-
-            <p class="sub-flow">Rinnovare un canone alla scadenza</p>
-            <ol class="steps">
-                <li>Tab <strong>Vendite</strong> → sezione <strong>Canoni</strong> → trova il canone in scadenza (o vai in <em>Scadenzario</em>).</li>
-                <li>Clicca <strong>Rinnova</strong>.</li>
-                <li>Verifica o aggiorna descrizione e importo per il nuovo periodo. Salva.</li>
-                <li>Il vecchio canone passa a stato <em>Rinnovato</em>, il nuovo è attivo con la nuova scadenza.</li>
-            </ol>
-
-            <p class="sub-flow">Includere un canone in una proforma</p>
-            <ol class="steps">
-                <li>Quando generi una proforma (tab <em>Proforma</em>), dopo aver selezionato cliente e mese, compariranno anche i canoni con stato <em>Da fatturare</em>.</li>
-                <li>Selezionali insieme alle voci timesheet e genera normalmente.</li>
-            </ol>
-        </div>
-    </div>
-
-
-    <!-- FIRME DIGITALI -->
-    <div class="section" id="firme">
-        <div class="section-header">
-            <h2>✍️ Firme Digitali</h2>
-        </div>
-        <div class="section-body">
-
-            <p class="sub-flow">Inserire una nuova firma</p>
-            <ol class="steps">
-                <li>Tab <strong>Vendite</strong> → sezione <strong>Firme</strong> → <strong>Nuova Firma</strong>.</li>
-                <li>Seleziona il cliente, il tipo (<em>Token</em> o <em>Remota</em>), l'importo e la data di acquisto.</li>
-                <li>La scadenza viene calcolata automaticamente a +3 anni. Salva.</li>
-            </ol>
-
-            <p class="sub-flow">Rinnovare una firma</p>
-            <ol class="steps">
-                <li>Tab <strong>Vendite</strong> → sezione <strong>Firme</strong> → clicca <strong>Rinnova</strong> sulla firma in scadenza.</li>
-                <li>Verifica tipo e importo. Salva. La vecchia firma passa a <em>Rinnovata</em>.</li>
-            </ol>
-
-            <div class="tip">Le firme in scadenza nei prossimi 30 giorni appaiono evidenziate nello <strong>Scadenzario</strong> — controllalo periodicamente.</div>
-        </div>
-    </div>
-
-
-    <!-- SCADENZE -->
-    <div class="section" id="scadenze">
-        <div class="section-header">
-            <h2>⚠️ Scadenzario</h2>
-        </div>
-        <div class="section-body">
-
-            <div class="flow-box">
-                Lo scadenzario mostra canoni e firme in scadenza nei prossimi 90 giorni, ordinati per data. Da qui puoi rinnovare direttamente.
-            </div>
-
-            <ol class="steps">
-                <li>Tab <strong>Vendite</strong> → sezione <strong>Scadenzario</strong> (oppure accedi direttamente dal tab <em>Scadenze</em> se presente nella tua versione).</li>
-                <li>Vedi l'elenco completo con: cliente, tipo (canone/firma), data scadenza, giorni mancanti.</li>
-                <li>Clicca <strong>Rinnova</strong> direttamente dalla riga per avviare il rinnovo senza cercare il prodotto nella lista.</li>
-            </ol>
-
-            <div class="tip">Le notifiche email vengono inviate automaticamente a <strong>30 giorni</strong> e a <strong>10 giorni</strong> dalla scadenza. Non devi fare nulla — arrivano in automatico all'indirizzo configurato.</div>
-        </div>
-    </div>
-
-
-    <div style="text-align:center; padding: 12px 0 8px;">
-        <a href="architecture.html" class="back-link">← Torna all'Architettura</a>
-    </div>
-
+<p class="piede">CRM Studio Smart · manuale d'uso essenziale, novembre 2026</p>
 </div>
 </body>
 </html>

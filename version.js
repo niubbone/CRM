@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.69.1';
+export const VERSION = '4.69.2';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.69.2",
+    date: "17/11/2026",
+    type: "cleanup",
+    changes: [ "Utilities: manuale utente riscritto per la versione di oggi (ore da decidere, proforma automatica, K-Tools, Kleos, incassi)", "Tolti i documenti tecnici superati (architettura, backend, frontend, scheda tecnica, fermi alla 4.9) e il link «Documentazione Architettura»" ]
+  },
   {
     version: "4.69.1",
     date: "13/11/2026",
