@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.69.2';
+export const VERSION = '4.70.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.70.0",
+    date: "17/11/2026",
+    type: "feature",
+    changes: [ "Timesheet: destinatari della mail di riepilogo modificabili (email dell'anagrafica precompilata, altri indirizzi separati da virgola)", "Timesheet: campo «Resoconto dell'incontro» facoltativo, va nel corpo della mail (backend 4.64.0)" ]
+  },
   {
     version: "4.69.2",
     date: "17/11/2026",

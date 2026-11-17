@@ -547,7 +547,15 @@
                 <input type="checkbox" id="send_email" name="send_email" value="true" checked> 
                 <label for="send_email">Invia Email di Riepilogo al Cliente</label>
             </div>
-            
+
+            <div id="email-extra">
+                <label for="destinatari">Destinatari email:</label>
+                <input type="text" id="destinatari" name="destinatari" placeholder="email dell'anagrafica; altri indirizzi separati da virgola">
+
+                <label for="resoconto">Resoconto dell'incontro (facoltativo, va nel corpo della mail):</label>
+                <textarea id="resoconto" name="resoconto" rows="6" placeholder="Incolla qui il resoconto riletto della call (es. preparato dalla trascrizione Plaud)"></textarea>
+            </div>
+
             <input type="submit" id="submit-btn" value="Salva Timesheet">
             <button type="button" class="btn-secondary" id="view-timesheet-list-btn" onclick="openTimesheetListModal()" style="margin-top: 15px; width: 100%;">
                 <i class="fas fa-list"></i> Visualizza Elenco Timesheet

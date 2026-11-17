@@ -14,6 +14,7 @@ export async function initTimesheet() {
   setTodayDate();
   setupSelectFocus();
   setupClientValidation();
+  setupDestinatari();
   // Sul telefono l'app resta aperta per giorni: quando torna in primo piano con clienti vecchi
   // di oltre 5 minuti li rilegge in sottofondo, con la lettura normale (veloce, dalla cache).
   document.addEventListener('visibilitychange', () => {
@@ -224,6 +225,41 @@ function setupClientValidation() {
 }
 
 /**
+ * Destinatari della mail di riepilogo (17/11/2026): scelto il cliente, il campo si riempie
+ * con l'email dell'anagrafica e si possono aggiungere altri indirizzi. Se lo hai già
+ * modificato a mano non viene sovrascritto finché non cambi cliente.
+ * Destinatari e resoconto si vedono solo con «Invia Email» spuntato.
+ */
+let destinatariDelCliente = '';
+function setupDestinatari() {
+  const clientInput = document.getElementById('client');
+  const dest = document.getElementById('destinatari');
+  const check = document.getElementById('send_email');
+  const extra = document.getElementById('email-extra');
+  if (!clientInput || !dest || !check || !extra) return;
+
+  const aggiorna = () => {
+    const c = (window.clients || []).find(x => x.name === clientInput.value.trim());
+    const email = c ? (c.email || '') : '';
+    if (dest.value.trim() === '' || dest.value.trim() === destinatariDelCliente) dest.value = email;
+    destinatariDelCliente = email;
+  };
+  clientInput.addEventListener('input', aggiorna);
+  clientInput.addEventListener('change', aggiorna);
+
+  const mostra = () => { extra.style.display = check.checked ? '' : 'none'; };
+  check.addEventListener('change', mostra);
+  mostra();
+}
+
+/** Dopo il salvataggio: il form torna vuoto, destinatari compresi */
+function resetDestinatari() {
+  destinatariDelCliente = '';
+  const extra = document.getElementById('email-extra');
+  if (extra) extra.style.display = '';
+}
+
+/**
  * Setup submit del form timesheet
  */
 function setupFormSubmit() {
@@ -349,6 +385,7 @@ function handleFormSubmit(event) {
       document.getElementById('timesheet-form').reset();
       document.getElementById('date').value = currentDate;
       document.getElementById('send_email').checked = true;
+      resetDestinatari();
       
     } catch (e) {
       console.error('Errore gestione submit:', e);
@@ -360,6 +397,7 @@ function handleFormSubmit(event) {
       document.getElementById('timesheet-form').reset();
       document.getElementById('date').value = currentDate;
       document.getElementById('send_email').checked = true;
+      resetDestinatari();
       
       setTimeout(function() {
         infoBox.innerHTML = '<p>✅ Pronto per un nuovo inserimento</p>';
