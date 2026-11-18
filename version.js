@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.71.0';
+export const VERSION = '4.72.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.72.0",
+    date: "18/11/2026",
+    type: "feature",
+    changes: [ "Timesheet: spunta «Prova» per mandare la mail solo a info@ senza salvare la riga; il form resta compilato", "Mail del CRM: logo orizzontale trasparente, riquadro con cornice petrolio; nella mail del timesheet la modalità di addebito e «In allegato il documento di dettaglio» (backend 4.66.0)" ]
+  },
   {
     version: "4.71.0",
     date: "18/11/2026",

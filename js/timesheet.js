@@ -301,6 +301,15 @@ function setupDestinatari() {
   const mostra = () => { extra.style.display = check.checked ? '' : 'none'; };
   check.addEventListener('change', mostra);
   mostra();
+
+  // Con la spunta «Prova» il pulsante dice cosa succede davvero
+  const prova = document.getElementById('solo_prova');
+  const btn = document.getElementById('submit-btn');
+  if (prova && btn) {
+    prova.addEventListener('change', () => {
+      if (!btn.disabled) btn.value = prova.checked ? 'Invia mail di prova' : 'Salva Timesheet';
+    });
+  }
 }
 
 /** Dopo il salvataggio: il form torna vuoto, destinatari compresi */
@@ -361,12 +370,37 @@ function handleFormSubmit(event) {
 
   const submitButton = document.getElementById('submit-btn');
   const infoBox = document.getElementById('info-box');
-  
+  const iframe = document.getElementById('hidden_iframe');
+
+  // Mail di prova (18/11/2026): solo a info@, niente riga salvata, il form resta compilato
+  const provaBox = document.getElementById('solo_prova');
+  if (provaBox && !document.getElementById('send_email').checked) provaBox.checked = false;
+  if (provaBox && provaBox.checked) {
+    submitButton.value = "Invio prova in corso...";
+    submitButton.disabled = true;
+    infoBox.innerHTML = '<p>⏳ Invio della mail di prova...</p>';
+    iframe.onload = async function() {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const errore = await getLastWarning(true);
+      submitButton.disabled = false;
+      if (errore) {
+        submitButton.value = "Invia mail di prova";
+        showNotification('info-box', errore, 'error');
+        return;
+      }
+      provaBox.checked = false;
+      submitButton.value = "Salva Timesheet";
+      infoBox.innerHTML = '<p style="color: #155724; background: #d4edda; padding: 15px !important; border-radius: 4px;">' +
+        '📧 Mail di prova inviata a info@studio-smart.it: controllala.<br>' +
+        'Il timesheet <strong>non</strong> è stato salvato. Il form è rimasto compilato e la spunta «Prova» è stata tolta: ' +
+        'se va bene premi «Salva Timesheet» per l’invio vero.</p>';
+    };
+    return true;
+  }
+
   submitButton.value = "Salvataggio in corso...";
   submitButton.disabled = true;
   infoBox.innerHTML = '<p>⏳ Invio dati a Google Sheets...</p>';
-  
-  const iframe = document.getElementById('hidden_iframe');
   
   iframe.onload = async function() {
     try {
