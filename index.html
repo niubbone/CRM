@@ -552,8 +552,11 @@
                 <label for="destinatari">Destinatari email:</label>
                 <input type="text" id="destinatari" name="destinatari" placeholder="email dell'anagrafica; altri indirizzi separati da virgola">
 
-                <label for="resoconto">Resoconto dell'incontro (facoltativo, va nel corpo della mail):</label>
-                <textarea id="resoconto" name="resoconto" rows="6" placeholder="Incolla qui il resoconto riletto della call (es. preparato dalla trascrizione Plaud)"></textarea>
+                <label for="allegato_file">Allegato (facoltativo, es. il report dell'incontro in PDF o Word, max 10 MB):</label>
+                <input type="file" id="allegato_file" accept=".pdf,.doc,.docx">
+                <input type="hidden" id="allegato_nome" name="allegato_nome">
+                <input type="hidden" id="allegato_tipo" name="allegato_tipo">
+                <input type="hidden" id="allegato_b64" name="allegato_b64">
             </div>
 
             <input type="submit" id="submit-btn" value="Salva Timesheet">

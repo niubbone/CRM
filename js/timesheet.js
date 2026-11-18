@@ -15,6 +15,7 @@ export async function initTimesheet() {
   setupSelectFocus();
   setupClientValidation();
   setupDestinatari();
+  setupAllegato();
   // Sul telefono l'app resta aperta per giorni: quando torna in primo piano con clienti vecchi
   // di oltre 5 minuti li rilegge in sottofondo, con la lettura normale (veloce, dalla cache).
   document.addEventListener('visibilitychange', () => {
@@ -228,9 +229,59 @@ function setupClientValidation() {
  * Destinatari della mail di riepilogo (17/11/2026): scelto il cliente, il campo si riempie
  * con l'email dell'anagrafica e si possono aggiungere altri indirizzi. Se lo hai già
  * modificato a mano non viene sovrascritto finché non cambi cliente.
- * Destinatari e resoconto si vedono solo con «Invia Email» spuntato.
+ * Destinatari e allegato si vedono solo con «Invia Email» spuntato.
  */
 let destinatariDelCliente = '';
+let allegatoInLettura = false;
+const ALLEGATO_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Allegato della mail (18/11/2026): il form parte in POST normale verso Apps Script, che non
+ * riceve file. Il file scelto viene letto subito in base64 e messo in tre campi nascosti
+ * (nome, tipo, contenuto) che il form invia con il resto.
+ */
+function setupAllegato() {
+  const input = document.getElementById('allegato_file');
+  if (!input) return;
+  input.addEventListener('change', () => {
+    svuotaAllegato(false);
+    const f = input.files && input.files[0];
+    if (!f) return;
+    if (f.size > ALLEGATO_MAX_BYTES) {
+      input.value = '';
+      showNotification('info-box', `❌ Allegato troppo grande (${(f.size / 1048576).toFixed(1)} MB): massimo 10 MB`, 'error');
+      return;
+    }
+    allegatoInLettura = true;
+    const r = new FileReader();
+    r.onload = () => {
+      const dataUrl = String(r.result || '');
+      document.getElementById('allegato_nome').value = f.name;
+      document.getElementById('allegato_tipo').value = f.type || 'application/octet-stream';
+      document.getElementById('allegato_b64').value = dataUrl.slice(dataUrl.indexOf(',') + 1);
+      allegatoInLettura = false;
+    };
+    r.onerror = () => {
+      allegatoInLettura = false;
+      input.value = '';
+      showNotification('info-box', '❌ Allegato non leggibile, riprova a sceglierlo', 'error');
+    };
+    r.readAsDataURL(f);
+  });
+}
+
+/** I campi nascosti non tornano vuoti con form.reset(): si svuotano qui */
+function svuotaAllegato(ancheFile = true) {
+  ['allegato_nome', 'allegato_tipo', 'allegato_b64'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  if (ancheFile) {
+    const input = document.getElementById('allegato_file');
+    if (input) input.value = '';
+  }
+  allegatoInLettura = false;
+}
 function setupDestinatari() {
   const clientInput = document.getElementById('client');
   const dest = document.getElementById('destinatari');
@@ -255,6 +306,7 @@ function setupDestinatari() {
 /** Dopo il salvataggio: il form torna vuoto, destinatari compresi */
 function resetDestinatari() {
   destinatariDelCliente = '';
+  svuotaAllegato();
   const extra = document.getElementById('email-extra');
   if (extra) extra.style.display = '';
 }
@@ -300,7 +352,13 @@ function handleFormSubmit(event) {
     clientInput.select();
     return false;
   }
-  
+
+  if (allegatoInLettura) {
+    event.preventDefault();
+    showNotification('info-box', '⏳ Sto ancora leggendo l\'allegato: riprova tra un attimo', 'error');
+    return false;
+  }
+
   const submitButton = document.getElementById('submit-btn');
   const infoBox = document.getElementById('info-box');
   

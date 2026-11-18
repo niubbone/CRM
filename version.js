@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.70.0';
+export const VERSION = '4.71.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.71.0",
+    date: "18/11/2026",
+    type: "feature",
+    changes: [ "Timesheet: allegato alla mail di riepilogo (PDF o Word, max 10 MB), al posto del campo «Resoconto dell'incontro» (backend 4.65.0)" ]
+  },
   {
     version: "4.70.0",
     date: "17/11/2026",
