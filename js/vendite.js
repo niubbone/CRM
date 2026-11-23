@@ -1506,8 +1506,11 @@ function renderStoricoRinnovi(catena) {
 
 const LICENZA_STRUMENTI = [
     ['udienze', "Fogli d'udienza"], ['parcelle', 'Parcelle da incassare'],
-    ['allegati', 'Atto e allegati'], ['isa', 'ISA Studio Legale'], ['preventivi', 'Preventivi']
+    ['allegati', 'Atto e allegati'], ['isa', 'ISA Studio Legale'], ['preventivi', 'Preventivi'],
+    ['pseudonimi', 'Pseudonimizza']
 ];
+// Fuori dalla licenza «tutti gli strumenti»: con la spunta «tutti» vanno scelti a parte (backend LICENZE_FUORI_APERTA)
+const LICENZA_FUORI_APERTA = ['pseudonimi'];
 
 // Prezzo di un canone nato «Prezzo da definire»: da qui entra fra i canoni da fatturare
 async function impostaPrezzoCanone(idCanone) {
@@ -1640,7 +1643,10 @@ function renderLicenzaCanone(idCanone, scadenza, licenze) {
             <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
                 <div style="font-size:12px;">
                     <strong style="font-size:13px;">${_escControllo(l.id)}</strong> · emessa il ${_escControllo(l.emessaIl)}<br>
-                    ${l.strumenti.indexOf('*') >= 0 ? '<strong>tutti gli strumenti</strong> (pilota)' : _escControllo(l.strumenti.join(', '))} · utenti: ${_escControllo(String(l.utenti))} · fino al ${_escControllo(l.scadenza.split('-').reverse().join('/'))}
+                    ${l.sospesa ? '<strong style="color:#dc3545;">SOSPESA</strong>: K-Tools in versione di prova'
+                      : (l.strumenti.indexOf('*') >= 0 ? '<strong>tutti gli strumenti</strong> (pilota)'
+                         + (l.strumenti.length > 1 ? ' + ' + _escControllo(l.strumenti.filter(s => s !== '*').join(', ')) : '')
+                         : _escControllo(l.strumenti.join(', '))) + ` · utenti: ${_escControllo(String(l.utenti))}`} · fino al ${_escControllo(l.scadenza.split('-').reverse().join('/'))}
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0;">
                     <button class="btn-small" onclick="copiaLicenza(this, '${_escControllo(l.codice)}')"><i class="fas fa-copy"></i> Copia codice</button>
@@ -1650,33 +1656,44 @@ function renderLicenzaCanone(idCanone, scadenza, licenze) {
             </div>
             ${l.note ? `<div style="font-size:11px;color:#888;margin-top:4px;">${_escControllo(l.note)}</div>` : ''}
         </div>`).join('');
+    // Il modulo parte dall'ultima licenza valida: per aggiungere o togliere uno strumento o un utente si
+    // cambia solo quello. Senza licenze: tutti gli strumenti tranne quelli fuori dalla licenza aperta.
+    const ultima = licenze.find(l => !l.sospesa);
+    const sospesaOra = licenze.length && licenze[0].sospesa;
+    const tuttiOra = !!(ultima && ultima.strumenti.indexOf('*') >= 0);
+    const scelto = k => ultima ? ultima.strumenti.indexOf(k) >= 0 || (tuttiOra && LICENZA_FUORI_APERTA.indexOf(k) < 0)
+                               : LICENZA_FUORI_APERTA.indexOf(k) < 0;
+    const utentiOra = ultima && /^\d+$/.test(String(ultima.utenti)) ? String(ultima.utenti) : '';
     const scelte = LICENZA_STRUMENTI.map(([k, nome]) =>
         `<label style="display:inline-flex;gap:4px;align-items:center;margin-right:10px;font-size:13px;">
-            <input type="checkbox" class="lic-str-${idCanone}" value="${k}" checked> ${nome}</label>`).join('');
+            <input type="checkbox" class="lic-str-${idCanone}" value="${k}" ${scelto(k) ? 'checked' : ''}> ${nome}</label>`).join('');
     return `
         <div style="font-size:12px;color:#888;margin-bottom:4px;">Licenze K-Tools emesse (${licenze.length})</div>
         ${emesse || '<div style="font-size:12px;color:#888;margin-bottom:6px;">Nessuna licenza ancora.</div>'}
         <div style="border:1px dashed #b8c4d6;border-radius:6px;padding:8px;">
-            <div style="font-weight:600;font-size:13px;margin-bottom:6px;"><i class="fas fa-key"></i> Emetti una licenza</div>
+            <div style="font-weight:600;font-size:13px;margin-bottom:6px;"><i class="fas fa-key"></i> ${ultima ? 'Cambia la licenza' : 'Emetti una licenza'}</div>
+            ${ultima ? `<div style="font-size:11px;color:#888;margin-bottom:6px;">Compilato come ${_escControllo(ultima.id)}${sospesaOra ? ' (emettendola si riattiva K-Tools)' : ''}: cambia quello che serve. La licenza nuova arriva da sola a K-Tools entro un'ora.</div>` : ''}
             <div style="margin-bottom:6px;">${scelte}</div>
-            <label style="display:flex;gap:6px;align-items:center;font-size:12px;margin-bottom:6px;" title="Gli strumenti attivi li scegli tu in K-Tools (Impostazioni, con l'utente di assistenza), anche quelli futuri, senza nuove licenze. Serve K-Tools dal Setup 2026.11.08.">
-                <input type="checkbox" id="lic-tutti-${idCanone}"> Tutti gli strumenti, anche i futuri (cliente pilota)</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:12px;margin-bottom:6px;" title="Gli strumenti attivi li scegli tu in K-Tools (Impostazioni, con l'utente di assistenza), anche quelli futuri, senza nuove licenze. Pseudonimizza va spuntato a parte. Serve K-Tools dal Setup 2026.11.08.">
+                <input type="checkbox" id="lic-tutti-${idCanone}" ${tuttiOra ? 'checked' : ''}> Tutti gli strumenti, anche i futuri (cliente pilota; Pseudonimizza a parte)</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
                 <label style="font-size:12px;">Utenti attivi (vuoto = senza limite)<br>
-                    <input type="number" min="1" id="lic-utenti-${idCanone}" style="width:110px;"></label>
+                    <input type="number" min="1" id="lic-utenti-${idCanone}" value="${utentiOra}" style="width:110px;"></label>
                 <label style="font-size:12px;">Scadenza<br>
                     <input type="date" id="lic-scad-${idCanone}" value="${iso}"></label>
             </div>
             <input type="text" id="lic-note-${idCanone}" placeholder="Note (facoltative)" style="width:100%;margin-bottom:6px;">
-            <button class="btn-small btn-storico-detail" onclick="emettiLicenzaCanone('${idCanone}', '${scadenza || ''}')"><i class="fas fa-stamp"></i> Emetti licenza</button>
+            <button class="btn-small btn-storico-detail" onclick="emettiLicenzaCanone('${idCanone}', '${scadenza || ''}')"><i class="fas fa-stamp"></i> ${sospesaOra ? 'Riattiva con questa licenza' : 'Emetti licenza'}</button>
+            ${ultima && !sospesaOra ? `<button class="btn-small" style="color:#dc3545;margin-left:6px;" title="Canone non pagato: K-Tools torna versione di prova (dati di prova, scritta sui documenti) entro un'ora. Si riattiva emettendo una licenza normale."
+                onclick="sospendiLicenzaCanone(this, '${idCanone}', '${scadenza || ''}')"><i class="fas fa-pause"></i> Sospendi (versione di prova)</button>` : ''}
             <div id="lic-esito-${idCanone}" style="margin-top:8px;"></div>
         </div>`;
 }
 
 async function emettiLicenzaCanone(idCanone, scadenza) {
     const tutti = document.getElementById(`lic-tutti-${idCanone}`);
-    const strumenti = tutti && tutti.checked ? ['*']
-        : [...document.querySelectorAll(`.lic-str-${idCanone}:checked`)].map(x => x.value);
+    const spuntati = [...document.querySelectorAll(`.lic-str-${idCanone}:checked`)].map(x => x.value);
+    const strumenti = tutti && tutti.checked ? ['*'].concat(spuntati.filter(k => LICENZA_FUORI_APERTA.indexOf(k) >= 0)) : spuntati;
     const esito = document.getElementById(`lic-esito-${idCanone}`);
     if (!strumenti.length) { esito.innerHTML = '<span style="color:#dc3545;font-size:12px;">Scegli almeno uno strumento.</span>'; return; }
     esito.innerHTML = '<span style="font-size:12px;color:#888;">⏳ Firma della licenza...</span>';
@@ -1693,10 +1710,40 @@ async function emettiLicenzaCanone(idCanone, scadenza) {
         await loadLicenzaCanone(idCanone, scadenza);
         const nuovo = document.getElementById(`lic-esito-${idCanone}`);
         if (nuovo) nuovo.innerHTML = `
-            <div style="font-size:12px;color:#28a745;font-weight:600;margin-bottom:4px;">✓ Licenza ${_escControllo(result.licenza.id)} emessa: copia il codice e incollalo in K-Tools → Impostazioni → Licenza.</div>
+            <div style="font-size:12px;color:#28a745;font-weight:600;margin-bottom:4px;">✓ Licenza ${_escControllo(result.licenza.id)} emessa${result.depositata
+                ? ' e inviata: K-Tools dello studio la prende da solo entro un\'ora (subito con Impostazioni → Licenza → «Controlla adesso»). Il codice serve solo per un K-Tools nuovo o mai collegato.'
+                : ': NON inviata al sito (' + _escControllo(result.errore_deposito || '') + '). Copia il codice e incollalo in K-Tools → Impostazioni → Licenza.'}</div>
             <textarea readonly rows="4" style="width:100%;font-family:monospace;font-size:11px;">${_escControllo(result.licenza.codice)}</textarea>`;
     } catch (e) {
         esito.innerHTML = `<span style="color:#dc3545;font-size:12px;">Errore: ${_escControllo(e.message)}</span>`;
+    }
+}
+
+// Canone non pagato: primo clic chiede conferma sul pulsante, secondo emette la licenza sospesa.
+async function sospendiLicenzaCanone(bottone, idCanone, scadenza) {
+    if (bottone.dataset.conferma !== '1') {
+        bottone.dataset.conferma = '1';
+        bottone.innerHTML = '<i class="fas fa-pause"></i> Confermi? K-Tools torna in prova';
+        return;
+    }
+    bottone.disabled = true;
+    bottone.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+        const params = new URLSearchParams({ action: 'sospendi_licenza', canone_id: idCanone,
+            note: 'Sospesa: canone non pagato' });
+        const res = await fetch(`${getAPIUrl()}?${params.toString()}`);
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Errore');
+        await loadLicenzaCanone(idCanone, scadenza);
+        const esito = document.getElementById(`lic-esito-${idCanone}`);
+        if (esito) esito.innerHTML = `<div style="font-size:12px;color:#dc3545;font-weight:600;">⏸ Licenza ${_escControllo(result.licenza.id)} SOSPESA${result.depositata
+            ? ": K-Tools dello studio torna versione di prova entro un'ora. Per riattivarlo emetti una licenza normale."
+            : ': NON inviata al sito (' + _escControllo(result.errore_deposito || '') + ').'}</div>`;
+    } catch (e) {
+        bottone.disabled = false;
+        bottone.dataset.conferma = '';
+        bottone.innerHTML = '<i class="fas fa-pause"></i> Sospendi (versione di prova)';
+        alert('❌ Errore: ' + e.message);
     }
 }
 
@@ -3303,6 +3350,7 @@ if (typeof window !== 'undefined') {
     window.emettiLicenzaCanone = emettiLicenzaCanone;
     window.copiaLicenza = copiaLicenza;
     window.eliminaLicenzaCanone = eliminaLicenzaCanone;
+    window.sospendiLicenzaCanone = sospendiLicenzaCanone;
     window.toggleVccForm = toggleVccForm;
     window.submitControlloCard = submitControlloCard;
     window.resetControlloCard = resetControlloCard;

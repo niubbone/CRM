@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.72.0';
+export const VERSION = '4.73.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.73.0",
+    date: "23/11/2026",
+    type: "feature",
+    changes: [ "Licenze K-Tools gestite da remoto: ogni licenza emessa arriva da sola a K-Tools entro un'ora; il modulo parte dall'ultima licenza per cambiare solo strumenti o utenti", "«Sospendi (versione di prova)» per i canoni non pagati; Pseudonimizza fra gli strumenti, anche accanto a «tutti» (backend 4.67.0)" ]
+  },
   {
     version: "4.72.0",
     date: "18/11/2026",
