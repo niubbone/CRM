@@ -44,7 +44,7 @@ export async function aggiornaClienti({ silenzioso = false } = {}) {
     const clientDatalist = document.getElementById('client_list');
     if (clientDatalist) {
       clientDatalist.innerHTML = '';
-      window.clients.forEach(client => {
+      window.clients.filter(client => client.attivo !== 'NO').forEach(client => {   // i «Non attivo» no
         const option = document.createElement('option');
         option.value = client.name;
         clientDatalist.appendChild(option);
@@ -104,7 +104,7 @@ function populateFormFields() {
   // Popola datalist clienti
   const clientDatalist = document.getElementById('client_list');
   clientDatalist.innerHTML = '';
-  window.clients.forEach(client => {
+  window.clients.filter(client => client.attivo !== 'NO').forEach(client => {   // i «Non attivo» no
     const option = document.createElement('option');
     option.value = client.name;
     clientDatalist.appendChild(option);

@@ -17,7 +17,7 @@
 // ============================================
 // CAMBIA SOLO QUESTO NUMERO
 // ============================================
-export const VERSION = '4.73.0';
+export const VERSION = '4.74.0';
 // ============================================
 
 // DOPO aver cambiato VERSION sopra:
@@ -75,6 +75,12 @@ export const BUILD_INFO = {
 // CHANGELOG COMPLETO - Aggiungi nuove versioni QUI IN CIMA
 // ============================================
 export const CHANGELOG = [
+  {
+    version: "4.74.0",
+    date: "25/11/2026",
+    type: "feature",
+    changes: [ "Anagrafica: un cliente «Non attivo» (solo firme, abbonamenti QODNET…) non compare più nella tendina del nuovo timesheet; resta in fatture, proforma, filtri e ricerche (backend 4.68.0)" ]
+  },
   {
     version: "4.73.0",
     date: "23/11/2026",
